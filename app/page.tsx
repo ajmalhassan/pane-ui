@@ -48,7 +48,7 @@ export default function Home() {
           Hi, I{"'"}m Ajmal
         </h1>
         <h1 className={`text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100 mb-8`}>
-          A Software engineer, traveller, and photographer.
+          A software engineer, travelers, and photographer.
         </h1>
         <h1 className={`text-3xl font-bold tracking-tight text-zinc-600 sm:text-3xl dark:text-zinc-400`}>
           I craft compelling front-end experiences, pixel by pixel.
