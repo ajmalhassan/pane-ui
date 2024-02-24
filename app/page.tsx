@@ -62,7 +62,7 @@ export default function Home() {
         <a href="https://www.instagram.com/_ajmalhassan" target="_blank"><FontAwesomeIcon icon={faInstagram} className="w-6" /></a>
       </section>
       <section>
-        <h1 id="experience" className={`text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100 my-16`}>
+        <h1 id="experience" className={`text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100 mt-16 mb-8`}>
           Work
         </h1>
         <ol className="relative border-s border-gray-200 dark:border-gray-700">
