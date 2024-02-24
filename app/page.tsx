@@ -45,7 +45,7 @@ export default function Home() {
           <Image alt="" width="512" height="512" decoding="async" data-nimg="1" className="rounded-full bg-zinc-100 object-cover dark:bg-zinc-800 h-16 w-16" sizes="4rem" src="/portfolio.heic"  />
         </div>
         <h1 className={`text-3xl font-bold tracking-tight text-zinc-600 sm:text-3xl dark:text-zinc-400 mb-8`}>
-          Hi, I'm Ajmal
+          Hi, I{"'"}m Ajmal
         </h1>
         <h1 className={`text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100 mb-8`}>
           A Software engineer, traveller, and photographer.
