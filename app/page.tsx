@@ -9,8 +9,8 @@ import {
 import {} from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { getSortedPostsData } from "@/lib/posts";
-import Blog from "@/core/components/Blog";
-import WorkExperience from "@/core/components/WorkExperience";
+import Blog from "@/components/Blog";
+import WorkExperience from "@/components/WorkExperience";
 
 const experiences = [
   {
