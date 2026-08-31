@@ -26,8 +26,9 @@ export function PhotographyPanel() {
                 width={512}
               />
             ) : (
-              <div aria-hidden="true" className={styles.typeFrame}>
-                {entry.title}
+              <div className={styles.typeFrame}>
+                <span>Photography selection in progress</span>
+                <strong>{entry.title}</strong>
               </div>
             )}
             <figcaption>

@@ -27,12 +27,12 @@ export const photography = [
     id: "streets-in-transit",
     kind: "placeholder",
     title: "streets / in transit",
-    note: "A typographic placeholder for a future travel frame.",
+    note: "Photography selection in progress.",
   },
   {
     id: "light-and-geometry",
     kind: "placeholder",
     title: "light / geometry",
-    note: "A typographic placeholder for a future architecture frame.",
+    note: "Photography selection in progress.",
   },
 ] satisfies PhotographyEntry[];

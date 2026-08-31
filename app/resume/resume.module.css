@@ -1,0 +1,149 @@
+.resume {
+  width: min(100% - 2rem, 50rem);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(2rem, 7vw, 5rem) 0;
+  color: var(--metro-text);
+}
+
+.header,
+.section,
+.reviewNote {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid var(--metro-line);
+  background: var(--metro-surface);
+}
+
+.header,
+.section {
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--metro-cyan);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header h1,
+.section h2,
+.workList h3 {
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.header h1 {
+  font-size: clamp(2.75rem, 10vw, 5rem);
+  line-height: 0.95;
+}
+
+.headline {
+  margin: 1rem 0 0;
+  color: var(--metro-cyan);
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+}
+
+.bio,
+.section li,
+.workList p,
+.reviewNote {
+  color: var(--metro-muted);
+  line-height: 1.7;
+}
+
+.section h2 {
+  margin-bottom: 1rem;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.section ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.section li + li {
+  margin-top: 0.65rem;
+}
+
+.workList {
+  display: grid;
+  gap: 1rem;
+}
+
+.workList article + article {
+  padding-top: 1rem;
+  border-top: 1px solid var(--metro-line);
+}
+
+.workList h3 {
+  font-size: 1.2rem;
+}
+
+.workList p {
+  margin: 0.4rem 0 0;
+}
+
+.reviewNote {
+  margin-bottom: 1rem;
+  border-color: var(--metro-cyan);
+}
+
+.reviewNote a,
+.links a {
+  color: var(--metro-text);
+  font-weight: 700;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  padding-left: 0 !important;
+  list-style: none;
+}
+
+.links li + li {
+  margin-top: 0 !important;
+}
+
+@media print {
+  .resume {
+    width: 100%;
+    min-height: auto;
+    padding: 0;
+    color: #000;
+  }
+
+  .header,
+  .section,
+  .reviewNote {
+    break-inside: avoid;
+    margin-bottom: 0.35in;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    color: #000;
+  }
+
+  .eyebrow,
+  .headline,
+  .bio,
+  .section li,
+  .workList p,
+  .reviewNote,
+  .reviewNote a,
+  .links a {
+    color: #000;
+  }
+
+  .resume a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+}

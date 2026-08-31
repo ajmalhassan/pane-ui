@@ -1,19 +1,66 @@
+export type ProfileLink = {
+  label: string;
+  href: string;
+};
+
+export type SelectedExperience = {
+  title: string;
+  summary: string;
+};
+
+export type Profile = {
+  name: string;
+  headline: string;
+  bio: string;
+  leadership: readonly string[];
+  links: {
+    linkedin: ProfileLink;
+    github: ProfileLink;
+    dev: ProfileLink;
+    codepen: ProfileLink;
+    instagram: ProfileLink;
+  };
+  selectedExperience: readonly SelectedExperience[];
+};
+
 export const profile = {
   name: "Ajmal Hassan",
-  position: "technical leader / builder / systems thinker",
-  statement:
-    "I build AI-native product systems that connect learning, assessment, and business outcomes—and help teams ship with clarity.",
-  focus:
-    "My path runs from deep frontend craft into AI product and full-stack systems, while staying close to implementation.",
-  leadership:
-    "My direct team is five frontend engineers, and I hold engineering ownership across five multidisciplinary learning squads. The broader squads are cross-functional partners, not five teams of direct reports.",
-  philosophy:
-    "I like turning ambiguous product problems into small, legible systems: clear boundaries, honest evidence, practical trade-offs, and repositories that help both people and agents contribute well.",
-  next: "I am interested in technical-leadership work where product judgment, hands-on engineering, and team enablement reinforce one another.",
-  personal:
-    "Away from delivery, I travel and make photographs. The Lumia 520 Cyan was an early reminder that software could feel unmistakably itself; this portfolio revisits that feeling without turning the web into a replica.",
+  headline: "technical leader / builder / systems thinker",
+  bio:
+    "I am pursuing technical-leadership work that combines hands-on engineering, product judgment, and team enablement.",
+  leadership: [
+    "I directly lead five frontend engineers while staying close to implementation.",
+    "I hold cross-functional engineering ownership across five learning squads; that ownership does not imply direct reporting relationships across the squads.",
+    "My growth has moved from deep frontend craft toward broader full-stack ownership.",
+  ],
   links: {
-    linkedin: "https://www.linkedin.com/in/ajmalhassankn/",
-    github: "https://github.com/ajmalhassan",
+    linkedin: {
+      label: "LinkedIn",
+      href: "https://www.linkedin.com/in/ajmalhassankn/",
+    },
+    github: { label: "GitHub", href: "https://github.com/ajmalhassan" },
+    dev: { label: "DEV", href: "https://dev.to/ajmalhassan" },
+    codepen: { label: "CodePen", href: "https://codepen.io/ajmalhassankn" },
+    instagram: {
+      label: "Instagram",
+      href: "https://www.instagram.com/_ajmalhassan",
+    },
   },
-} as const;
+  selectedExperience: [
+    {
+      title: "Frontend leadership",
+      summary:
+        "Hands-on leadership for a five-person frontend team, with a focus on clear engineering decisions and delivery.",
+    },
+    {
+      title: "Learning systems",
+      summary:
+        "Cross-functional engineering ownership across five learning squads, described without disclosing employer, product, or internal details.",
+    },
+    {
+      title: "Expanding product ownership",
+      summary:
+        "A progression from frontend craft into broader full-stack product and system-building work.",
+    },
+  ],
+} as const satisfies Profile;

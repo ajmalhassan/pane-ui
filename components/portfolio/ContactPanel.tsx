@@ -2,11 +2,11 @@ import { profile } from "@/content/profile";
 import styles from "./PortfolioPanorama.module.css";
 
 type Props = {
-  open: boolean;
+  open?: boolean;
   onClose: () => void;
 };
 
-export function ContactPanel({ open, onClose }: Props) {
+export function ContactPanel({ open = false, onClose }: Props) {
   return (
     <section
       aria-labelledby="contact-heading"
@@ -22,11 +22,19 @@ export function ContactPanel({ open, onClose }: Props) {
           work, find me on these existing profiles.
         </p>
         <div className={styles.contactLinks}>
-          <a href={profile.links.linkedin} rel="noreferrer" target="_blank">
-            LinkedIn
+          <a
+            href={profile.links.linkedin.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {profile.links.linkedin.label}
           </a>
-          <a href={profile.links.github} rel="noreferrer" target="_blank">
-            GitHub
+          <a
+            href={profile.links.github.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {profile.links.github.label}
           </a>
         </div>
       </div>
