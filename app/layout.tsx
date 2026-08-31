@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Ajmal Hassan",
-  description: "A portfolio of Ajmal Hassan K N, frontend developer, traveler and hobby photographer",
+  title: "Ajmal Hassan — Technical Leader & Builder",
+  description:
+    "AI-native product engineering leadership across learning, assessment, business systems, frontend craft, and full-stack delivery.",
 };
 
 export default function RootLayout({
@@ -17,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
