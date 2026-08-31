@@ -38,7 +38,24 @@ export function AppBar({ actions }: Props) {
 
           if (action.href) {
             return (
-              <a className={styles.action} href={action.href} key={action.label}>
+              <a
+                className={styles.action}
+                href={action.href}
+                key={action.label}
+                onClick={(event) => {
+                  if (
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  ) {
+                    return;
+                  }
+
+                  action.onSelect?.();
+                }}
+              >
                 {content}
               </a>
             );
