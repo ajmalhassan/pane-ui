@@ -49,6 +49,24 @@ it("renders the Me-first portfolio with link-owned navigation", () => {
   );
 });
 
+it("places portfolio pivots after the shared panorama heading", () => {
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+
+  const heading = screen.getByRole("heading", {
+    level: 1,
+    name: /^technical leader \/ builder$/i,
+  });
+  const navigation = screen.getByRole("navigation", {
+    name: "Portfolio sections",
+  });
+
+  expect(
+    heading.compareDocumentPosition(navigation) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
 it("updates the selected pivot without taking URL ownership from the link", () => {
   render(
     <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,

@@ -53,10 +53,15 @@ export function PortfolioPanorama({
       <div className={styles.status}>
         <StatusBar label="AJMAL / PORTFOLIO" />
       </div>
-      <div className={styles.pivots}>
-        <PivotList active={active} onSelect={setActive} options={PIVOTS} />
-      </div>
-      <Panorama active={active} heading="technical leader / builder">
+      <Panorama
+        active={active}
+        heading="technical leader / builder"
+        navigation={
+          <div className={styles.pivots}>
+            <PivotList active={active} onSelect={setActive} options={PIVOTS} />
+          </div>
+        }
+      >
         <section data-pivot="me">
           <BioPanel />
         </section>
