@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { pivotHref, type PivotId } from "@/lib/content/pivots";
 import styles from "./PivotList.module.css";
 
@@ -35,10 +35,25 @@ export function PivotList({ active, options, onSelect }: Props) {
     const next = options[nextIndex];
     if (!next) return;
 
-    onSelect(next.id);
-    event.currentTarget.ownerDocument
-      .getElementById(pivotTabId(next.id))
-      ?.focus();
+    const nextLink = event.currentTarget.ownerDocument.getElementById(
+      pivotTabId(next.id),
+    ) as HTMLAnchorElement | null;
+    nextLink?.focus();
+    nextLink?.click();
+  }
+
+  function select(event: MouseEvent<HTMLAnchorElement>, id: PivotId) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    onSelect(id);
   }
 
   return (
@@ -59,10 +74,9 @@ export function PivotList({ active, options, onSelect }: Props) {
               href={pivotHref(option.id)}
               id={pivotTabId(option.id)}
               key={option.id}
-              onClick={() => onSelect(option.id)}
+              onClick={(event) => select(event, option.id)}
               onKeyDown={(event) => move(event, index)}
               role="tab"
-              tabIndex={selected ? 0 : -1}
             >
               {option.label}
             </Link>
