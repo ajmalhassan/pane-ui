@@ -177,6 +177,23 @@
   grid-column: 2;
 }
 
+.articleList .articleMeta {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  color: var(--metro-cyan);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.articleList .articleMeta span {
+  color: inherit;
+  font-size: inherit;
+}
+
 .emptyState {
   min-height: 10rem;
   display: flex;

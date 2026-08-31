@@ -1,12 +1,6 @@
 import Link from "next/link";
+import type { PostSummary } from "@/lib/content/posts";
 import styles from "./PortfolioPanorama.module.css";
-
-export type PostSummary = {
-  slug: string;
-  title: string;
-  summary: string;
-  date: string;
-};
 
 type Props = {
   posts: readonly PostSummary[];
@@ -31,6 +25,14 @@ export function BlogPanel({ posts }: Props) {
                 <time dateTime={post.date}>{post.date}</time>
                 <strong>{post.title}</strong>
                 <span>{post.summary}</span>
+                <small className={styles.articleMeta}>
+                  <span>
+                    {post.status === "draft-example"
+                      ? "Draft example"
+                      : "Published"}
+                  </span>
+                  <span>{post.readingMinutes} min read</span>
+                </small>
               </Link>
             </li>
           ))}

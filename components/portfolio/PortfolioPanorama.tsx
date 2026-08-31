@@ -8,10 +8,11 @@ import {
   StatusBar,
   type PivotOption,
 } from "@/components/metro";
+import type { PostSummary } from "@/lib/content/posts";
 import type { Project } from "@/lib/content/projects";
 import type { PivotId } from "@/lib/content/pivots";
 import { BioPanel } from "./BioPanel";
-import { BlogPanel, type PostSummary } from "./BlogPanel";
+import { BlogPanel } from "./BlogPanel";
 import { ContactPanel } from "./ContactPanel";
 import { PhotographyPanel } from "./PhotographyPanel";
 import { ProjectsPanel } from "./ProjectsPanel";
