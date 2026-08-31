@@ -1,0 +1,54 @@
+.panorama {
+  position: relative;
+  overflow: hidden;
+}
+
+.heading {
+  margin-inline: -0.04em;
+  overflow: hidden;
+  color: var(--metro-muted);
+  font-size: clamp(3.5rem, 14vw, 10rem);
+  font-weight: 300;
+  line-height: 0.82;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  transform: translate3d(calc(var(--panorama-index) * -12vw), 0, 0);
+  transition: transform var(--motion-emphasized) var(--ease-metro);
+  will-change: transform;
+}
+
+.plane {
+  display: flex;
+  width: 100%;
+  transform: translate3d(calc(var(--panorama-index) * -100%), 0, 0);
+  transition: transform var(--motion-standard) var(--ease-metro);
+  will-change: transform;
+}
+
+.panel {
+  flex: 0 0 100%;
+  min-width: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.panel[data-active="true"] {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heading,
+  .plane {
+    transform: none;
+    transition: none;
+  }
+
+  .plane {
+    display: grid;
+  }
+
+  .panel {
+    grid-area: 1 / 1;
+  }
+}
