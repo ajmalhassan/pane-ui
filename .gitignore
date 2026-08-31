@@ -9,6 +9,9 @@
 # testing
 /coverage
 
+# local design exploration
+/.superpowers/
+
 # next.js
 /.next/
 /out/
