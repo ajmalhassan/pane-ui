@@ -1,0 +1,14 @@
+.pressable {
+  min-width: 44px;
+  min-height: 44px;
+  transform: perspective(700px) rotateX(var(--press-rotate-x, 0deg)) rotateY(var(--press-rotate-y, 0deg));
+  transform-origin: center;
+  transition: transform var(--motion-fast) ease;
+}
+
+.pressable:active { transform: perspective(700px) scale(0.985); }
+.pressable:focus-visible { outline: 3px solid var(--metro-text); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable, .pressable:active { transform: none; }
+}

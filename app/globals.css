@@ -3,27 +3,35 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --metro-cyan: #00a4ef;
+  --metro-ink: #07090a;
+  --metro-surface: #111416;
+  --metro-text: #f2f4f5;
+  --metro-muted: #91989e;
+  --metro-line: #2a2e31;
+  --motion-fast: 140ms;
+  --motion-standard: 420ms;
+  --motion-emphasized: 560ms;
+  --ease-metro: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
+* { box-sizing: border-box; }
+html { background: var(--metro-ink); color: var(--metro-text); }
+body { margin: 0; min-height: 100%; background: var(--metro-ink); }
+a { color: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --motion-fast: 1ms;
+    --motion-standard: 1ms;
+    --motion-emphasized: 1ms;
   }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 @layer utilities {
