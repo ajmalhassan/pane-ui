@@ -64,26 +64,33 @@ test("Next links update pivot history and back/forward restore selected state", 
   );
 });
 
-test("modified pivot clicks are not intercepted by client navigation", async ({
+test("modified pivot clicks open Projects and leave the opener unchanged", async ({
+  context,
   page,
 }) => {
   await page.goto("/");
 
-  const projects = page.getByRole("tab", { name: "Projects" });
-  const wasPrevented = await projects.evaluate((link) => {
-    const modifiedClick = new MouseEvent("click", {
-      bubbles: true,
-      button: 0,
-      cancelable: true,
-      ctrlKey: true,
-    });
-
-    link.dispatchEvent(modifiedClick);
-    return modifiedClick.defaultPrevented;
+  const openerUrl = page.url();
+  const newPagePromise = context.waitForEvent("page");
+  await page
+    .getByRole("tab", { name: "Projects" })
+    .click({ modifiers: ["ControlOrMeta"] });
+  const newPage = await newPagePromise;
+  await newPage.waitForURL(/\?view=projects$/, {
+    waitUntil: "domcontentloaded",
   });
 
-  expect(wasPrevented).toBe(false);
-  await expect(page).toHaveURL(/\?view=projects$/);
+  await expect(newPage).toHaveURL(/\?view=projects$/);
+  await expect(newPage.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page).toHaveURL(openerUrl);
+  await expect(page.getByRole("tab", { name: "Me" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await newPage.close();
 });
 
 test("keyboard reaches pivots, project links, and app-bar actions", async ({
