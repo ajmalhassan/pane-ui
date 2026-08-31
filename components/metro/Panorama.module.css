@@ -4,7 +4,7 @@
 }
 
 .heading {
-  margin-inline: -0.04em;
+  margin: 0 -0.04em;
   overflow: hidden;
   color: var(--metro-muted);
   font-size: clamp(3.5rem, 14vw, 10rem);

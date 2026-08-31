@@ -5,7 +5,7 @@ export function BioPanel() {
   return (
     <div className={styles.bio}>
       <p className={styles.eyebrow}>Ajmal Hassan / product engineering</p>
-      <h1 className={styles.bioHeading}>{profile.position}</h1>
+      <h2 className={styles.bioHeading}>{profile.position}</h2>
       <p className={styles.lede}>{profile.statement}</p>
       <div className={styles.bioGrid}>
         <div>

@@ -46,6 +46,29 @@ it("keeps panels ordered while removing inactive panels from interaction", () =>
   expect(container.firstElementChild).toHaveStyle({ "--panorama-index": "2" });
 });
 
+it("collapses inactive panel height while preserving the active panel layout", () => {
+  render(
+    <Panorama active="blog" heading="technical leader / builder">
+      <section data-pivot="me" style={{ height: "40rem", overflow: "visible" }}>
+        Bio
+      </section>
+      <section data-pivot="projects">Projects</section>
+      <section
+        data-pivot="blog"
+        style={{ height: "12rem", overflow: "visible" }}
+      >
+        Blog
+      </section>
+      <section data-pivot="photography">Photography</section>
+    </Panorama>,
+  );
+
+  const panels = screen.getAllByRole("tabpanel", { hidden: true });
+  expect(panels[0]).toHaveStyle({ height: "0px", overflow: "hidden" });
+  expect(panels[2].style.height).toBe("12rem");
+  expect(panels[2].style.overflow).toBe("visible");
+});
+
 it("rejects a panorama without exactly one section per pivot in development", () => {
   expect(() =>
     renderToStaticMarkup(

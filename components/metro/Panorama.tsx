@@ -52,9 +52,7 @@ export function Panorama({ active, heading, children }: Props) {
 
   return (
     <div className={styles.panorama} style={panoramaStyle}>
-      <div aria-hidden="true" className={styles.heading}>
-        {heading}
-      </div>
+      <h1 className={styles.heading}>{heading}</h1>
       <div className={styles.plane}>
         {Children.map(children, (child) => {
           if (!isValidElement<PanelProps>(child) || child.type !== "section")
@@ -65,6 +63,9 @@ export function Panorama({ active, heading, children }: Props) {
           const className = [styles.panel, child.props.className]
             .filter(Boolean)
             .join(" ");
+          const panelStyle = isActive
+            ? child.props.style
+            : { ...child.props.style, height: 0, overflow: "hidden" };
 
           return cloneElement(child, {
             "aria-hidden": !isActive,
@@ -74,6 +75,7 @@ export function Panorama({ active, heading, children }: Props) {
             id: pivotPanelId(pivot),
             inert: isActive ? undefined : "",
             role: "tabpanel",
+            style: panelStyle,
           });
         })}
       </div>

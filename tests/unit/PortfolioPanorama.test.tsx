@@ -6,6 +6,24 @@ import { projects } from "@/lib/content/projects";
 
 afterEach(cleanup);
 
+it.each(["me", "projects", "blog", "photography"] as const)(
+  "exposes one persistent page heading when %s is initially active",
+  (initialPivot) => {
+    render(
+      <PortfolioPanorama
+        initialPivot={initialPivot}
+        projects={projects}
+        posts={[]}
+      />,
+    );
+
+    const headings = screen.getAllByRole("heading", { level: 1 });
+    expect(headings).toHaveLength(1);
+    expect(headings[0]).toHaveAccessibleName(/^technical leader \/ builder$/i);
+    expect(headings[0]).toBeVisible();
+  },
+);
+
 it("renders the Me-first portfolio with link-owned navigation", () => {
   render(
     <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
@@ -16,7 +34,10 @@ it("renders the Me-first portfolio with link-owned navigation", () => {
     "true",
   );
   expect(
-    screen.getByRole("heading", { name: /technical leader/i }),
+    screen.getByRole("heading", {
+      level: 1,
+      name: /^technical leader \/ builder$/i,
+    }),
   ).toBeVisible();
   expect(screen.getByRole("tab", { name: "Projects" })).toHaveAttribute(
     "href",
