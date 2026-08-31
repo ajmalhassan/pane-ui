@@ -1,7 +1,7 @@
 # Lumia-Inspired Developer Portfolio Design
 
 **Date:** 2026-08-31  
-**Status:** Approved direction; awaiting written-spec review
+**Status:** Approved
 
 ## 1. Purpose
 
