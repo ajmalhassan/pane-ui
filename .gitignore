@@ -11,6 +11,7 @@
 
 # local design exploration
 /.superpowers/
+/.worktrees/
 
 # next.js
 /.next/
