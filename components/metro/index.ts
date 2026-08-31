@@ -5,3 +5,6 @@ export type { TileSize } from "./TileGrid";
 export { PivotList } from "./PivotList";
 export type { PivotOption } from "./PivotList";
 export { Panorama } from "./Panorama";
+export { AppBar } from "./AppBar";
+export type { AppAction } from "./AppBar";
+export { StatusBar } from "./StatusBar";
