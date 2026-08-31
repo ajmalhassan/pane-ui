@@ -1,7 +1,9 @@
 import { expect, it } from "vitest";
 import {
+  estimateReadingMinutes,
   getPost,
   getPostSummaries,
+  renderPostMarkdown,
   validatePostMeta,
 } from "@/lib/content/posts";
 
@@ -30,6 +32,21 @@ it("renders Markdown to HTML and returns undefined for unknown posts", async () 
     "<p>",
   );
   expect(await getPost("missing")).toBeUndefined();
+});
+
+it("starts a second reading minute only after the 220-word boundary", () => {
+  expect(estimateReadingMinutes("word ".repeat(220))).toBe(1);
+  expect(estimateReadingMinutes("word ".repeat(221))).toBe(2);
+});
+
+it("does not pass dangerous raw HTML through Markdown rendering", async () => {
+  const html = await renderPostMarkdown(
+    "Safe copy.\n\n<script>window.exposed = true</script>",
+  );
+
+  expect(html).toContain("<p>Safe copy.</p>");
+  expect(html).not.toContain("<script");
+  expect(html).not.toContain("window.exposed");
 });
 
 it("accepts only the exact post metadata schema", () => {

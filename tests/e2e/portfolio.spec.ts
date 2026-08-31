@@ -182,6 +182,61 @@ test("captures a named review screenshot without a committed baseline", async ({
   });
 });
 
+test("project panorama preserves the leading headline on a compact phone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/?view=projects");
+
+  const heading = page.getByRole("heading", {
+    level: 1,
+    name: /technical leader/i,
+  });
+  const box = await heading.boundingBox();
+
+  expect(box).not.toBeNull();
+  expect(box?.x).toBeGreaterThanOrEqual(0);
+});
+
+test("compact project summaries do not collide with their destination links", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/?view=projects");
+
+  const tiles = page.getByRole("article");
+  for (let index = 0; index < (await tiles.count()); index += 1) {
+    const tile = tiles.nth(index);
+    const summary = tile.locator("button > span").first().locator("span").last();
+    const link = tile.getByRole("link");
+    const summaryBox = await summary.boundingBox();
+    const linkBox = await link.boundingBox();
+
+    expect(summaryBox).not.toBeNull();
+    expect(linkBox).not.toBeNull();
+    expect((summaryBox?.y ?? 0) + (summaryBox?.height ?? 0)).toBeLessThanOrEqual(
+      linkBox?.y ?? 0,
+    );
+  }
+});
+
+test("résumé uses a white page canvas when printed", async ({ page }) => {
+  await page.emulateMedia({ media: "print" });
+  await page.goto("/resume");
+
+  const backgrounds = await page.evaluate(() => ({
+    body: getComputedStyle(document.body).backgroundColor,
+    html: getComputedStyle(document.documentElement).backgroundColor,
+    resume: getComputedStyle(document.querySelector("main")!).backgroundColor,
+  }));
+
+  expect(backgrounds).toEqual({
+    body: "rgb(255, 255, 255)",
+    html: "rgb(255, 255, 255)",
+    resume: "rgb(255, 255, 255)",
+  });
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 

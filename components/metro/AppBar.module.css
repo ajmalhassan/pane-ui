@@ -41,6 +41,13 @@
   border-color: var(--metro-cyan);
 }
 
+.action:active {
+  border-color: var(--metro-cyan);
+  background: var(--metro-cyan);
+  color: var(--metro-ink);
+  transform: scale(0.96);
+}
+
 .action:focus-visible {
   outline: 3px solid var(--metro-text);
   outline-offset: 3px;
@@ -77,5 +84,9 @@
 @media (prefers-reduced-motion: reduce) {
   .label {
     transition: none;
+  }
+
+  .action:active {
+    transform: none;
   }
 }

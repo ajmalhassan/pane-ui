@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Pressable } from "@/components/metro/Pressable";
 
 describe("Pressable", () => {
@@ -17,5 +17,23 @@ describe("Pressable", () => {
     fireEvent.pointerLeave(button);
     expect(button.style.getPropertyValue("--press-rotate-x")).toBe("");
     expect(button.style.getPropertyValue("--press-rotate-y")).toBe("");
+  });
+
+  it("still forwards pointer movement when reduced motion disables tilt", () => {
+    const onPointerMove = vi.fn();
+    vi.mocked(window.matchMedia).mockReturnValueOnce({
+      ...window.matchMedia(""),
+      matches: true,
+    });
+    render(
+      <Pressable onPointerMove={onPointerMove}>Open project</Pressable>,
+    );
+
+    fireEvent.pointerMove(screen.getByRole("button"), {
+      clientX: 20,
+      clientY: 20,
+    });
+
+    expect(onPointerMove).toHaveBeenCalledOnce();
   });
 });

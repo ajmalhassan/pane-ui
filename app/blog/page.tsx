@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPostSummaries } from "@/lib/content/posts";
+import {
+  getPostSummaries,
+  type PostStatus,
+} from "@/lib/content/posts";
 
 export const metadata: Metadata = {
   title: "Field notes — Ajmal Hassan",
@@ -8,7 +11,7 @@ export const metadata: Metadata = {
     "Draft field notes on AI product boundaries and connected learning systems.",
 };
 
-function statusLabel(status: "draft-example" | "published") {
+function statusLabel(status: PostStatus) {
   return status === "draft-example" ? "Draft example" : "Published";
 }
 

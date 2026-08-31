@@ -14,6 +14,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Pressable({ intensity = 4, className = "", onPointerMove, onPointerLeave, ...props }: Props) {
   function move(event: PointerEvent<HTMLButtonElement>) {
+    onPointerMove?.(event);
     if (event.pointerType === "touch" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const box = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - box.left) / box.width - 0.5;
@@ -21,7 +22,6 @@ export function Pressable({ intensity = 4, className = "", onPointerMove, onPoin
     const style = event.currentTarget.style as TiltStyle;
     style.setProperty("--press-rotate-x", `${-y * intensity}deg`);
     style.setProperty("--press-rotate-y", `${x * intensity}deg`);
-    onPointerMove?.(event);
   }
 
   function leave(event: PointerEvent<HTMLButtonElement>) {

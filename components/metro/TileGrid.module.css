@@ -7,4 +7,9 @@
   .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .small, .medium { grid-column: span 3; }
   .wide, .large { grid-column: span 6; }
+  .wide { grid-row: span 2; }
+}
+
+@media (max-width: 360px) {
+  .small, .medium { grid-column: span 6; }
 }

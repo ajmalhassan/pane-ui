@@ -12,7 +12,7 @@
   line-height: 0.82;
   letter-spacing: -0.055em;
   white-space: nowrap;
-  transform: translate3d(calc(var(--panorama-index) * -12vw), 0, 0);
+  transform: translate3d(calc(var(--panorama-index) * -0.5vw), 0, 0);
   transition: transform var(--motion-emphasized) var(--ease-metro);
   will-change: transform;
 }

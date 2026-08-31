@@ -58,6 +58,14 @@ a {
   }
 }
 
+@media print {
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

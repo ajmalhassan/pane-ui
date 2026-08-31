@@ -77,9 +77,14 @@ export function validatePostMeta(filename: string, data: unknown): PostMeta {
   };
 }
 
-function readingMinutes(markdown: string): number {
+export function estimateReadingMinutes(markdown: string): number {
   const wordCount = markdown.trim() ? markdown.trim().split(/\s+/).length : 0;
   return Math.max(1, Math.ceil(wordCount / 220));
+}
+
+export async function renderPostMarkdown(markdown: string): Promise<string> {
+  const rendered = await remark().use(remarkHtml).process(markdown);
+  return rendered.toString();
 }
 
 async function postFilenames(): Promise<string[]> {
@@ -99,13 +104,13 @@ async function readPost(filename: string): Promise<Post> {
   }
 
   const metadata = validatePostMeta(filename, parsed.data);
-  const rendered = await remark().use(remarkHtml).process(parsed.content);
+  const html = await renderPostMarkdown(parsed.content);
 
   return {
     slug: filename.replace(/\.md$/, ""),
     ...metadata,
-    readingMinutes: readingMinutes(parsed.content),
-    html: rendered.toString(),
+    readingMinutes: estimateReadingMinutes(parsed.content),
+    html,
   };
 }
 
