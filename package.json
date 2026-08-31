@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:a11y": "playwright test tests/e2e/accessibility.spec.ts",
+    "test:e2e": "playwright test tests/e2e/portfolio.spec.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -23,6 +25,8 @@
     "remark-html": "^16.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.6",
@@ -35,6 +39,7 @@
     "eslint-config-next": "^14.2.33",
     "eslint-config-prettier": "^9.1.0",
     "jsdom": "^30.0.1",
+    "lighthouse": "^13.4.1",
     "postcss": "^8",
     "prettier": "3.2.5",
     "tailwindcss": "^3.3.0",
