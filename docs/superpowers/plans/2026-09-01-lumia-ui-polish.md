@@ -112,10 +112,10 @@ Assert that:
 ```tsx
 expect(screen.getByRole("link", { name: "Résumé" }).querySelector("svg")).not.toBeNull();
 expect(screen.getByRole("link", { name: "Contact" }).querySelector("svg")).not.toBeNull();
-expect(screen.getByRole("button", { name: "Show app bar labels" })).toHaveAttribute("aria-expanded", "false");
+expect(screen.getByRole("button", { name: "Hide app bar labels" })).toHaveAttribute("aria-expanded", "true");
 ```
 
-After activating overflow, require `Hide app bar labels`, and verify both visual labels remain in the DOM. Add a test proving no Unicode glyph appears in the bar text.
+After activating overflow, require `Show app bar labels`, and verify both visual labels remain in the DOM. Labels are visible by default at every layout (the approved rings-with-labels look); wide layouts may collapse them via the overflow, and the overflow is hidden at phone widths where labels are always shown. Add a test proving no Unicode glyph appears in the bar text.
 
 - [ ] **Step 2: Verify the tests fail for the current bar**
 
