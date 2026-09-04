@@ -1,5 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
+
+// Testing Library only auto-registers cleanup when a global afterEach exists; Vitest runs without globals here.
+afterEach(cleanup);
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
