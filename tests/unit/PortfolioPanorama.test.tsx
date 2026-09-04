@@ -5,10 +5,12 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { PortfolioPanorama } from "@/components/portfolio/PortfolioPanorama";
+import { profile } from "@/content/profile";
 import { projects } from "@/lib/content/projects";
 
 const HEADINGS = {
@@ -111,6 +113,36 @@ it.each(["me", "projects", "blog", "photography"] as const)(
     ).toEqual([]);
   },
 );
+
+/*
+ * Me is a personal Start screen now: one lede stating the proposition, then the
+ * tile grid. The identity line lives in the status bar and the pivot name is
+ * the page heading, so the panel adds no third identity line of its own.
+ */
+it("opens Me with the AI-native proposition above the Start-screen grid", () => {
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  const me = screen.getByRole("tabpanel", { name: HEADINGS.me });
+
+  const lede = within(me).getByText(profile.bio);
+  expect(lede).toBeVisible();
+  expect(lede).toHaveTextContent(/ai-native/i);
+  expect(lede).toHaveTextContent(/learning/i);
+  expect(lede).toHaveTextContent(/assessment/i);
+  expect(lede).toHaveTextContent(/business outcomes/i);
+
+  expect(
+    within(me).getByRole("img", { name: "Portrait of Ajmal Hassan" }),
+  ).toBeVisible();
+  expect(
+    within(me).getByText("capability graph", { exact: false }),
+  ).toBeVisible();
+  expect(
+    within(me).queryByText(/ajmal hassan \/ product engineering/i),
+  ).toBeNull();
+  expect(within(me).queryByText(profile.headline)).toBeNull();
+});
 
 it("updates the selected pivot without taking URL ownership from the link", () => {
   render(

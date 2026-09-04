@@ -52,33 +52,19 @@
   text-transform: uppercase;
 }
 
-.bioHeading {
-  max-width: 18ch;
-  margin: 0;
-  font-size: clamp(2.25rem, 6vw, 5.75rem);
-  font-weight: 300;
-  line-height: 0.96;
-  letter-spacing: -0.055em;
-  text-wrap: balance;
-}
-
+/*
+ * The Me pivot opens on this and nothing else: the proposition, then the Start
+ * screen. It is the first thing under the panorama heading, so it carries no
+ * top margin of its own -- `.bio` already insets the panel.
+ */
 .lede {
   max-width: 48rem;
-  margin: clamp(1.5rem, 4vw, 3rem) 0;
+  margin: 0 0 clamp(1.5rem, 4vw, 3rem);
   font-size: clamp(1.25rem, 2.5vw, 2rem);
   line-height: 1.35;
   text-wrap: balance;
 }
 
-.bioGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.5rem, 5vw, 5rem);
-  max-width: 70rem;
-}
-
-.bioGrid h2,
-.personalNote h2,
 .contact h2 {
   margin: 0 0 0.75rem;
   font-size: clamp(1.5rem, 3vw, 2.5rem);
@@ -86,28 +72,321 @@
   letter-spacing: -0.035em;
 }
 
-.bioGrid p,
-.personalNote p,
 .panelIntro p,
 .contact p {
   color: var(--metro-muted);
   line-height: 1.7;
 }
 
-.personalNote {
-  max-width: 70rem;
+/*
+ * ---------------------------------------------------------------------------
+ * Me -- the personal Start screen
+ * ---------------------------------------------------------------------------
+ */
+
+/*
+ * Copy that has to ride above a tile's own graphic. The motifs below are
+ * absolutely positioned inside the tile's content region, which puts them in
+ * the positioned paint layer; raising the copy is what keeps type on top of a
+ * trace instead of under it.
+ *
+ * Same box model as MetroTile's own `.content` (position, min-height, flex
+ * column, gap, overflow) -- this is a nested copy span, not a specificity
+ * override of it -- plus `z-index: 1` for a stacking context above the motif.
+ */
+.tileCopy {
+  min-height: 0;
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 1rem;
-  margin-top: clamp(2rem, 5vw, 4rem);
-  padding: 1.25rem;
-  border: 1px solid var(--metro-line);
-  background: var(--metro-surface);
+  flex-direction: column;
+  gap: var(--tile-gap-copy);
+  overflow: hidden;
 }
 
-.cyanMark {
-  width: 0.45rem;
-  flex: 0 0 0.45rem;
+/*
+ * A tile's supporting line: the sentence that makes a numeral precise, or the
+ * text a glyph stands in for. It is clipped rather than `display: none`, so it
+ * is in the accessibility tree at every width -- on a **display** tile. Inside
+ * a **live** tile's face (`MetroTile.tsx`'s `.face`, rendered `aria-hidden`)
+ * this line is hidden along with the rest of the face, and that fact is
+ * instead carried by the tile's `accessibleLabel`. It is painted only where a
+ * tile is genuinely tall enough to hold it. That width is not the 48rem type
+ * step: a 2x1 tile is one grid unit high, which is 81px at 48rem.
+ *
+ * No approved fact depends on the threshold any more -- every tile now writes
+ * its fact on its own face -- so this line is elaboration, not evidence.
+ * Threshold: see the 84rem block below.
+ */
+.tileNote {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * A 1x1 or 2x1 tile is exactly one grid unit high, and the grid derives that
+ * unit from the frame's own inline size. The tile system's type steps are
+ * absolute, so at the 48rem breakpoint -- where the grid goes from four units
+ * across to eight, and a unit drops from 171px to 81px -- a 2rem numeral or a
+ * second title line no longer fits inside one. These budgets are therefore
+ * derived from the same measurement the grid itself uses, so copy shrinks with
+ * its tile instead of spilling out of it. `--unit` itself is not re-derived:
+ * `--tile-units` and `--tile-gap` are ordinary inheriting custom properties
+ * TileGrid sets on `.grid` (TileGrid.module.css), and a tile is a child of
+ * `.grid`, so its own `--unit` is the grid's own row-height expression,
+ * verbatim -- it cannot drift from the grid the way a hand-copied restatement
+ * could.
+ *
+ * The value cap is the tile system's own step for the sizes `.unitTile` is
+ * actually used on -- `1.75rem` below 48rem and `2rem` from 48rem, `.tile`'s
+ * own `--tile-value-size` for `small`/`wide` (MetroTile.module.css:22,87) --
+ * never `.large`'s `3rem`, which a 1x1 or 2x1 tile never renders at.
+ *
+ * `--unit-copy` is what is left for copy: the unit, less the tile's own
+ * padding, its caption line, `--tile-gap-copy` (`.label`'s own `padding-top`
+ * in MetroTile, not a gap between copy lines), the supporting line's share
+ * where that is painted, and a 2px cushion so a line whose computed height
+ * rounds up does not tip the clamp. The doubled class, `.unitTile.unitTile`,
+ * is (0,2,0) specificity; it out-specifies every selector it overrides in
+ * MetroTile.module.css -- `.tile`, `.small`, `.wide`, all (0,1,0), including
+ * inside MetroTile's own 48rem media query -- whatever order the two
+ * stylesheets land in. It would only stop winning if MetroTile grew a
+ * two-class selector (e.g. `.hero .value`) for the same custom properties.
+ */
+.unitTile.unitTile {
+  --unit: calc(
+    (100cqw - (var(--tile-units) - 1) * var(--tile-gap)) / var(--tile-units)
+  );
+  --unit-note: 0px;
+  --tile-note-size: 0.85rem;
+  --tile-note-lines: 2;
+  --tile-note-leading: 1.4;
+  --unit-copy: calc(
+    var(--unit) - 2 * var(--tile-pad) - var(--metro-text-label) * 1.2 -
+      var(--tile-gap-copy) - var(--unit-note) - 2px
+  );
+
+  /* Floored as well as capped: a container narrower than the supported 320px
+     frame must land on a small numeral, never on a negative one. */
+  --tile-value-size: clamp(0.75rem, var(--unit-copy), 1.75rem);
+  /* Two title lines at the tile system's own 1.15 line-height. */
+  --tile-title: clamp(0.6rem, calc(var(--unit-copy) / 2.3), 0.85rem);
+}
+
+/*
+ * Three corpora into one model, and the model into assessment and placement --
+ * a low-contrast trace with the current node as the only lit one. Static by
+ * design: the Start screen's one moving graphic is the assessment waveform.
+ *
+ * On a phone the hero is 288x141 and its title and body take almost all of
+ * that, so a trace drawn across the whole tile put a lit cyan ring on the word
+ * "assessment". Here the graph is instead the last flex item of the content
+ * region: `flex: 1 1 0` hands it exactly the height the copy leaves and
+ * nothing more, so the two can never intersect however the title wraps. From
+ * 48rem the tile is tall enough for the trace to sit behind the copy again.
+ */
+.graphMotif {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  color: var(--metro-white);
+}
+
+.graphTrace {
+  opacity: 0.22;
+}
+
+.graphTrace path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: square;
+}
+
+.graphTrace circle {
+  fill: currentColor;
+}
+
+/*
+ * The current node is lit as a ring rather than a disc: the copy sits over the
+ * motif, and a solid cyan disc under white type is a contrast hazard where a
+ * 2px stroke is not.
+ */
+.graphNode {
+  fill: none;
+  stroke: var(--metro-cyan);
+  stroke-width: 2.5;
+}
+
+/* Monochrome, with the cyan carried by a blend rather than a second asset. */
+.portrait {
+  filter: grayscale(1) contrast(1.06);
+}
+
+/*
+ * Restrained, and measured as such: at 0.5 the blend replaced the photo's own
+ * grey with cyan and the tile read as a blue duotone rather than a monochrome
+ * portrait with an accent. At 0.28 the image is still visibly greyscale and
+ * the cyan is a tint over it.
+ */
+.portraitWash {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
   background: var(--metro-cyan);
+  mix-blend-mode: color;
+  opacity: 0.28;
+}
+
+/* The craft tile's motif scales with the numeral budget of its neighbours. */
+.motif {
+  display: flex;
+  color: var(--metro-cyan);
+  font-size: var(--tile-value-size);
+}
+
+/*
+ * The one waveform of Phase 2: low amplitude, slow, and decorative. Its drift
+ * is driven from the tile root, because the claim it sits under is replaced
+ * every six seconds and an animation declared on the wave itself would restart
+ * with it. The registered property is what makes the shift interpolate rather
+ * than jump; without registration the wave simply stands still.
+ *
+ * CSS Modules do not scope `@property`: this registers `--wave-shift`
+ * document-wide the moment this stylesheet loads, not only for `.wave`. A
+ * second registration of the same name anywhere else in the app would
+ * silently win or lose depending on load order -- there is no error, and no
+ * per-module isolation to fall back on.
+ */
+@property --wave-shift {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  /* Stated, not inferred: an absolutely positioned replaced element with an
+     auto width takes its viewBox aspect ratio over the given height -- 5:1
+     here -- and ignores `right`, which put the wave 21px past its tile. */
+  width: 100%;
+  /* The band the claim leaves, and never more: at 320 a 2x1 tile's copy region
+     is 32px and a wrapped claim takes 31px of it, so a fixed 20px wave crossed
+     the claim's second line. `--wave-band` is that remainder, computed from
+     the same container measurement the grid uses. */
+  height: min(1.25rem, var(--wave-band, 1.25rem));
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  opacity: 0.3;
+}
+
+.waveDrift {
+  transform: translateX(var(--wave-shift));
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+/*
+ * The copy region, less the two title lines a claim is allowed to wrap to.
+ * `--unit-copy` has already taken out the supporting line's share wherever
+ * that line is painted, so this is the height left under the claim at any
+ * width -- 2.8px at 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920.
+ * Floored at zero: a band can be too small for a wave, never negative.
+ */
+.assessmentTile {
+  --wave-band: max(0px, var(--unit-copy) + 2px - 2.3 * var(--tile-title));
+
+  /* This is the tile root's only `animation`. A later entrance stagger
+     (Task 9) must COMPOSE with it (comma-separated: `animation: waveDrift …,
+     entranceStagger …`), not replace it, or the wave stops drifting. */
+  animation: waveDrift 9s linear infinite;
+}
+
+@keyframes waveDrift {
+  from {
+    --wave-shift: 0px;
+  }
+
+  to {
+    /* Exactly one viewBox width: the second period lands where the first was. */
+    --wave-shift: -120px;
+  }
+}
+
+@media (min-width: 48rem) {
+  .unitTile.unitTile {
+    --tile-value-size: clamp(0.75rem, var(--unit-copy), 2rem);
+    --tile-title: clamp(0.6rem, calc(var(--unit-copy) / 2.3), 0.95rem);
+  }
+
+  .graphMotif {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+
+  .wave {
+    height: min(2rem, var(--wave-band, 2rem));
+  }
+}
+
+/*
+ * 84rem = 1344px, and the number is measured rather than picked. Sweeping the
+ * paint block on at every width, the smallest one where no note loses a line
+ * to its clamp is 1278px -- the binding tile is the 1x1 Lumia, whose note
+ * needs a third line below that. 1344 keeps 66px of margin over it.
+ *
+ * It must also stay clear of the required 1440 frame, which the previous
+ * 90rem did not: 90rem is 1440px exactly, so a browser with a classic 15-17px
+ * scrollbar lays a 1440 window out at 1423-1425 and every supporting line on
+ * the Start screen disappeared. At 84rem a 1440 window paints them with or
+ * without a scrollbar, and so does a 1366 laptop (1351 laid out).
+ */
+@media (min-width: 84rem) {
+  .tileNote {
+    position: static;
+    display: -webkit-box;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    /* line-clamp cannot take a var(): kept a literal, beside the
+       --tile-note-lines token it must stay in sync with. */
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    clip-path: none;
+    /* Fallbacks equal .unitTile.unitTile's own values, so a .tileNote painted
+       outside a .unitTile cannot silently inherit 16px/normal. */
+    font-size: var(--tile-note-size, 0.85rem);
+    line-height: var(--tile-note-leading, 1.4);
+    white-space: normal;
+    /* Reads as secondary on every accent without naming a grey. */
+    opacity: 0.86;
+  }
+
+  /* Painted from here, so it takes its share of the tile's copy budget. */
+  .unitTile.unitTile {
+    --unit-note: calc(
+      var(--tile-note-lines) * var(--tile-note-size) * var(--tile-note-leading) +
+        var(--tile-gap-copy)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assessmentTile {
+    animation: none;
+  }
 }
 
 .panelIntro {
@@ -343,7 +622,6 @@
     background: var(--metro-ink);
   }
 
-  .bioGrid,
   .photoGrid {
     grid-template-columns: 1fr;
   }

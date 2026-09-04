@@ -3,6 +3,7 @@ import styles from "./MetroIcon.module.css";
 
 export const METRO_ICON_NAMES = [
   "arrow-northeast",
+  "arrow-east",
   "mail",
   "ellipsis",
   "camera",
@@ -25,6 +26,15 @@ const GLYPHS: Record<MetroIconName, ReactNode> = {
     <>
       <path d="M5 19 19 5" />
       <path d="M9 5h10v10" />
+    </>
+  ),
+  // Progression: the `back` shaft and arrowhead, mirrored to point east. It is
+  // a motif rather than a command -- "frontend to full-stack" is drawn, not set
+  // in a Unicode arrow.
+  "arrow-east": (
+    <>
+      <path d="M4 12h15" />
+      <path d="M14 7 19 12l-5 5" />
     </>
   ),
   // Envelope: closed body with the flap crease meeting both top corners.

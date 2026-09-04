@@ -391,6 +391,298 @@ for (const frame of [
 }
 
 /*
+ * Me is a Start screen of nine tiles over 24 grid units: six complete rows of
+ * four on a phone, three complete rows of eight on a wide canvas. Asserting the
+ * grid's own height is what proves the packing -- a hole anywhere in the middle
+ * would push the block onto another row.
+ *
+ * Extending this grid: a future tile must keep the unit total (`ME_UNITS`) a
+ * multiple of both 8 (hole-free at eight columns) and 4 (hole-free at four),
+ * and must keep the 4-wide hero on a row boundary (it is what forces the hero
+ * to lead at both column counts -- see the ordering note in ProfileTiles.tsx).
+ * Both `ME_TILES` and `ME_UNITS` have to be updated together, or this test
+ * fails on purpose: a tile count with no matching unit count is exactly the
+ * kind of drift this packing test exists to catch.
+ */
+const ME_TILES = 9;
+const ME_UNITS = 24;
+/*
+ * Named positions into the Me tile list, in the same DOM/visual order
+ * `ProfileTiles.test.tsx`'s `APPROVED_GRID` pins. Only the four this file
+ * addresses are named here.
+ */
+const HERO = 0; // capability graph
+const ASSESSMENT = 5; // live AI assessment
+const CRAFT = 6; // the craft arrow, captioned `full stack`
+const LEADERSHIP = 8; // leadership method
+/*
+ * Where a tile's supporting line starts being painted (84rem). The number is
+ * measured -- below 1278px a note loses a line to its clamp -- and it is
+ * deliberately not 1440: a browser with a classic 15-17px scrollbar lays a
+ * 1440 window out at 1423-1425, so a threshold of 90rem hid every supporting
+ * line on the exact frame the spec requires.
+ */
+const ME_NOTE_PAINT = 1344;
+
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 393, height: 851 },
+  // The tightest frame of all: the grid doubles to eight columns at 48rem, so
+  // a tile is 81px here -- half of what it is one pixel below the breakpoint.
+  { width: 768, height: 1024 },
+  // The 8-column band where a unit is large but no note is painted yet (48rem–84rem):
+  // the widest a `value` gets before --unit-note claws its budget back. 900 sits
+  // inside the band that used to ellipsise the Lumia numeral; 1024 clears it by 0.13px.
+  { width: 900, height: 700 },
+  { width: 1024, height: 768 },
+  // A 1440 window in a browser that reserves 17px for a scrollbar. Headless
+  // Chromium's overlay scrollbar hides this frame, which is exactly why it is
+  // stated: every supporting line has to survive it.
+  { width: 1423, height: 900 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+] as const) {
+  test(`Me packs its Start screen and keeps every word inside a tile at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=me");
+
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.me });
+    const grid = panel.locator("[data-tile-grid]");
+    await expect(panel.locator("[data-tile-role]")).toHaveCount(ME_TILES);
+    // Résumé and contact are app-bar commands; the grid does not repeat them.
+    await expect(panel.getByRole("link")).toHaveCount(0);
+
+    const packing = await grid.evaluate((node, units) => {
+      const style = getComputedStyle(node);
+      const columns = style.gridTemplateColumns.split(" ").length;
+      const gap = Number.parseFloat(style.columnGap);
+      const unit = Number.parseFloat(style.gridAutoRows);
+      const rows = units / columns;
+
+      return {
+        columns,
+        rows,
+        height: node.getBoundingClientRect().height,
+        expected: rows * unit + (rows - 1) * gap,
+      };
+    }, ME_UNITS);
+
+    const at = `${frame.width}px`;
+    expect(packing.columns, at).toBe(frame.width < 768 ? 4 : 8);
+    expect(Number.isInteger(packing.rows), at).toBe(true);
+    expect(Math.abs(packing.height - packing.expected), at).toBeLessThanOrEqual(
+      1,
+    );
+
+    /*
+     * Nothing a tile paints may leave its rectangle, lose a line to a clamp, or
+     * be ellipsised away. The last one is measured with a Range rather than
+     * `scrollWidth`: a caption that overflows its box by half a pixel is
+     * already showing an ellipsis, and `scrollWidth` is an integer.
+     */
+    const faults = await panel.evaluate((root) => {
+      const found: string[] = [];
+
+      for (const tile of root.querySelectorAll<HTMLElement>(
+        "[data-tile-role]",
+      )) {
+        const box = tile.getBoundingClientRect();
+        const name = `${tile.dataset.tileSize} tile`;
+
+        for (const child of tile.querySelectorAll<HTMLElement>("*")) {
+          // An SVG's own geometry is decoration and is clipped by its viewport.
+          if (child.closest("svg")) continue;
+
+          const style = getComputedStyle(child);
+          // Deliberately clipped: copy kept in the accessibility tree, unpainted.
+          if (style.clipPath === "inset(50%)") continue;
+
+          const rect = child.getBoundingClientRect();
+          const text = (child.textContent ?? "").slice(0, 30);
+
+          if (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            (rect.left < box.left - 0.5 ||
+              rect.right > box.right + 0.5 ||
+              rect.top < box.top - 0.5 ||
+              rect.bottom > box.bottom + 0.5)
+          ) {
+            found.push(`${name}: "${text}" outside its tile`);
+          }
+
+          if (style.overflow !== "visible") {
+            const line = Number.parseFloat(style.lineHeight) || 0;
+            if (child.scrollHeight > child.clientHeight + line * 0.5) {
+              found.push(`${name}: "${text}" lost a line to its clamp`);
+            }
+          }
+
+          if (
+            child.childElementCount === 0 &&
+            (child.textContent ?? "").trim()
+          ) {
+            const range = document.createRange();
+            range.selectNodeContents(child);
+            if (range.getBoundingClientRect().width > rect.width + 0.1) {
+              found.push(`${name}: "${text}" is ellipsised`);
+            }
+          }
+        }
+      }
+
+      return found;
+    });
+
+    expect(faults, at).toEqual([]);
+
+    /*
+     * The facts the spec names for a face -- `full stack`, the three notions of
+     * the leadership tile, and the supporting lines -- measured on the tightest
+     * box each of them owns; and the two motifs that share a box with copy,
+     * measured against that copy. A motif's rectangle may meet the copy's edge
+     * but never cross it: at 320 a graph drawn over the whole hero puts a lit
+     * cyan ring on the word "assessment", and a fixed-height waveform crosses a
+     * claim that has wrapped to two lines.
+     */
+    const faces = await panel.evaluate(
+      (root, indices) => {
+        const tiles = [
+          ...root.querySelectorAll<HTMLElement>("[data-tile-role]"),
+        ];
+        const rangeWidth = (node: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return range.getBoundingClientRect().width;
+        };
+        const inner = (tile: HTMLElement) => {
+          const style = getComputedStyle(tile);
+          return (
+            tile.getBoundingClientRect().width -
+            Number.parseFloat(style.paddingLeft) -
+            Number.parseFloat(style.paddingRight)
+          );
+        };
+        // A motif and the copy it sits under are siblings, so reading the
+        // copy as `previousElementSibling` also asserts that the motif still
+        // follows it.
+        const crosses = (motif: Element) => {
+          const a = motif.getBoundingClientRect();
+          const b = (
+            motif.previousElementSibling as Element
+          ).getBoundingClientRect();
+
+          return (
+            Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 &&
+            Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5
+          );
+        };
+
+        const craft = tiles[indices.craft];
+        const caption = craft.lastElementChild as HTMLElement;
+        const title = tiles[indices.leadership].querySelector(
+          "strong",
+        ) as HTMLElement;
+        const note = title.nextElementSibling as HTMLElement;
+        const titleLine = Number.parseFloat(getComputedStyle(title).lineHeight);
+
+        return {
+          caption: caption.textContent ?? "",
+          captionWidth: rangeWidth(caption),
+          captionBox: inner(craft),
+          captionEllipsised: caption.scrollWidth > caption.clientWidth,
+          title: title.textContent ?? "",
+          titleClamped:
+            title.scrollHeight > title.clientHeight + titleLine * 0.5,
+          notePainted: getComputedStyle(note).position !== "absolute",
+          noteWidth: note.getBoundingClientRect().width,
+          graphCrossesCopy: crosses(
+            tiles[indices.hero].querySelector("svg") as SVGElement,
+          ),
+          waveCrossesClaim: crosses(
+            tiles[indices.assessment].querySelector("svg") as SVGElement,
+          ),
+        };
+      },
+      {
+        hero: HERO,
+        assessment: ASSESSMENT,
+        craft: CRAFT,
+        leadership: LEADERSHIP,
+      },
+    );
+
+    // The craft tile's whole claim is its caption, so an ellipsis there is the
+    // fact going missing rather than a word being shortened.
+    expect(faces.caption, at).toMatch(/full stack/i);
+    expect(faces.captionEllipsised, at).toBe(false);
+    expect(faces.captionWidth, at).toBeLessThanOrEqual(faces.captionBox);
+
+    expect(faces.title, at).toMatch(/hands-on/i);
+    expect(faces.title, at).toMatch(/product/i);
+    expect(faces.title, at).toMatch(/team/i);
+    expect(faces.titleClamped, at).toBe(false);
+
+    const painted = frame.width >= ME_NOTE_PAINT;
+    expect(faces.notePainted, at).toBe(painted);
+    expect(faces.noteWidth > 1, at).toBe(painted);
+
+    expect(faces.waveCrossesClaim, at).toBe(false);
+    // From 48rem the hero is tall enough for the trace to sit behind its copy
+    // again, which is that tile's design; on a phone it is not.
+    if (frame.width < 768) expect(faces.graphCrossesCopy, at).toBe(false);
+  });
+}
+
+/*
+ * A minority of tiles move: the two live tiles change claims, and exactly one
+ * graphic animates. The capability graph is a state, not an animation, and the
+ * waveform stops dead when the reader asks for less motion.
+ */
+test("Me animates one restrained waveform and stills it for reduced motion", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=me");
+
+  const wave = page.locator('[data-pivot="me"] [data-tile-role="live"] svg g');
+  await expect(wave).toHaveCount(1);
+
+  const shiftOf = () =>
+    wave.evaluate((node) => ({
+      shift: getComputedStyle(
+        node.closest("[data-tile-role]") as HTMLElement,
+      ).getPropertyValue("--wave-shift"),
+      animated: getComputedStyle(
+        node.closest("[data-tile-role]") as HTMLElement,
+      ).animationName,
+      transform: getComputedStyle(node).transform,
+    }));
+
+  const first = await shiftOf();
+  await page.waitForTimeout(1000);
+  const second = await shiftOf();
+  expect(first.animated).not.toBe("none");
+  // A registered custom property interpolates; an unregistered one would jump.
+  expect(second.shift).not.toBe(first.shift);
+
+  // The graph carries no animation of its own, at either motion setting.
+  const graph = page.locator('[data-pivot="me"] [data-tile-size="hero"]');
+  await expect(graph).toHaveCSS("animation-name", "none");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  const stilled = await shiftOf();
+  await page.waitForTimeout(800);
+
+  expect(stilled.animated).toBe("none");
+  expect(stilled.transform).toBe("matrix(1, 0, 0, 1, 0, 0)");
+  expect((await shiftOf()).shift).toBe(stilled.shift);
+});
+
+/*
  * The panorama clips its inactive panels, and a focus ring is painted outside
  * the element it belongs to -- so the clip edge used to slice the ring on the
  * first and last column of tiles in half. The clip box now bleeds by the ring's

@@ -12,11 +12,18 @@ function renderEveryIcon() {
   );
 }
 
-it("draws every supported command as a controlled inline SVG", () => {
+it("draws every supported name as its own controlled inline SVG", () => {
   const { container } = renderEveryIcon();
+  const glyphs = [...container.querySelectorAll("svg")].map(
+    (svg) => svg.innerHTML,
+  );
 
-  expect(METRO_ICON_NAMES).toHaveLength(6);
-  expect(container.querySelectorAll("svg")).toHaveLength(6);
+  // The craft tile's motif: an SVG arrow, never a Unicode one.
+  expect(METRO_ICON_NAMES).toContain("arrow-east");
+  expect(glyphs).toHaveLength(METRO_ICON_NAMES.length);
+  // Every name draws something, and no two names draw the same thing.
+  expect(glyphs.filter(Boolean)).toHaveLength(METRO_ICON_NAMES.length);
+  expect(new Set(glyphs).size).toBe(METRO_ICON_NAMES.length);
 });
 
 it("shares one view box, fill, stroke, and joinery contract across the icon set", () => {
