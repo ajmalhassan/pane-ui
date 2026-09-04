@@ -12,7 +12,7 @@ import {
 import {
   AppBar,
   Panorama,
-  PivotList,
+  PanoramaNav,
   StatusBar,
   type PivotOption,
 } from "@/components/metro";
@@ -43,11 +43,13 @@ function currentEntryOwnsContact(): boolean {
   return state?.portfolioContact === true;
 }
 
+// The panorama heading is the navigation, so these labels are the page
+// headings themselves rather than a small tab row repeating them.
 const PIVOTS: readonly PivotOption[] = [
-  { id: "me", label: "Me" },
-  { id: "projects", label: "Projects" },
-  { id: "blog", label: "Blog" },
-  { id: "photography", label: "Photography" },
+  { id: "me", label: "technical leader / builder" },
+  { id: "projects", label: "projects" },
+  { id: "blog", label: "blog" },
+  { id: "photography", label: "photography" },
 ];
 
 export function PortfolioPanorama({
@@ -144,11 +146,8 @@ export function PortfolioPanorama({
       </div>
       <Panorama
         active={active}
-        heading="technical leader / builder"
         navigation={
-          <div className={styles.pivots}>
-            <PivotList active={active} onSelect={setActive} options={PIVOTS} />
-          </div>
+          <PanoramaNav active={active} onSelect={setActive} options={PIVOTS} />
         }
       >
         <section data-pivot="me">

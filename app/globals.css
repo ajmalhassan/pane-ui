@@ -52,7 +52,7 @@
   --metro-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
   --metro-ease-exit: ease;
 
-  /* Deprecated aliases — do not use in new code; remaining consumers migrate in Tasks 3–4. */
+  /* Deprecated aliases — do not use in new code; the remaining consumer migrates in Task 4. */
   --motion-fast: var(--metro-duration-fast);
   --motion-standard: var(--metro-duration-base);
   --motion-emphasized: var(--metro-duration-slow);

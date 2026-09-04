@@ -37,13 +37,6 @@
   justify-content: space-between;
 }
 
-.pivots {
-  position: relative;
-  z-index: 2;
-  padding-top: clamp(0.5rem, 2vw, 1.5rem);
-  font-size: clamp(1rem, 2vw, 1.35rem);
-}
-
 .bio,
 .panelContent {
   min-height: 32rem;
@@ -86,7 +79,6 @@
 
 .bioGrid h2,
 .personalNote h2,
-.panelIntro h2,
 .contact h2 {
   margin: 0 0 0.75rem;
   font-size: clamp(1.5rem, 3vw, 2.5rem);
@@ -121,10 +113,6 @@
 .panelIntro {
   max-width: 50rem;
   margin-bottom: 2rem;
-}
-
-.panelIntro h2 {
-  font-size: clamp(2.5rem, 6vw, 5rem);
 }
 
 .tileFront,

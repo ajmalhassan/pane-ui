@@ -11,6 +11,15 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import { PortfolioPanorama } from "@/components/portfolio/PortfolioPanorama";
 import { projects } from "@/lib/content/projects";
 
+const HEADINGS = {
+  me: "technical leader / builder",
+  projects: "projects",
+  blog: "blog",
+  photography: "photography",
+} as const;
+
+const REPEATED_HEADING = /^(technical leader \/ builder|projects|blog|photography)$/i;
+
 function resetUrl() {
   window.history.replaceState(null, "", "/");
 }
@@ -34,7 +43,7 @@ afterEach(async () => {
 });
 
 it.each(["me", "projects", "blog", "photography"] as const)(
-  "exposes one persistent page heading when %s is initially active",
+  "names the one page heading after the initially active %s pivot",
   (initialPivot) => {
     render(
       <PortfolioPanorama
@@ -46,7 +55,7 @@ it.each(["me", "projects", "blog", "photography"] as const)(
 
     const headings = screen.getAllByRole("heading", { level: 1 });
     expect(headings).toHaveLength(1);
-    expect(headings[0]).toHaveAccessibleName(/^technical leader \/ builder$/i);
+    expect(headings[0]).toHaveAccessibleName(HEADINGS[initialPivot]);
     expect(headings[0]).toBeVisible();
   },
 );
@@ -56,17 +65,14 @@ it("renders the Me-first portfolio with link-owned navigation", () => {
     <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
   );
 
-  expect(screen.getByRole("tab", { name: "Me" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   expect(
-    screen.getByRole("heading", {
-      level: 1,
-      name: /^technical leader \/ builder$/i,
-    }),
+    screen.getByRole("heading", { level: 1, name: HEADINGS.me }),
   ).toBeVisible();
-  expect(screen.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "href",
     "/?view=projects",
   );
@@ -76,29 +82,41 @@ it("renders the Me-first portfolio with link-owned navigation", () => {
   );
 });
 
-it("places portfolio pivots after the shared panorama heading", () => {
-  render(
-    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
-  );
+it.each(["me", "projects", "blog", "photography"] as const)(
+  "makes the %s heading the navigation instead of repeating it in the panel",
+  (initialPivot) => {
+    render(
+      <PortfolioPanorama
+        initialPivot={initialPivot}
+        projects={projects}
+        posts={[]}
+      />,
+    );
 
-  const heading = screen.getByRole("heading", {
-    level: 1,
-    name: /^technical leader \/ builder$/i,
-  });
-  const navigation = screen.getByRole("navigation", {
-    name: "Portfolio sections",
-  });
+    const navigation = screen.getByRole("navigation", {
+      name: "Portfolio sections",
+    });
+    const heading = screen.getByRole("heading", { level: 1 });
 
-  expect(
-    heading.compareDocumentPosition(navigation) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy();
-});
+    expect(navigation).toContainElement(heading);
+    expect(heading).toHaveAccessibleName(HEADINGS[initialPivot]);
+    expect(
+      screen.queryByText(/selected systems \/ working drafts/i),
+    ).toBeNull();
+    expect(
+      screen
+        .queryAllByRole("heading", { hidden: true, level: 2 })
+        .map((entry) => entry.textContent?.trim() ?? "")
+        .filter((text) => REPEATED_HEADING.test(text)),
+    ).toEqual([]);
+  },
+);
 
 it("updates the selected pivot without taking URL ownership from the link", () => {
   render(
     <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
   );
-  const projectsTab = screen.getByRole("tab", { name: "Projects" });
+  const projectsTab = screen.getByRole("tab", { name: HEADINGS.projects });
   projectsTab.addEventListener("click", (event) => event.preventDefault());
 
   fireEvent.click(projectsTab);
@@ -121,7 +139,7 @@ it("restores selection when server query state changes", () => {
     />,
   );
 
-  expect(screen.getByRole("tab", { name: "Photography" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: HEADINGS.photography })).toHaveAttribute(
     "aria-selected",
     "true",
   );

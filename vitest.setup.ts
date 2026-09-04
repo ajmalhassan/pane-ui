@@ -5,6 +5,10 @@ import { afterEach, vi } from "vitest";
 // Testing Library only auto-registers cleanup when a global afterEach exists; Vitest runs without globals here.
 afterEach(cleanup);
 
+// jsdom runs without layout, so it ships no scrollIntoView; components that
+// bring a focused element into view need the method to exist.
+Element.prototype.scrollIntoView = function scrollIntoView() {};
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({

@@ -9,3 +9,11 @@ export function parsePivot(value: string | string[] | undefined): PivotId {
 export function pivotHref(pivot: PivotId): string {
   return `/?view=${pivot}`;
 }
+
+export function pivotTabId(id: PivotId): string {
+  return `pivot-tab-${id}`;
+}
+
+export function pivotPanelId(id: PivotId): string {
+  return `pivot-panel-${id}`;
+}

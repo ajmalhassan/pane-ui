@@ -11,7 +11,6 @@ export function BlogPanel({ posts }: Props) {
     <div className={styles.panelContent}>
       <header className={styles.panelIntro}>
         <p className={styles.eyebrow}>Field notes / firsthand lessons</p>
-        <h2>Blog</h2>
         <p>
           Notes on AI product boundaries, full-stack systems, frontend craft,
           and engineering environments that help teams ship.

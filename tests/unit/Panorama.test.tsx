@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 it("identifies the active panel without hiding content from the document", () => {
   render(
-    <Panorama active="projects" heading="technical leader / builder">
+    <Panorama active="projects">
       <section data-pivot="me">Bio</section>
       <section data-pivot="projects">Projects</section>
       <section data-pivot="blog">Blog</section>
@@ -23,7 +23,7 @@ it("identifies the active panel without hiding content from the document", () =>
 
 it("keeps panels ordered while removing inactive panels from interaction", () => {
   const { container } = render(
-    <Panorama active="blog" heading="technical leader / builder">
+    <Panorama active="blog">
       <section data-pivot="me">Bio</section>
       <section data-pivot="projects">Projects</section>
       <section data-pivot="blog">Blog</section>
@@ -48,7 +48,7 @@ it("keeps panels ordered while removing inactive panels from interaction", () =>
 
 it("collapses inactive panel height while preserving the active panel layout", () => {
   render(
-    <Panorama active="blog" heading="technical leader / builder">
+    <Panorama active="blog">
       <section data-pivot="me" style={{ height: "40rem", overflow: "visible" }}>
         Bio
       </section>
@@ -72,9 +72,25 @@ it("collapses inactive panel height while preserving the active panel layout", (
 it("rejects a panorama without exactly one section per pivot in development", () => {
   expect(() =>
     renderToStaticMarkup(
-      <Panorama active="me" heading="technical leader / builder">
+      <Panorama active="me">
         <section data-pivot="me">Bio</section>
       </Panorama>,
     ),
   ).toThrow(/exactly one section for each pivot/i);
+});
+
+it("leaves the page heading to the navigation it renders", () => {
+  render(
+    <Panorama active="me" navigation={<nav aria-label="Portfolio sections" />}>
+      <section data-pivot="me">Bio</section>
+      <section data-pivot="projects">Projects</section>
+      <section data-pivot="blog">Blog</section>
+      <section data-pivot="photography">Photography</section>
+    </Panorama>,
+  );
+
+  expect(screen.queryAllByRole("heading", { hidden: true })).toEqual([]);
+  expect(
+    screen.getByRole("navigation", { name: "Portfolio sections" }),
+  ).toBeInTheDocument();
 });

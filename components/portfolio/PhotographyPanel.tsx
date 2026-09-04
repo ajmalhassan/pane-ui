@@ -7,7 +7,6 @@ export function PhotographyPanel() {
     <div className={styles.panelContent}>
       <header className={styles.panelIntro}>
         <p className={styles.eyebrow}>Developing collection</p>
-        <h2>Photography</h2>
         <p>
           A quiet counterpoint to engineering: travel, light, and fragments of
           place. This collection is still developing.

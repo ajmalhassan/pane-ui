@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Children,
   cloneElement,
@@ -8,13 +6,16 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import { PIVOT_IDS, type PivotId } from "@/lib/content/pivots";
-import { pivotPanelId, pivotTabId } from "./PivotList";
+import {
+  PIVOT_IDS,
+  pivotPanelId,
+  pivotTabId,
+  type PivotId,
+} from "@/lib/content/pivots";
 import styles from "./Panorama.module.css";
 
 type Props = {
   active: PivotId;
-  heading: string;
   navigation?: ReactNode;
   children: ReactNode;
 };
@@ -44,7 +45,7 @@ function assertPanels(children: ReactNode) {
   }
 }
 
-export function Panorama({ active, heading, navigation, children }: Props) {
+export function Panorama({ active, navigation, children }: Props) {
   if (process.env.NODE_ENV !== "production") assertPanels(children);
 
   const activeIndex = PIVOT_IDS.indexOf(active);
@@ -52,7 +53,6 @@ export function Panorama({ active, heading, navigation, children }: Props) {
 
   return (
     <div className={styles.panorama} style={panoramaStyle}>
-      <h1 className={styles.heading}>{heading}</h1>
       {navigation}
       <div className={styles.plane}>
         {Children.map(children, (child) => {

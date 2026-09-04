@@ -1,7 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-const PIVOTS = ["Me", "Projects", "Blog", "Photography"] as const;
-const VALID_VIEWS = ["me", "projects", "blog", "photography"] as const;
+const VIEWS = ["me", "projects", "blog", "photography"] as const;
+// The panorama heading is the navigation, so each pivot's tab is its heading.
+const HEADINGS = {
+  me: "technical leader / builder",
+  projects: "projects",
+  blog: "blog",
+  photography: "photography",
+} as const;
+const NARROW_FRAMES = [
+  { width: 320, height: 568 },
+  { width: 393, height: 851 },
+] as const;
 const APP_BAR = 'nav[aria-label="Page actions"]';
 
 async function tabTo(page: Page, target: Locator, attempts = 24) {
@@ -22,14 +32,14 @@ test("bare and invalid URLs show Me with one page heading", async ({
 }) => {
   for (const path of ["/", "/?view=invalid"]) {
     await page.goto(path);
-    await expect(page.getByRole("tab", { name: "Me" })).toHaveAttribute(
+    await expect(page.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(
-      page.getByRole("heading", { level: 1, name: /technical leader/i }),
-    ).toBeVisible();
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveCount(1);
+    await expect(heading).toHaveAccessibleName(HEADINGS.me);
+    await expect(heading).toBeVisible();
   }
 });
 
@@ -37,14 +47,14 @@ test("Next links update pivot history and back/forward restore selected state", 
   page,
 }) => {
   await page.goto("/?view=projects");
-  await expect(page.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "aria-selected",
     "true",
   );
 
-  await page.getByRole("tab", { name: "Blog" }).click();
+  await page.getByRole("tab", { name: HEADINGS.blog }).click();
   await expect(page).toHaveURL(/\?view=blog$/);
-  await expect(page.getByRole("tab", { name: "Blog" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -52,14 +62,14 @@ test("Next links update pivot history and back/forward restore selected state", 
 
   await page.goBack();
   await expect(page).toHaveURL(/\?view=projects$/);
-  await expect(page.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "aria-selected",
     "true",
   );
 
   await page.goForward();
   await expect(page).toHaveURL(/\?view=blog$/);
-  await expect(page.getByRole("tab", { name: "Blog" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -74,7 +84,7 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
   const openerUrl = page.url();
   const newPagePromise = context.waitForEvent("page");
   await page
-    .getByRole("tab", { name: "Projects" })
+    .getByRole("tab", { name: HEADINGS.projects })
     .click({ modifiers: ["ControlOrMeta"] });
   const newPage = await newPagePromise;
   await newPage.waitForURL(/\?view=projects$/, {
@@ -82,12 +92,12 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
   });
 
   await expect(newPage).toHaveURL(/\?view=projects$/);
-  await expect(newPage.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  await expect(newPage.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   await expect(page).toHaveURL(openerUrl);
-  await expect(page.getByRole("tab", { name: "Me" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -99,14 +109,16 @@ test("keyboard reaches pivots, project links, and app-bar actions", async ({
 }) => {
   await page.goto("/?view=projects");
 
-  for (const name of PIVOTS) {
-    const pivot = page.getByRole("tab", { name });
+  const tabs = page.getByRole("tab");
+  await expect(tabs).toHaveCount(VIEWS.length);
+  for (let index = 0; index < VIEWS.length; index += 1) {
+    const pivot = tabs.nth(index);
     await tabTo(page, pivot);
     await expect(pivot).toBeFocused();
   }
 
   const project = page
-    .getByRole("tabpanel", { name: "Projects" })
+    .getByRole("tabpanel", { name: HEADINGS.projects })
     .getByRole("link")
     .first();
   await tabTo(page, project);
@@ -146,7 +158,7 @@ test("direct fragment load opens contact and close keeps the pivot query", async
 }) => {
   await page.goto("/?view=projects#contact");
   await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -167,7 +179,7 @@ test("pivot navigation while contact is open follows the fragment-less URL", asy
     await page.evaluate(() => window.history.state?.portfolioContact),
   ).toBe(true);
 
-  await page.getByRole("tab", { name: "Projects" }).click();
+  await page.getByRole("tab", { name: HEADINGS.projects }).click();
   await expect(page).toHaveURL(/\/\?view=projects$/);
   await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
   await expect(page.getByRole("link", { name: "Contact" })).not.toBeFocused();
@@ -181,12 +193,12 @@ test("arrow keys navigate pivots through their real links", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("tab", { name: "Me" }).focus();
+  await page.getByRole("tab", { name: HEADINGS.me }).focus();
   await page.keyboard.press("ArrowRight");
 
   await expect(page).toHaveURL(/\?view=projects$/);
-  await expect(page.getByRole("tab", { name: "Projects" })).toBeFocused();
-  await expect(page.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toBeFocused();
+  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -200,11 +212,11 @@ test("every valid pivot keeps exactly one persistent page heading", async ({
   const persistentHeading = await heading.elementHandle();
   if (!persistentHeading) throw new Error("Page heading was not rendered");
 
-  for (const view of VALID_VIEWS) {
-    await page.getByRole("tab", { name: new RegExp(`^${view}$`, "i") }).click();
+  for (const view of VIEWS) {
+    await page.getByRole("tab", { name: HEADINGS[view], exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`\\?view=${view}$`));
     await expect(heading).toHaveCount(1);
-    await expect(heading).toHaveText(/technical leader \/ builder/i);
+    await expect(heading).toHaveAccessibleName(HEADINGS[view]);
     expect(
       await heading.evaluate(
         (currentHeading, originalHeading) => currentHeading === originalHeading,
@@ -235,21 +247,61 @@ test("captures a named review screenshot without a committed baseline", async ({
   });
 });
 
-test("project panorama preserves the leading headline on a compact phone", async ({
+test("a direct query load leads with that pivot's own heading", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?view=projects");
+  for (const view of VIEWS) {
+    await page.goto(`/?view=${view}`);
 
-  const heading = page.getByRole("heading", {
-    level: 1,
-    name: /technical leader/i,
-  });
-  const box = await heading.boundingBox();
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading, view).toHaveCount(1);
+    await expect(heading, view).toHaveAccessibleName(HEADINGS[view]);
 
-  expect(box).not.toBeNull();
-  expect(box?.x).toBeGreaterThanOrEqual(0);
+    const leading = page.getByRole("tab").first();
+    await expect(leading, view).toHaveAccessibleName(HEADINGS[view]);
+    await expect(leading, view).toHaveAttribute("aria-selected", "true");
+  }
 });
+
+for (const frame of NARROW_FRAMES) {
+  test(`every panorama heading fits a ${frame.width}px frame and keeps its peek`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+
+    for (const view of VIEWS) {
+      await page.goto(`/?view=${view}`);
+      const tabs = page.getByRole("tab");
+      const tablist = page.getByRole("tablist");
+      const leading = tabs.first();
+      const at = `${view} at ${frame.width}px`;
+
+      await expect(leading, at).toHaveAccessibleName(HEADINGS[view]);
+      const box = await leading.boundingBox();
+      const tablistBox = await tablist.boundingBox();
+      expect(box, at).not.toBeNull();
+      expect(tablistBox, at).not.toBeNull();
+      expect(box?.x ?? -1, at).toBeGreaterThanOrEqual(0);
+      // The clip boundary is the tablist's own clipped box, not the viewport
+      // edge -- there can be inset between the two.
+      expect((box?.x ?? 0) + (box?.width ?? 0), at).toBeLessThanOrEqual(
+        (tablistBox?.x ?? 0) + (tablistBox?.width ?? 0),
+      );
+
+      const peek = await tabs.nth(1).boundingBox();
+      expect(peek, at).not.toBeNull();
+      expect(peek?.x ?? frame.width, at).toBeLessThan(frame.width);
+
+      const tabCount = await tabs.count();
+      for (let index = 0; index < tabCount; index += 1) {
+        const tabAt = `${at} tab ${index}`;
+        const tabBox = await tabs.nth(index).boundingBox();
+        expect(tabBox, tabAt).not.toBeNull();
+        expect(tabBox?.width ?? 0, tabAt).toBeGreaterThanOrEqual(44);
+      }
+    }
+  });
+}
 
 test("compact project summaries do not collide with their destination links", async ({
   page,
@@ -459,24 +511,14 @@ test.describe("without JavaScript", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(
-      page.getByRole("heading", {
-        level: 1,
-        name: /technical leader/i,
-      }),
-    ).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveCount(1);
+    await expect(heading).toHaveAccessibleName(HEADINGS.me);
+    await expect(heading).toBeVisible();
 
-    const expectedHrefs = [
-      "/?view=me",
-      "/?view=projects",
-      "/?view=blog",
-      "/?view=photography",
-    ];
-    for (let index = 0; index < PIVOTS.length; index += 1) {
-      const name = PIVOTS[index];
-      const pivot = page.getByRole("tab", { name });
-      await expect(pivot).toHaveAttribute("href", expectedHrefs[index]);
+    for (const view of VIEWS) {
+      const pivot = page.getByRole("tab", { name: HEADINGS[view] });
+      await expect(pivot).toHaveAttribute("href", `/?view=${view}`);
       await page.keyboard.press("Tab");
       await expect(pivot).toBeFocused();
     }
@@ -489,5 +531,30 @@ test.describe("without JavaScript", () => {
       "href",
       "#contact",
     );
+  });
+
+  test("server markup already shows the selected pivot's heading", async ({
+    page,
+  }) => {
+    for (const view of VIEWS) {
+      await page.goto(`/?view=${view}`);
+
+      const heading = page.getByRole("heading", { level: 1 });
+      await expect(heading, view).toHaveCount(1);
+      await expect(heading, view).toHaveAccessibleName(HEADINGS[view]);
+      await expect(page.getByRole("tab").first(), view).toHaveAccessibleName(
+        HEADINGS[view],
+      );
+    }
+
+    // No script means no measurement: the leading heading has to start at the
+    // content inset because the markup order already puts it there.
+    await page.goto("/?view=projects");
+    const width = page.viewportSize()?.width ?? 0;
+    const inset = Math.min(Math.max(16, width * 0.04), 72);
+    const box = await page.getByRole("tab").first().boundingBox();
+
+    expect(box).not.toBeNull();
+    expect(Math.abs((box?.x ?? 0) - inset)).toBeLessThanOrEqual(1);
   });
 });

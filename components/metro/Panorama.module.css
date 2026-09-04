@@ -3,25 +3,11 @@
   overflow: hidden;
 }
 
-.heading {
-  margin: 0 -0.04em;
-  overflow: hidden;
-  color: var(--metro-muted);
-  font-size: clamp(3.5rem, 14vw, 10rem);
-  font-weight: 300;
-  line-height: 0.82;
-  letter-spacing: -0.055em;
-  white-space: nowrap;
-  transform: translate3d(calc(var(--panorama-index) * -0.5vw), 0, 0);
-  transition: transform var(--motion-emphasized) var(--ease-metro);
-  will-change: transform;
-}
-
 .plane {
   display: flex;
   width: 100%;
   transform: translate3d(calc(var(--panorama-index) * -100%), 0, 0);
-  transition: transform var(--motion-standard) var(--ease-metro);
+  transition: transform var(--metro-duration-base) var(--metro-ease-standard);
   will-change: transform;
 }
 
@@ -38,14 +24,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heading,
-  .plane {
-    transform: none;
-    transition: none;
-  }
-
   .plane {
     display: grid;
+    transform: none;
+    transition: none;
   }
 
   .panel {
