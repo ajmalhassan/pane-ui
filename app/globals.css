@@ -14,11 +14,14 @@
   --metro-target-min: 2.75rem; /* 44px minimum touch target */
   --metro-command-ring: 2.125rem; /* 34px command ring diameter */
   --metro-command-stroke: 0.125rem; /* 2px command ring stroke */
-  --metro-icon-stroke: 1.75; /* SVG user units; mirrors STROKE_WIDTH in components/metro/MetroIcon.tsx */
+  --metro-command-glyph: 1.25rem; /* 20px glyph inside the ring, ~59% of it */
+  --metro-appbar-height: 4.5rem; /* 72px bar: ring, label, and its inset block */
 
   /* Colour: one cyan signature, one deep Windows blue, restrained greys. */
   --metro-cyan: #00a4ef;
   --metro-blue: #174f9d;
+  /* Pure white/black: app-bar rings and labels, inversion surfaces, and print.
+     Body text and base surfaces stay --metro-text / --metro-ink. */
   --metro-white: #ffffff;
   --metro-black: #000000;
   --metro-ink: #07090a;
@@ -40,6 +43,7 @@
   --metro-gap-section: 2rem; /* 32px between content sections */
   --metro-gap-tile: 0.5rem; /* 8px between a tile's own title and label */
   --metro-gap-command-label: 0.25rem; /* 4px between command ring and its label */
+  --metro-text-label: 0.7rem; /* small labels -- app-bar command labels, status line */
 
   /* Motion: Phase 2 defines the tokens; Phase 3 builds the transition engine. */
   --metro-duration-fast: 140ms;
@@ -48,7 +52,7 @@
   --metro-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
   --metro-ease-exit: ease;
 
-  /* Existing motion names, now aliases so each timing is declared exactly once. */
+  /* Deprecated aliases — do not use in new code; remaining consumers migrate in Tasks 3–4. */
   --motion-fast: var(--metro-duration-fast);
   --motion-standard: var(--metro-duration-base);
   --motion-emphasized: var(--metro-duration-slow);

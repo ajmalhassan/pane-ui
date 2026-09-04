@@ -29,9 +29,7 @@ it("shares one view box, fill, stroke, and joinery contract across the icon set"
     expect(svg).toHaveAttribute("stroke", "currentColor");
     expect(svg).toHaveAttribute("stroke-linecap", "square");
     expect(svg).toHaveAttribute("stroke-linejoin", "miter");
-    expect(svg.getAttribute("stroke-width")).toBe(
-      svgs[0].getAttribute("stroke-width"),
-    );
+    expect(svg).toHaveAttribute("stroke-width", "1.75");
   }
 });
 

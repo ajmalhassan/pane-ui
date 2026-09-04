@@ -1,23 +1,116 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import type { MouseEvent, Ref } from "react";
 import { useState } from "react";
 import { MetroIcon, type MetroIconName } from "./MetroIcon";
+import { applyPressTilt, clearPressTilt } from "./Pressable";
 import styles from "./AppBar.module.css";
 
-export type AppAction = {
+type CommandBase = {
   label: string;
-  href?: string;
   icon: MetroIconName;
   onSelect?: (event: MouseEvent<HTMLElement>) => void;
 };
 
+/**
+ * A command is either a destination or a pure action, and the two carry
+ * different capabilities. Only the link branch renders an element an owner can
+ * hold, so `ref` is offered there and forbidden on the button branch -- the
+ * union makes that a type error at the call site instead of a ref this
+ * component silently drops.
+ */
+export type AppAction =
+  | (CommandBase & {
+      href: string;
+      /**
+       * Lets an owner focus the command it declared instead of hunting for it
+       * with a selector over markup this component is free to change.
+       */
+      ref?: Ref<HTMLAnchorElement>;
+    })
+  | (CommandBase & { href?: undefined; ref?: never });
+
 type Props = {
+  /**
+   * 1-4 primary commands (Windows Phone caps the bar at four); the bar has no
+   * overflow strategy for more. The bar has no inline inset of its own; the
+   * consumer's wrapper owns the horizontal inset and left/right safe areas
+   * (see `components/portfolio/PortfolioPanorama.module.css` `.appBar`).
+   */
   actions: readonly AppAction[];
 };
 
+type FaceProps = {
+  icon: MetroIconName;
+  label?: string;
+};
+
+/**
+ * The ring carries the glyph and the label sits under it. The label span is
+ * rendered even when a command has no name -- the overflow ellipsis does not --
+ * so every ring keeps the same baseline in the bar.
+ */
+function CommandFace({ icon, label }: FaceProps) {
+  return (
+    <>
+      <span aria-hidden="true" className={styles.ring}>
+        <MetroIcon name={icon} />
+      </span>
+      <span className={styles.label}>{label}</span>
+    </>
+  );
+}
+
+/** One command, one interactive owner: an anchor when it has a destination. */
+function AppBarCommand({ action }: { action: AppAction }) {
+  const face = <CommandFace icon={action.icon} label={action.label} />;
+
+  if (action.href) {
+    return (
+      <a
+        className={styles.command}
+        href={action.href}
+        onClick={(event) => {
+          if (
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+
+          action.onSelect?.(event);
+        }}
+        onPointerLeave={clearPressTilt}
+        onPointerMove={applyPressTilt}
+        ref={action.ref}
+      >
+        {face}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      className={styles.command}
+      onClick={action.onSelect}
+      onPointerLeave={clearPressTilt}
+      onPointerMove={applyPressTilt}
+      type="button"
+    >
+      {face}
+    </button>
+  );
+}
+
 export function AppBar({ actions }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  // Rings-with-labels is the approved look, so the bar opens named: a hiring
+  // manager reads "résumé" without touching anything, at every width. Wide
+  // layouts can still collapse to rings on demand; phones never can, because
+  // their labels are always painted (see the stylesheet's media queries).
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <nav
@@ -27,63 +120,22 @@ export function AppBar({ actions }: Props) {
       data-testid="app-bar"
     >
       <div className={styles.actions}>
-        {actions.map((action) => {
-          const content = (
-            <>
-              <span aria-hidden="true" className={styles.icon}>
-                <MetroIcon name={action.icon} />
-              </span>
-              <span className={styles.label}>{action.label}</span>
-            </>
-          );
-
-          if (action.href) {
-            return (
-              <a
-                className={styles.action}
-                href={action.href}
-                key={action.label}
-                onClick={(event) => {
-                  if (
-                    event.button !== 0 ||
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey
-                  ) {
-                    return;
-                  }
-
-                  action.onSelect?.(event);
-                }}
-              >
-                {content}
-              </a>
-            );
-          }
-
-          return (
-            <button
-              className={styles.action}
-              key={action.label}
-              onClick={action.onSelect}
-              type="button"
-            >
-              {content}
-            </button>
-          );
-        })}
+        {actions.map((action) => (
+          <AppBarCommand action={action} key={action.label} />
+        ))}
       </div>
       <button
         aria-expanded={expanded}
-        aria-label="Show app bar labels"
-        className={styles.action}
+        // Names the state the press produces, so the command never claims to
+        // show labels that are already showing.
+        aria-label={expanded ? "Hide app bar labels" : "Show app bar labels"}
+        className={`${styles.command} ${styles.overflow}`}
         onClick={() => setExpanded((current) => !current)}
+        onPointerLeave={clearPressTilt}
+        onPointerMove={applyPressTilt}
         type="button"
       >
-        <span aria-hidden="true" className={styles.icon}>
-          <MetroIcon name="ellipsis" />
-        </span>
+        <CommandFace icon="ellipsis" />
       </button>
     </nav>
   );

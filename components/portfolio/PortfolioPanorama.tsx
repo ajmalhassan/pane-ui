@@ -43,12 +43,6 @@ function currentEntryOwnsContact(): boolean {
   return state?.portfolioContact === true;
 }
 
-function focusContactLink(): void {
-  document
-    .querySelector<HTMLAnchorElement>(`a[href="${CONTACT_HASH}"]`)
-    ?.focus();
-}
-
 const PIVOTS: readonly PivotOption[] = [
   { id: "me", label: "Me" },
   { id: "projects", label: "Projects" },
@@ -69,6 +63,15 @@ export function PortfolioPanorama({
   // One fragment traversal fires both popstate and hashchange; this ref keeps
   // the open->closed focus rescue to a single run.
   const contactOpenRef = useRef(false);
+  // The command that owns the fragment. Holding the element itself keeps the
+  // focus rescue working through any app-bar markup change.
+  const contactRef = useRef<HTMLAnchorElement>(null);
+
+  // TODO: the fragment open/close/focus trio is ready to become a
+  // `useContactFragment` hook once anything else needs it.
+  const focusContactLink = useCallback(() => {
+    contactRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     setActive(initialPivot);
@@ -86,7 +89,7 @@ export function PortfolioPanorama({
         focusContactLink();
       }
     }
-  }, []);
+  }, [focusContactLink]);
 
   useEffect(() => {
     window.addEventListener("hashchange", syncContact);
@@ -171,6 +174,7 @@ export function PortfolioPanorama({
               href: CONTACT_HASH,
               icon: "mail",
               onSelect: openContact,
+              ref: contactRef,
             },
           ]}
         />

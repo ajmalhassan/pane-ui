@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const PIVOTS = ["Me", "Projects", "Blog", "Photography"] as const;
 const VALID_VIEWS = ["me", "projects", "blog", "photography"] as const;
+const APP_BAR = 'nav[aria-label="Page actions"]';
 
 async function tabTo(page: Page, target: Locator, attempts = 24) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -270,6 +271,168 @@ test("compact project summaries do not collide with their destination links", as
       linkBox?.y ?? 0,
     );
   }
+});
+
+test("app-bar commands keep circular rings and 44px targets on every frame", async ({
+  page,
+}) => {
+  await page.goto("/?view=me");
+
+  for (const frame of [
+    { width: 320, height: 568 },
+    // Straddles the single `48rem` breakpoint: 767 must be a phone and 768 must
+    // not, which is only true while the two media queries tile the axis exactly.
+    { width: 767, height: 800 },
+    { width: 768, height: 800 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(frame);
+    const commands = page.locator(`${APP_BAR} :is(a, button)`);
+    const label = `${frame.width}x${frame.height}`;
+    await expect(commands, label).toHaveCount(3);
+
+    // The overflow command is the last of the three and is a no-op at phone
+    // widths -- labels are unconditional there -- so it is not painted and has
+    // no box to measure. The two real commands are always drawn.
+    const painted = frame.width < 768 ? 2 : 3;
+    const overflow = page.getByRole("button", { name: /app bar labels/ });
+
+    if (painted === 3) {
+      await expect(overflow, label).toBeVisible();
+    } else {
+      await expect(overflow, label).toBeHidden();
+    }
+
+    for (let index = 0; index < painted; index += 1) {
+      const command = commands.nth(index);
+      const ring = command.locator("span").first();
+      const commandBox = await command.boundingBox();
+      const ringBox = await ring.boundingBox();
+      const at = `${label} command ${index}`;
+
+      expect(commandBox, at).not.toBeNull();
+      expect(ringBox, at).not.toBeNull();
+      expect(commandBox?.width ?? 0, at).toBeGreaterThanOrEqual(44);
+      expect(commandBox?.height ?? 0, at).toBeGreaterThanOrEqual(44);
+      expect(ringBox?.width ?? 0, at).toBeGreaterThanOrEqual(34);
+      expect(
+        Math.abs((ringBox?.width ?? 0) - (ringBox?.height ?? 1)),
+        at,
+      ).toBeLessThanOrEqual(0.5);
+      await expect(ring, at).toHaveCSS("border-radius", "50%");
+      await expect(command, at).toHaveCSS("border-radius", "0px");
+    }
+  }
+});
+
+test("a compact phone shows every command label under its ring", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/?view=me");
+
+  const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
+  await expect(labels).toHaveText(["Résumé", "Contact"]);
+  await expect(labels.first()).toBeVisible();
+  await expect(labels.last()).toBeVisible();
+
+  const ring = page.locator(`${APP_BAR} a > span:first-child`).first();
+  const ringBox = await ring.boundingBox();
+  const labelBox = await labels.first().boundingBox();
+  expect((ringBox?.y ?? 0) + (ringBox?.height ?? 0)).toBeLessThanOrEqual(
+    labelBox?.y ?? 0,
+  );
+  await expect(
+    page.getByRole("button", { name: /app bar labels/ }),
+  ).toBeHidden();
+});
+
+test("a wide layout ships labelled commands and collapses only on demand", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=me");
+
+  const bar = page.locator(APP_BAR);
+  const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
+  await expect(labels).toHaveText(["Résumé", "Contact"]);
+  await expect(labels.first()).toBeVisible();
+  await expect(labels.last()).toBeVisible();
+
+  const hide = page.getByRole("button", { name: "Hide app bar labels" });
+  await expect(hide).toHaveAttribute("aria-expanded", "true");
+  const expandedHeight = (await bar.boundingBox())?.height ?? 0;
+  expect(expandedHeight).toBeGreaterThan(0);
+
+  await hide.click();
+  const show = page.getByRole("button", { name: "Show app bar labels" });
+  await expect(show).toHaveAttribute("aria-expanded", "false");
+
+  /*
+   * `toBeVisible` cannot express this: the collapsed label keeps a 1x1 box and
+   * Playwright counts any non-empty box as visible. So the collapse is measured
+   * instead -- the label occupies no readable area -- while the accessible names
+   * below prove the text is still there naming its link. Together those pin the
+   * behaviour without naming the technique that achieves it, leaving a future
+   * task free to swap the hiding mechanism as long as both stay true.
+   */
+  for (const label of [labels.first(), labels.last()]) {
+    const box = await label.boundingBox();
+    expect(box?.width ?? 99).toBeLessThanOrEqual(1);
+    expect(box?.height ?? 99).toBeLessThanOrEqual(1);
+  }
+
+  await expect(page.getByRole("link", { name: "Résumé" })).toHaveAccessibleName(
+    "Résumé",
+  );
+  await expect(page.getByRole("link", { name: "Contact" })).toHaveAccessibleName(
+    "Contact",
+  );
+  expect((await bar.boundingBox())?.height ?? 0).toBeCloseTo(expandedHeight, 1);
+
+  await show.click();
+  await expect(labels.first()).toBeVisible();
+  expect((await labels.first().boundingBox())?.height ?? 0).toBeGreaterThan(1);
+});
+
+test("the phone layout keeps its labels and drops the overflow command", async ({
+  page,
+}) => {
+  // Pixel 5's own frame, so the mobile project runs this at its native size.
+  await page.setViewportSize({ width: 393, height: 851 });
+  await page.goto("/?view=me");
+
+  const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
+  await expect(labels).toHaveText(["Résumé", "Contact"]);
+  await expect(labels.first()).toBeVisible();
+  await expect(labels.last()).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /app bar labels/ }),
+  ).toBeHidden();
+});
+
+test("the fixed app bar reserves its height instead of covering the page end", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/?view=projects");
+  await page.evaluate(async () => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+  });
+
+  const bar = await page.locator(APP_BAR).boundingBox();
+  const lastLink = await page
+    .locator("#contact")
+    .getByRole("link")
+    .last()
+    .boundingBox();
+
+  expect(bar).not.toBeNull();
+  expect(lastLink).not.toBeNull();
+  expect((lastLink?.y ?? 0) + (lastLink?.height ?? 0)).toBeLessThanOrEqual(
+    bar?.y ?? 0,
+  );
 });
 
 test("résumé uses a white page canvas when printed", async ({ page }) => {

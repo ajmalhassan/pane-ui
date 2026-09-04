@@ -12,8 +12,8 @@ export const METRO_ICON_NAMES = [
 
 export type MetroIconName = (typeof METRO_ICON_NAMES)[number];
 
-// One weight for the whole set. Mirrored by `--metro-icon-stroke` in
-// app/globals.css so command geometry can reason about it in CSS.
+// One weight for the whole set, and the only place it is declared. Ring
+// geometry has its own token (`--metro-command-stroke`); this is not it.
 const STROKE_WIDTH = 1.75;
 
 // Hand-authored on the shared 24x24 optical grid, strokes kept inside x/y 3-21

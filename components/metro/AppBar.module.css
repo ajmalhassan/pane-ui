@@ -1,92 +1,145 @@
+/*
+ * Windows Phone application bar: an ink strip of thin white command rings with
+ * lowercase labels beneath them, and the designed three-dot overflow pinned to
+ * the right. The bar's height is `--metro-appbar-height`, the same token the
+ * page shell reserves as bottom padding, so the two can never drift apart.
+ */
 .bar {
+  /* Two grid units of air above and below the command column. */
+  --command-inset-block: calc(var(--metro-grid) * 2);
+  /* Four grid units between neighbouring commands. Inter-command gap only --
+     the bar's inline inset belongs to the `.appBar` wrapper, which owns the
+     content column and the left/right safe areas with it. */
+  --command-gap: calc(var(--metro-grid) * 4);
+
   box-sizing: border-box;
-  min-height: 4.25rem;
+  min-height: calc(var(--metro-appbar-height) + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.5rem max(1rem, env(safe-area-inset-right))
-    calc(0.5rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  gap: var(--metro-content-inset);
+  padding: var(--command-inset-block) 0
+    calc(var(--command-inset-block) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--metro-line);
   background: var(--metro-ink);
+  color: var(--metro-white);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--command-gap);
   min-width: 0;
 }
 
-.action {
+/*
+ * `composes` pulls in the shared press contract -- 44px target, pointer tilt,
+ * release scale, focus ring, reduced-motion opt-out -- from the one file that
+ * owns it. The command adds only its own geometry and colour, so nothing here
+ * needs to restate a Pressable value that could then drift.
+ */
+.command {
+  composes: pressable from "./Pressable.module.css";
+
   box-sizing: border-box;
-  width: 44px;
-  height: 44px;
   display: inline-flex;
-  flex: 0 0 44px;
+  flex: none;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  overflow: hidden;
-  border: 1px solid var(--metro-line);
-  border-radius: 50%;
-  background: var(--metro-surface);
-  color: var(--metro-text);
+  gap: var(--metro-gap-command-label);
+  padding: 0;
+  border: 0;
+  border-radius: var(--metro-radius);
+  background: none;
+  color: inherit;
   cursor: pointer;
   font: inherit;
   text-decoration: none;
 }
 
-.action:hover {
-  border-color: var(--metro-cyan);
-}
-
-.action:active {
-  border-color: var(--metro-cyan);
-  background: var(--metro-cyan);
-  color: var(--metro-ink);
-  transform: scale(0.96);
-}
-
-.action:focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: 3px;
-}
-
-.icon {
+.ring {
+  box-sizing: border-box;
+  width: var(--metro-command-ring);
+  height: var(--metro-command-ring);
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
+  border: var(--metro-command-stroke) solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  /* The glyph is 1em, so this sets it to ~20px of drawing inside a 34px ring. */
+  font-size: var(--metro-command-glyph);
   line-height: 1;
+  transition: border-color var(--metro-duration-fast) var(--metro-ease-exit);
+}
+
+.command:hover .ring {
+  border-color: var(--metro-cyan);
+}
+
+/*
+ * Authentic Windows Phone press feedback: the ring inverts to a white disc with
+ * an ink glyph. It never grows into a filled pill. The shared `.pressable:active`
+ * scale *replaces* the hover tilt for the duration of the press rather than
+ * compounding with it, and touch never tilts at all; Task 9 owns motion and
+ * restores rotation during press plus touch parity.
+ */
+.command:active .ring {
+  border-color: var(--metro-white);
+  background: var(--metro-white);
+  color: var(--metro-ink);
 }
 
 .label {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
+  display: block;
+  /* Holds one text line even when empty, so the overflow command's ring lines
+     up with the labelled ones. */
+  min-height: 1.2em;
+  color: inherit;
+  font-size: var(--metro-text-label);
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  /* Windows Phone sets command labels lowercase. Doing it in CSS keeps the
+     accessible name the author's own casing. */
+  text-transform: lowercase;
   white-space: nowrap;
-  transition: max-width var(--motion-fast) var(--ease-metro),
-    opacity var(--motion-fast) var(--ease-metro);
 }
 
-.bar[data-expanded="true"] .action {
-  width: auto;
-  min-width: 44px;
-  padding: 0 0.75rem;
-  border-radius: 1.375rem;
-}
-
-.bar[data-expanded="true"] .label {
-  max-width: 12rem;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .label {
-    transition: none;
+/*
+ * Every layout ships named rings: the bar's default state is expanded, so the
+ * Résumé command is legible before anyone interacts with it. Wide layouts may
+ * still be minimized down to the phone's rings-only bar on demand. The text
+ * stays in the accessibility tree throughout, because it is what names each
+ * command -- `display: none` here would erase those names, and the clipped
+ * box keeps the bar's height on `min-height` rather than on this row.
+ */
+@media (min-width: 48rem) {
+  .bar[data-expanded="false"] .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
   }
+}
 
-  .action:active {
-    transform: none;
+/*
+ * Phone layouts keep their labels in every state, which leaves the overflow
+ * command nothing to toggle, so it is dropped from the paint rather than left
+ * as a dead target. It stays in the markup -- and in the server-rendered HTML
+ * -- so the component never has to branch on viewport width. The remaining
+ * commands' own labels hold the row here, so the bar's height is unchanged.
+ */
+@media not all and (min-width: 48rem) {
+  .overflow {
+    display: none;
   }
 }

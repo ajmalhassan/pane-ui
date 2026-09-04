@@ -1,6 +1,6 @@
 .pressable {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--metro-target-min);
+  min-height: var(--metro-target-min);
   transform: perspective(700px) rotateX(var(--press-rotate-x, 0deg)) rotateY(var(--press-rotate-y, 0deg));
   transform-origin: center;
   transition: transform var(--metro-duration-fast) var(--metro-ease-exit);
