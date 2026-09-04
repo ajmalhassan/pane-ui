@@ -1,0 +1,6 @@
+/* Sizing lives on the SVG itself (width/height 1em) so an icon tracks the
+   font-size of the command that owns it. This class owns box behaviour only. */
+.icon {
+  display: block;
+  flex: none;
+}

@@ -1,13 +1,14 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent } from "react";
 import { useState } from "react";
+import { MetroIcon, type MetroIconName } from "./MetroIcon";
 import styles from "./AppBar.module.css";
 
 export type AppAction = {
   label: string;
   href?: string;
-  icon: ReactNode;
+  icon: MetroIconName;
   onSelect?: (event: MouseEvent<HTMLElement>) => void;
 };
 
@@ -30,7 +31,7 @@ export function AppBar({ actions }: Props) {
           const content = (
             <>
               <span aria-hidden="true" className={styles.icon}>
-                {action.icon}
+                <MetroIcon name={action.icon} />
               </span>
               <span className={styles.label}>{action.label}</span>
             </>
@@ -81,7 +82,7 @@ export function AppBar({ actions }: Props) {
         type="button"
       >
         <span aria-hidden="true" className={styles.icon}>
-          …
+          <MetroIcon name="ellipsis" />
         </span>
       </button>
     </nav>

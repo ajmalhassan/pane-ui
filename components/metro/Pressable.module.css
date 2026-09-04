@@ -3,7 +3,7 @@
   min-height: 44px;
   transform: perspective(700px) rotateX(var(--press-rotate-x, 0deg)) rotateY(var(--press-rotate-y, 0deg));
   transform-origin: center;
-  transition: transform var(--motion-fast) ease;
+  transition: transform var(--metro-duration-fast) var(--metro-ease-exit);
 }
 
 .pressable:active { transform: perspective(700px) scale(0.985); }

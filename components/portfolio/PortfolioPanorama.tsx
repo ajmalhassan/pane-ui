@@ -165,11 +165,11 @@ export function PortfolioPanorama({
       <div className={styles.appBar}>
         <AppBar
           actions={[
-            { label: "Résumé", href: "/resume", icon: "↗" },
+            { label: "Résumé", href: "/resume", icon: "arrow-northeast" },
             {
               label: "Contact",
               href: CONTACT_HASH,
-              icon: "✉",
+              icon: "mail",
               onSelect: openContact,
             },
           ]}

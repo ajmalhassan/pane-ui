@@ -3,16 +3,56 @@
 @tailwind utilities;
 
 :root {
+  /* Grid and spacing -- everything is a multiple of the 4px base unit. */
+  --metro-grid: 0.25rem; /* 4px */
+  --metro-tile-gap: 0.375rem; /* 6px tile gutter at phone scale */
+  --metro-tile-gap-wide: 0.5rem; /* 8px gutter cap on wide layouts */
+  --metro-content-inset: 1.5rem; /* 24px core content inset */
+  --metro-radius: 0; /* Metro corners are square, never rounded */
+
+  /* Interactive targets and application-bar command geometry. */
+  --metro-target-min: 2.75rem; /* 44px minimum touch target */
+  --metro-command-ring: 2.125rem; /* 34px command ring diameter */
+  --metro-command-stroke: 0.125rem; /* 2px command ring stroke */
+  --metro-icon-stroke: 1.75; /* SVG user units; mirrors STROKE_WIDTH in components/metro/MetroIcon.tsx */
+
+  /* Colour: one cyan signature, one deep Windows blue, restrained greys. */
   --metro-cyan: #00a4ef;
+  --metro-blue: #174f9d;
+  --metro-white: #ffffff;
+  --metro-black: #000000;
   --metro-ink: #07090a;
   --metro-surface: #111416;
   --metro-text: #f2f4f5;
   --metro-muted: #91989e;
   --metro-line: #2a2e31;
-  --motion-fast: 140ms;
-  --motion-standard: 420ms;
-  --motion-emphasized: 560ms;
-  --ease-metro: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Backgrounds: atmosphere that never competes with type or tile edges. */
+  --metro-bg-trace: rgba(0, 164, 239, 0.08); /* low-contrast cyan node traces */
+  --metro-bg-veil: rgba(7, 9, 10, 0.72); /* keeps nav and commands legible over imagery */
+
+  /* Typography: prefer Segoe without distributing proprietary font files. */
+  --metro-font:
+    "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui,
+    -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --metro-gap-title: 0.5rem; /* 8px under a panorama title */
+  --metro-gap-pivot: 0.75rem; /* 12px between pivot headings */
+  --metro-gap-section: 2rem; /* 32px between content sections */
+  --metro-gap-tile: 0.5rem; /* 8px between a tile's own title and label */
+  --metro-gap-command-label: 0.25rem; /* 4px between command ring and its label */
+
+  /* Motion: Phase 2 defines the tokens; Phase 3 builds the transition engine. */
+  --metro-duration-fast: 140ms;
+  --metro-duration-base: 420ms;
+  --metro-duration-slow: 560ms;
+  --metro-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --metro-ease-exit: ease;
+
+  /* Existing motion names, now aliases so each timing is declared exactly once. */
+  --motion-fast: var(--metro-duration-fast);
+  --motion-standard: var(--metro-duration-base);
+  --motion-emphasized: var(--metro-duration-slow);
+  --ease-metro: var(--metro-ease-standard);
 }
 
 * {
@@ -45,9 +85,9 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --motion-fast: 1ms;
-    --motion-standard: 1ms;
-    --motion-emphasized: 1ms;
+    --metro-duration-fast: 1ms;
+    --metro-duration-base: 1ms;
+    --metro-duration-slow: 1ms;
   }
   *,
   *::before,

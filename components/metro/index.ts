@@ -5,6 +5,8 @@ export type { TileSize } from "./TileGrid";
 export { PivotList } from "./PivotList";
 export type { PivotOption } from "./PivotList";
 export { Panorama } from "./Panorama";
+export { METRO_ICON_NAMES, MetroIcon } from "./MetroIcon";
+export type { MetroIconName } from "./MetroIcon";
 export { AppBar } from "./AppBar";
 export type { AppAction } from "./AppBar";
 export { StatusBar } from "./StatusBar";
