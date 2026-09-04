@@ -1,10 +1,37 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import { PortfolioPanorama } from "@/components/portfolio/PortfolioPanorama";
 import { projects } from "@/lib/content/projects";
 
-afterEach(cleanup);
+function resetUrl() {
+  window.history.replaceState(null, "", "/");
+}
+
+function contactMarker() {
+  return (window.history.state as { portfolioContact?: boolean } | null)
+    ?.portfolioContact;
+}
+
+function contactSection() {
+  return document.getElementById("contact");
+}
+
+beforeEach(resetUrl);
+
+afterEach(async () => {
+  cleanup();
+  // jsdom's replaceState cannot cancel a queued fragment traversal; drain one macrotask so no test leaks navigation into the next.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  resetUrl();
+});
 
 it.each(["me", "projects", "blog", "photography"] as const)(
   "exposes one persistent page heading when %s is initially active",
@@ -100,23 +127,121 @@ it("restores selection when server query state changes", () => {
   );
 });
 
-it("enhances the contact destination and returns focus when it closes", async () => {
+it("enhances the contact destination and records a history marker", async () => {
   const user = userEvent.setup();
   render(
     <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
   );
   const contact = screen.getByRole("link", { name: "Contact" });
-  contact.addEventListener("click", (event) => event.preventDefault());
 
   expect(contact).toHaveAttribute("href", "#contact");
-  expect(document.getElementById("contact")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Résumé" })).toHaveAttribute(
+    "href",
+    "/resume",
+  );
+  expect(contactSection()).toBeInTheDocument();
+  expect(contactSection()).toHaveAttribute("data-open", "false");
 
   await user.click(contact);
-  expect(document.getElementById("contact")).toHaveAttribute(
-    "data-open",
-    "true",
+
+  expect(window.location.hash).toBe("#contact");
+  expect(contactMarker()).toBe(true);
+  expect(contactSection()).toHaveAttribute("data-open", "true");
+});
+
+it("prevents the default anchor navigation for ordinary contact clicks", () => {
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
   );
+  const contact = screen.getByRole("link", { name: "Contact" });
+
+  const clickEvent = createEvent.click(contact, { button: 0 });
+  fireEvent(contact, clickEvent);
+
+  expect(clickEvent.defaultPrevented).toBe(true);
+});
+
+it("leaves modified contact clicks to the browser", async () => {
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  const contact = screen.getByRole("link", { name: "Contact" });
+
+  const metaClick = createEvent.click(contact, { button: 0, metaKey: true });
+  fireEvent(contact, metaClick);
+
+  expect(metaClick.defaultPrevented).toBe(false);
+  expect(window.location.hash).toBe("");
+  expect(contactSection()).toHaveAttribute("data-open", "false");
+
+  await waitFor(() => {
+    expect(window.location.hash).toBe("#contact");
+  });
+  expect(contactMarker()).toBeUndefined();
+});
+
+it("returns to the previous history entry and refocuses when contact closes", async () => {
+  const user = userEvent.setup();
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  const contact = screen.getByRole("link", { name: "Contact" });
+
+  await user.click(contact);
+  expect(window.location.hash).toBe("#contact");
+  expect(contactMarker()).toBe(true);
+  const lengthBefore = window.history.length;
 
   await user.click(screen.getByRole("button", { name: "Close contact" }));
+
+  await waitFor(() => {
+    expect(window.location.hash).toBe("");
+  });
+  await waitFor(() => {
+    expect(contactSection()).toHaveAttribute("data-open", "false");
+  });
   expect(contact).toHaveFocus();
+  expect(window.history.length).toBe(lengthBefore);
+});
+
+it("opens from a direct fragment load and clears only the fragment on close", async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(null, "", "/?view=projects#contact");
+  render(
+    <PortfolioPanorama
+      initialPivot="projects"
+      projects={projects}
+      posts={[]}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(contactSection()).toHaveAttribute("data-open", "true");
+  });
+  expect(contactMarker()).toBeUndefined();
+
+  await user.click(screen.getByRole("button", { name: "Close contact" }));
+
+  expect(window.location.hash).toBe("");
+  expect(window.location.pathname).toBe("/");
+  expect(window.location.search).toBe("?view=projects");
+  expect(contactSection()).toHaveAttribute("data-open", "false");
+  expect(screen.getByRole("link", { name: "Contact" })).toHaveFocus();
+});
+
+it("closes contact when the browser moves back through history", async () => {
+  const user = userEvent.setup();
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+
+  await user.click(screen.getByRole("link", { name: "Contact" }));
+  expect(contactSection()).toHaveAttribute("data-open", "true");
+
+  window.history.back();
+
+  await waitFor(() => {
+    expect(contactSection()).toHaveAttribute("data-open", "false");
+  });
+  expect(window.location.hash).toBe("");
 });

@@ -124,6 +124,58 @@ test("keyboard reaches pivots, project links, and app-bar actions", async ({
   await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
 });
 
+test("contact follows fragment history and close clears it", async ({ page }) => {
+  await page.goto("/?view=me");
+  await page.getByRole("link", { name: "Contact" }).click();
+  await expect(page).toHaveURL(/#contact$/);
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
+
+  await page.goBack();
+  await expect(page).not.toHaveURL(/#contact$/);
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+
+  await page.getByRole("link", { name: "Contact" }).click();
+  await page.getByRole("button", { name: "Close contact" }).click();
+  await expect(page).not.toHaveURL(/#contact$/);
+  await expect(page.getByRole("link", { name: "Contact" })).toBeFocused();
+});
+
+test("direct fragment load opens contact and close keeps the pivot query", async ({
+  page,
+}) => {
+  await page.goto("/?view=projects#contact");
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Projects" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await page.getByRole("button", { name: "Close contact" }).click();
+  await expect(page).toHaveURL(/\/\?view=projects$/);
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+  await expect(page.getByRole("link", { name: "Contact" })).toBeFocused();
+});
+
+test("pivot navigation while contact is open follows the fragment-less URL", async ({
+  page,
+}) => {
+  await page.goto("/?view=me");
+  await page.getByRole("link", { name: "Contact" }).click();
+  await expect(page).toHaveURL(/#contact$/);
+  expect(
+    await page.evaluate(() => window.history.state?.portfolioContact),
+  ).toBe(true);
+
+  await page.getByRole("tab", { name: "Projects" }).click();
+  await expect(page).toHaveURL(/\/\?view=projects$/);
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+  await expect(page.getByRole("link", { name: "Contact" })).not.toBeFocused();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/\?view=me#contact$/);
+  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
+});
+
 test("arrow keys navigate pivots through their real links", async ({
   page,
 }) => {

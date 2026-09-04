@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { useState } from "react";
 import styles from "./AppBar.module.css";
 
@@ -8,7 +8,7 @@ export type AppAction = {
   label: string;
   href?: string;
   icon: ReactNode;
-  onSelect?: () => void;
+  onSelect?: (event: MouseEvent<HTMLElement>) => void;
 };
 
 type Props = {
@@ -53,7 +53,7 @@ export function AppBar({ actions }: Props) {
                     return;
                   }
 
-                  action.onSelect?.();
+                  action.onSelect?.(event);
                 }}
               >
                 {content}
