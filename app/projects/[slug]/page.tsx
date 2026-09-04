@@ -3,18 +3,17 @@ import { notFound } from "next/navigation";
 import { ProjectCaseStudy } from "@/components/portfolio/ProjectCaseStudy";
 import { getProject, projects } from "@/lib/content/projects";
 
-type Props = {
-  params: {
-    slug: string;
-  };
+type SlugProps = {
+  params: Promise<{ slug: string }>;
 };
 
 export function generateStaticParams() {
   return projects.map(({ slug }) => ({ slug }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const project = getProject(params.slug);
+export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
+  const { slug } = await params;
+  const project = getProject(slug);
 
   if (!project) {
     return {};
@@ -26,8 +25,9 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function ProjectPage({ params }: Props) {
-  const project = getProject(params.slug);
+export default async function ProjectPage({ params }: SlugProps) {
+  const { slug } = await params;
+  const project = getProject(slug);
 
   if (!project) {
     notFound();

@@ -29,7 +29,7 @@ it("provides static params and metadata for repository-owned posts", async () =>
   });
   await expect(
     generateMetadata({
-      params: { slug: "ai-assessment-needs-a-narrower-job" },
+      params: Promise.resolve({ slug: "ai-assessment-needs-a-narrower-job" }),
     }),
   ).resolves.toEqual(
     expect.objectContaining({
@@ -41,7 +41,7 @@ it("provides static params and metadata for repository-owned posts", async () =>
 it("renders an article with an unmistakable draft-example label", async () => {
   render(
     await ArticlePage({
-      params: { slug: "ai-assessment-needs-a-narrower-job" },
+      params: Promise.resolve({ slug: "ai-assessment-needs-a-narrower-job" }),
     }),
   );
 
@@ -62,6 +62,6 @@ it("renders an article with an unmistakable draft-example label", async () => {
 
 it("returns the Next.js not-found result for an unknown article", async () => {
   await expect(
-    ArticlePage({ params: { slug: "missing" } }),
-  ).rejects.toMatchObject({ digest: "NEXT_NOT_FOUND" });
+    ArticlePage({ params: Promise.resolve({ slug: "missing" }) }),
+  ).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
 });

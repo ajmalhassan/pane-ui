@@ -22,7 +22,6 @@ type Props = {
 type PanelProps = HTMLAttributes<HTMLElement> & {
   "data-pivot": PivotId;
   "data-active"?: "true" | "false";
-  inert?: "";
 };
 
 type PanoramaStyle = CSSProperties & {
@@ -75,7 +74,7 @@ export function Panorama({ active, heading, navigation, children }: Props) {
             "data-active": isActive ? "true" : "false",
             className,
             id: pivotPanelId(pivot),
-            inert: isActive ? undefined : "",
+            inert: !isActive,
             role: "tabpanel",
             style: panelStyle,
           });

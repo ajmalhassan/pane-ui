@@ -3,10 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPost, getPostSummaries } from "@/lib/content/posts";
 
-type Props = {
-  params: {
-    slug: string;
-  };
+type SlugProps = {
+  params: Promise<{ slug: string }>;
 };
 
 export const dynamicParams = false;
@@ -15,8 +13,9 @@ export async function generateStaticParams() {
   return (await getPostSummaries()).map(({ slug }) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = await getPost(params.slug);
+export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) {
     return {};
@@ -28,8 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ArticlePage({ params }: Props) {
-  const post = await getPost(params.slug);
+export default async function ArticlePage({ params }: SlugProps) {
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) {
     notFound();
