@@ -1,4 +1,9 @@
-import { LiveTile, TileGrid, type TileSize } from "@/components/metro";
+import {
+  MetroTile,
+  TileGrid,
+  tileTextClass,
+  type TileSize,
+} from "@/components/metro";
 import type { Project } from "@/lib/content/projects";
 import styles from "./PortfolioPanorama.module.css";
 
@@ -6,32 +11,30 @@ type Props = {
   projects: readonly Project[];
 };
 
-const TILE_SIZES: readonly TileSize[] = ["large", "medium", "medium", "wide"];
+/*
+ * One prominent system tile leading a Start-screen block. Every project is a
+ * navigation tile: the whole rectangle is the case study's link, so there is no
+ * second control to collide with the copy above it. Evidence-led composition
+ * and per-project metadata are the next task's; this is the geometry.
+ */
+const TILE_SIZES: readonly TileSize[] = ["hero", "large", "large", "wide"];
 
 export function ProjectsPanel({ projects }: Props) {
   return (
     <div className={styles.panelContent}>
       <TileGrid>
         {projects.map((project, index) => (
-          <LiveTile
+          <MetroTile
             accent={project.accent}
-            back={
-              <span className={styles.tileBack}>
-                <strong>{project.metric ?? project.status}</strong>
-                <span>{project.sections[7]?.body}</span>
-              </span>
-            }
-            front={
-              <span className={styles.tileFront}>
-                <strong>{project.title}</strong>
-                <span>{project.summary}</span>
-              </span>
-            }
             href={`/projects/${project.slug}`}
             key={project.slug}
             label={project.title}
-            size={TILE_SIZES[index] ?? "medium"}
-          />
+            role="navigation"
+            size={TILE_SIZES[index] ?? "large"}
+          >
+            <strong className={tileTextClass.title}>{project.title}</strong>
+            <span className={tileTextClass.body}>{project.summary}</span>
+          </MetroTile>
         ))}
       </TileGrid>
     </div>

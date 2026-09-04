@@ -16,6 +16,10 @@
   --metro-command-stroke: 0.125rem; /* 2px command ring stroke */
   --metro-command-glyph: 1.25rem; /* 20px glyph inside the ring, ~59% of it */
   --metro-appbar-height: 4.5rem; /* 72px bar: ring, label, and its inset block */
+  /* 6px: the focus ring's own 3px width plus its 3px outline-offset. A clipped
+     region that holds focusable edge content has to be widened by exactly this
+     much, or the ring on the outermost item is cut in half. */
+  --metro-focus-bleed: 0.375rem;
 
   /* Colour: one cyan signature, one deep Windows blue, restrained greys. */
   --metro-cyan: #00a4ef;
@@ -51,12 +55,6 @@
   --metro-duration-slow: 560ms;
   --metro-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
   --metro-ease-exit: ease;
-
-  /* Deprecated aliases — do not use in new code; the remaining consumer migrates in Task 4. */
-  --motion-fast: var(--metro-duration-fast);
-  --motion-standard: var(--metro-duration-base);
-  --motion-emphasized: var(--metro-duration-slow);
-  --ease-metro: var(--metro-ease-standard);
 }
 
 * {

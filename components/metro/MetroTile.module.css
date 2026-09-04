@@ -1,0 +1,328 @@
+/*
+ * A Windows Phone tile: one flat rectangle with square corners, a content
+ * region, and a small caption pinned to its bottom edge. The role picks the
+ * root element -- an anchor, a Pressable button, or a plain, inert `<div>` --
+ * so a tile never carries a second control inside another one.
+ *
+ * `.tile` deliberately declares no min-width, min-height, transform,
+ * transform-origin or transition. The interactive roles also carry
+ * `.pressable`, which owns exactly those five, and two class selectors of
+ * equal specificity must never disagree over the same property. `overflow:
+ * hidden` also zeroes the grid item's automatic minimum size, so the tile
+ * needs no `min-width: 0` of its own to stop long copy blowing out a track.
+ */
+.tile {
+  /* Every tile knob is a multiple of the 4px grid or a named type step. */
+  --tile-pad: calc(var(--metro-grid) * 3);
+  --tile-gap-copy: var(--metro-grid);
+  --tile-title: 1rem;
+  --tile-body: 0.8rem;
+  /* The `value` budget's own step: a numeral is the whole content of the tiles
+     that have no room for a body line, so it scales with the tile. */
+  --tile-value-size: 1.75rem;
+
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--tile-pad);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--metro-radius);
+  background: var(--metro-surface);
+  color: var(--metro-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+/*
+ * Start-screen ratios, in the grid units TileGrid lays down: 1x1, 2x1, 2x2 and
+ * 4x2. Rows are square by construction there, so these spans are the whole of
+ * a tile's geometry.
+ */
+.small {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.wide {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.hero {
+  grid-column: span 4;
+  grid-row: span 2;
+}
+
+/* One-unit-tall tiles hold a caption and a short title, so they inset less. */
+.small,
+.wide {
+  --tile-pad: calc(var(--metro-grid) * 2);
+  --tile-title: 0.85rem;
+}
+
+.large {
+  --tile-value-size: 2.5rem;
+}
+
+.hero {
+  --tile-title: 1.15rem;
+  --tile-value-size: 3rem;
+}
+
+@media (min-width: 48rem) {
+  .tile {
+    --tile-pad: calc(var(--metro-grid) * 4);
+    --tile-gap-copy: var(--metro-gap-tile);
+    --tile-title: 1.25rem;
+    --tile-body: 0.85rem;
+    --tile-value-size: 2rem;
+  }
+
+  .small,
+  .wide {
+    --tile-title: 0.95rem;
+  }
+
+  .large {
+    --tile-value-size: 3rem;
+  }
+
+  .hero {
+    --tile-title: 1.6rem;
+    --tile-value-size: 3.5rem;
+  }
+}
+
+/*
+ * One cyan signature and one deep blue, over the restrained greys. Cyan is
+ * light enough that its copy inverts to near-black; the others keep white.
+ */
+.cyan {
+  background: var(--metro-cyan);
+  /* Slightly cooler than --metro-ink, which is the page behind the tile. */
+  color: #071014;
+}
+
+.blue {
+  background: var(--metro-blue);
+  color: var(--metro-white);
+}
+
+.ink {
+  background: var(--metro-surface);
+  color: var(--metro-text);
+}
+
+/* Imagery is the content: an image child fills the tile and the copy rides above it. */
+.photo {
+  background: var(--metro-ink);
+  color: var(--metro-white);
+}
+
+.photo :where(img) {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo .content,
+.photo .label {
+  position: relative;
+  z-index: 1;
+}
+
+.action {
+  cursor: pointer;
+}
+
+/*
+ * A navigation tile is a real anchor, so it cannot be a Pressable. `composes`
+ * pulls the same press contract -- 44px target, pointer tilt, release scale,
+ * focus ring, reduced-motion opt-out -- from the one file that owns it, the
+ * way an app-bar command does. Only the affordance is added here.
+ */
+.navigation {
+  composes: pressable from "./Pressable.module.css";
+
+  cursor: pointer;
+}
+
+.content {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tile-gap-copy);
+  overflow: hidden;
+}
+
+/*
+ * The caption never shrinks and never moves: `flex: none` inside a
+ * space-between column keeps it on the bottom edge whatever the content does,
+ * which is the collision the old fixed-height tile could not avoid.
+ */
+.label {
+  flex: none;
+  padding-top: var(--tile-gap-copy);
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--metro-text-label);
+  font-weight: 400;
+  line-height: 1.2;
+  /* Windows Phone sets tile names lowercase; the author's own casing survives
+     in the accessible name because this is presentation only. */
+  text-transform: lowercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Explicit line budgets. A tile clips rather than grows, so each size states
+ * what it can actually hold at that width -- a 2x1 tile one unit tall has room
+ * for a title and its caption, and nothing else.
+ */
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: inherit;
+  font-size: var(--tile-title);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.body {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: inherit;
+  font-size: var(--tile-body);
+  line-height: 1.4;
+  /* Reads as secondary on every accent without naming a grey that would fail
+     against cyan. */
+  opacity: 0.86;
+}
+
+/*
+ * The budget for a tile whose content *is* one number. Unlike `.body` it is
+ * never clamped away and never `display: none`, because the sizes that drop a
+ * body line are exactly the sizes a numeral is written for. One line, clipped
+ * rather than wrapped: a wrapped numeral is a broken numeral.
+ */
+.value {
+  display: block;
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--tile-value-size);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.small .title {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.small .body,
+.wide .body {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .wide .body {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .large .body,
+  .hero .body {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+}
+
+/*
+ * Reveal faces are stacked, and only the exposed one is in the accessibility
+ * tree -- the component sets `aria-hidden` on both faces in both directions,
+ * so a screen reader never meets duplicate tile copy.
+ */
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tile-gap-copy);
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform-origin: center;
+  transition: transform var(--metro-duration-slow) var(--metro-ease-standard);
+}
+
+.faceAway {
+  transform: rotateX(90deg);
+}
+
+/* The reduced-motion mechanism: taken out of the paint, never rotated away. */
+.faceHidden {
+  visibility: hidden;
+}
+
+.liveItem {
+  display: block;
+}
+
+.liveItemAnimated {
+  animation: tileClaimIn var(--metro-duration-base) var(--metro-ease-standard)
+    both;
+}
+
+@keyframes tileClaimIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * The component makes the same promise in JavaScript, but a no-JS or
+ * pre-hydration render has only this to go on.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .face {
+    transition: none;
+  }
+
+  .faceAway {
+    visibility: hidden;
+    transform: none;
+  }
+
+  .liveItemAnimated {
+    animation: none;
+  }
+}

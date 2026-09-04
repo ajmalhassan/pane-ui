@@ -1,5 +1,18 @@
+/*
+ * `overflow: hidden` is what keeps the off-screen panels off screen, and its
+ * clip box is the padding box -- which, left alone, lands exactly on the
+ * content column. A focus ring is drawn *outside* its element, so the ring on a
+ * first- or last-column tile was sliced down the middle by that edge.
+ *
+ * The clip box is therefore widened without moving anything: a negative inline
+ * margin pushes the border box out by the ring's reach, and an equal inline
+ * padding puts the content box back exactly where it was. Content position and
+ * plane width are unchanged; only the scissors moved.
+ */
 .panorama {
   position: relative;
+  margin-inline: calc(-1 * var(--metro-focus-bleed));
+  padding-inline: var(--metro-focus-bleed);
   overflow: hidden;
 }
 

@@ -82,6 +82,27 @@ describe("Pressable", () => {
     expect(button.style.getPropertyValue("--press-rotate-y")).toBe("");
   });
 
+  /*
+   * Touch is the other tilt opt-out. The helper returns before it writes, but a
+   * consumer's own pointer handler -- a live tile pausing its cycle, say -- has
+   * nothing to do with tilt and must still run on the touch path.
+   */
+  it("still forwards pointer movement from a touch pointer", () => {
+    const onPointerMove = vi.fn();
+    render(<Pressable onPointerMove={onPointerMove}>Open project</Pressable>);
+    const button = screen.getByRole("button");
+    stubBox(button, { width: 100, height: 50 });
+
+    fireEvent.pointerMove(button, {
+      clientX: 75,
+      clientY: 12.5,
+      pointerType: "touch",
+    });
+
+    expect(onPointerMove).toHaveBeenCalledOnce();
+    expect(button.style.getPropertyValue("--press-rotate-x")).toBe("");
+  });
+
   it("still forwards pointer movement when reduced motion disables tilt", () => {
     const onPointerMove = vi.fn();
     vi.mocked(window.matchMedia).mockReturnValueOnce({

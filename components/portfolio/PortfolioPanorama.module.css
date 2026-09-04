@@ -115,30 +115,6 @@
   margin-bottom: 2rem;
 }
 
-.tileFront,
-.tileBack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.tileFront strong {
-  font-size: clamp(1rem, 2vw, 1.45rem);
-  font-weight: 500;
-  line-height: 1.05;
-}
-
-.tileFront span,
-.tileBack span {
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.tileBack strong {
-  font-size: 1.4rem;
-  text-transform: uppercase;
-}
-
 .articleList {
   max-width: 64rem;
   margin: 0;

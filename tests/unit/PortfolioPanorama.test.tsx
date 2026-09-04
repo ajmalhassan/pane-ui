@@ -123,7 +123,11 @@ it("updates the selected pivot without taking URL ownership from the link", () =
 
   expect(projectsTab).toHaveAttribute("aria-selected", "true");
   expect(projectsTab).toHaveAttribute("href", "/?view=projects");
-  expect(screen.getByText("Lumia Metro Revival")).toBeVisible();
+  // A project tile prints its name twice for now -- as the tile title and as
+  // the bottom caption -- so this asks for the title specifically.
+  expect(
+    screen.getByText("Lumia Metro Revival", { selector: "strong" }),
+  ).toBeVisible();
 });
 
 it("restores selection when server query state changes", () => {

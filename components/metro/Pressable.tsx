@@ -1,6 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, PointerEvent } from "react";
+import { REDUCED_MOTION_QUERY } from "./useReducedMotion";
 import styles from "./Pressable.module.css";
 
 type TiltStyle = CSSStyleDeclaration & {
@@ -31,7 +32,7 @@ export function applyPressTilt<T extends HTMLElement>(
 ): void {
   if (
     event.pointerType === "touch" ||
-    matchMedia("(prefers-reduced-motion: reduce)").matches
+    matchMedia(REDUCED_MOTION_QUERY).matches
   ) {
     return;
   }

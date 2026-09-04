@@ -52,7 +52,7 @@ export function Panorama({ active, navigation, children }: Props) {
   const panoramaStyle: PanoramaStyle = { "--panorama-index": activeIndex };
 
   return (
-    <div className={styles.panorama} style={panoramaStyle}>
+    <div className={styles.panorama} data-panorama style={panoramaStyle}>
       {navigation}
       <div className={styles.plane}>
         {Children.map(children, (child) => {

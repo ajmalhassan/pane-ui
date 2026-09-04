@@ -303,25 +303,137 @@ for (const frame of NARROW_FRAMES) {
   });
 }
 
-test("compact project summaries do not collide with their destination links", async ({
+test("every project tile owns one destination and keeps its copy inside", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/?view=projects");
 
-  const tiles = page.getByRole("article");
-  for (let index = 0; index < (await tiles.count()); index += 1) {
-    const tile = tiles.nth(index);
-    const summary = tile.locator("button > span").first().locator("span").last();
-    const link = tile.getByRole("link");
-    const summaryBox = await summary.boundingBox();
-    const linkBox = await link.boundingBox();
+  const tiles = page
+    .getByRole("tabpanel", { name: HEADINGS.projects })
+    .getByRole("link");
+  const count = await tiles.count();
+  expect(count).toBeGreaterThan(0);
 
-    expect(summaryBox).not.toBeNull();
-    expect(linkBox).not.toBeNull();
-    expect((summaryBox?.y ?? 0) + (summaryBox?.height ?? 0)).toBeLessThanOrEqual(
-      linkBox?.y ?? 0,
-    );
+  for (let index = 0; index < count; index += 1) {
+    const tile = tiles.nth(index);
+    const at = `project tile ${index}`;
+
+    // One interactive owner: the tile is the link, and holds no second one.
+    expect(await tile.locator("a").count(), at).toBe(0);
+    expect(await tile.locator("button").count(), at).toBe(0);
+
+    // Line budgets, not luck: nothing a tile paints may leave its rectangle.
+    const spilling = await tile.evaluate((root) => {
+      const box = root.getBoundingClientRect();
+
+      return Array.from(root.querySelectorAll("*"))
+        .filter((child) => {
+          const rect = child.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) return false;
+
+          return (
+            rect.left < box.left - 0.5 ||
+            rect.right > box.right + 0.5 ||
+            rect.top < box.top - 0.5 ||
+            rect.bottom > box.bottom + 0.5
+          );
+        })
+        .map(
+          (child) => `${child.tagName}: ${child.textContent?.slice(0, 40) ?? ""}`,
+        );
+    });
+
+    expect(spilling, at).toEqual([]);
+  }
+});
+
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 1440, height: 900 },
+] as const) {
+  test(`tile units stay square on a ${frame.width}px canvas`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=projects");
+
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
+    const gap = await panel
+      .locator("[data-tile-grid]")
+      .evaluate((grid) => Number.parseFloat(getComputedStyle(grid).columnGap));
+    const large = await panel
+      .locator('[data-tile-size="large"]')
+      .first()
+      .boundingBox();
+    const hero = await panel
+      .locator('[data-tile-size="hero"]')
+      .first()
+      .boundingBox();
+    const at = `${frame.width}px`;
+
+    expect(large, at).not.toBeNull();
+    expect(hero, at).not.toBeNull();
+    expect(gap, at).toBeGreaterThan(0);
+
+    // A 2x2 tile is square, so the grid's rows really are unit-high.
+    expect(Math.abs((large?.width ?? 0) - (large?.height ?? 1)), at)
+      .toBeLessThanOrEqual(1);
+    // A 4x2 tile spans three gutters across and one down, so its width is two
+    // of its own heights plus the extra gutter -- the 4:2 ratio in a gapped grid.
+    expect(
+      Math.abs((hero?.width ?? 0) - (2 * (hero?.height ?? 0) + gap)),
+      at,
+    ).toBeLessThanOrEqual(2);
+    expect(Math.abs((hero?.height ?? 0) - (large?.height ?? 1)), at)
+      .toBeLessThanOrEqual(1);
+  });
+}
+
+/*
+ * The panorama clips its inactive panels, and a focus ring is painted outside
+ * the element it belongs to -- so the clip edge used to slice the ring on the
+ * first and last column of tiles in half. The clip box now bleeds by the ring's
+ * full reach while the content column stays put, which is only true if the tile
+ * sits strictly inside the clipped rectangle.
+ */
+test("a focused edge tile keeps its whole focus ring inside the panorama", async ({
+  page,
+}) => {
+  // 3px ring at a 3px outline-offset: the ring's outer edge is 6px out.
+  const ringReach = 6;
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/?view=projects");
+
+  const tile = page
+    .getByRole("tabpanel", { name: HEADINGS.projects })
+    .getByRole("link")
+    .first();
+  await tabTo(page, tile);
+  await expect(tile).toBeFocused();
+
+  const panoramaBox = await page.locator("[data-panorama]").boundingBox();
+  const tileBox = await tile.boundingBox();
+  expect(panoramaBox).not.toBeNull();
+  expect(tileBox).not.toBeNull();
+
+  expect((tileBox?.x ?? 0) - (panoramaBox?.x ?? 0)).toBeGreaterThanOrEqual(
+    ringReach,
+  );
+  expect(
+    (panoramaBox?.x ?? 0) +
+      (panoramaBox?.width ?? 0) -
+      ((tileBox?.x ?? 0) + (tileBox?.width ?? 0)),
+  ).toBeGreaterThanOrEqual(ringReach);
+
+  // A wider clip box must not become a wider page.
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const [scrollWidth, innerWidth] = await page.evaluate(() => [
+      document.documentElement.scrollWidth,
+      window.innerWidth,
+    ]);
+    expect(scrollWidth, `${width}px`).toBe(innerWidth);
   }
 });
 
