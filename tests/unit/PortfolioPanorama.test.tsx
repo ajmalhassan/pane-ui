@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -8,7 +9,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PortfolioPanorama } from "@/components/portfolio/PortfolioPanorama";
 import { profile } from "@/content/profile";
 import { projects } from "@/lib/content/projects";
@@ -298,4 +299,84 @@ it("closes contact when the browser moves back through history", async () => {
     expect(contactSection()).toHaveAttribute("data-open", "false");
   });
   expect(window.location.hash).toBe("");
+});
+
+/*
+ * ---------------------------------------------------------------------------
+ * The shell's own state, published
+ * ---------------------------------------------------------------------------
+ *
+ * `data-active-pivot` is what selects the atmosphere behind the page -- the
+ * node traces on Me, the transit lines on Projects, the quiet rules on Blog --
+ * and it is the hook Phase 3's transition engine will read for the same reason.
+ * `--panorama-index` beside it is the number that shifts the pattern: the
+ * plane's own copy of it lives on a descendant, and a background layer painted
+ * on the shell cannot read a property set below it.
+ */
+it.each(["me", "projects", "blog", "photography"] as const)(
+  "publishes %s on the shell for the atmosphere behind it",
+  (initialPivot) => {
+    const { container } = render(
+      <PortfolioPanorama
+        initialPivot={initialPivot}
+        projects={projects}
+        posts={[]}
+      />,
+    );
+
+    const shell = container.querySelector("main");
+    expect(shell).toHaveAttribute("data-active-pivot", initialPivot);
+    expect(shell?.style.getPropertyValue("--panorama-index")).toBe(
+      String(["me", "projects", "blog", "photography"].indexOf(initialPivot)),
+    );
+  },
+);
+
+it("moves the published pivot with the reader's own selection", async () => {
+  const user = userEvent.setup();
+  const { container } = render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  const shell = container.querySelector("main");
+
+  expect(shell).toHaveAttribute("data-active-pivot", "me");
+
+  await user.click(screen.getByRole("tab", { name: HEADINGS.blog }));
+
+  expect(shell).toHaveAttribute("data-active-pivot", "blog");
+  expect(shell?.style.getPropertyValue("--panorama-index")).toBe("2");
+});
+
+/*
+ * The two live tiles are a Start-screen guarantee, and the Start screen only
+ * exists inside this shell -- so the phase between them is asserted here as
+ * well as on the tiles themselves. Six seconds apart on the same beat would
+ * satisfy every per-tile test and still blink.
+ */
+it("keeps the two Me evidence tiles a phase apart", () => {
+  vi.useFakeTimers();
+  try {
+    render(
+      <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+    );
+
+    const live = () =>
+      [
+        ...document.querySelectorAll<HTMLElement>('[data-tile-role="live"]'),
+      ].map((tile) => tile.dataset.liveIndex);
+
+    expect(live()).toEqual(["0", "0"]);
+
+    act(() => {
+      vi.advanceTimersByTime(6000);
+    });
+    expect(live()).toEqual(["1", "0"]);
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(live()).toEqual(["1", "1"]);
+  } finally {
+    vi.useRealTimers();
+  }
 });

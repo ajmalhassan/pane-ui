@@ -12,16 +12,31 @@ import styles from "./PortfolioPanorama.module.css";
 const { start } = profile;
 
 /**
+ * The phase the second live tile cycles on: half of the six-second beat both
+ * tiles share, so the Start screen's two changing claims are never in the same
+ * second. The evidence tile leads and this one follows it by three.
+ *
+ * The three seconds are a property of this tile's schedule rather than of its
+ * first wait: `useLiveCycle` anchors both tiles to their own epoch, so hovering
+ * either one -- or backgrounding the tab, or reading with the page still --
+ * takes time out of a tile's timeline without moving the grid its changes land
+ * on. Only pressing a live tile moves it, and a reader who presses one has
+ * just been handed the claim they asked for.
+ */
+const ASSESSMENT_OFFSET_MS = 3000;
+
+/**
  * The capability graph's own shape, drawn once and never animated: three
  * corpora feed one model, and the model feeds assessment and placement. The
  * current node is the only lit one -- the Start screen's single moving graphic
  * is the assessment waveform, so this stays a state, not an animation.
  *
- * It is rendered after the copy so that below 48rem it can be the flex item
- * that takes whatever height the title and body leave: on a 320px frame the
- * hero is 141px tall and a lit cyan ring drawn across the whole of it lands on
- * a word. `meet` rather than `slice` because that band is far wider than the
- * viewBox is -- at the hero's own 2:1 proportion the two are indistinguishable.
+ * It is rendered after the copy because that is also where it sits, at every
+ * width: the flex item that takes whatever height the title and body leave.
+ * Drawn across the whole tile instead, a lit cyan ring lands on a word -- on a
+ * 320px frame it landed on "assessment", and on a 768px one it put the body's
+ * second line at 2.40:1. `meet` rather than `slice` because the band left over
+ * is far wider than the viewBox is, and the figure has to fit inside it whole.
  */
 function GraphMotif(): ReactNode {
   return (
@@ -206,6 +221,7 @@ export function ProfileTiles(): ReactNode {
         className={`${styles.unitTile} ${styles.assessmentTile}`}
         items={claimFaces(start.assessment.claims, <Waveform />)}
         label={start.assessment.label}
+        offsetMs={ASSESSMENT_OFFSET_MS}
         role="live"
         size="wide"
       />

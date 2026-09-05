@@ -34,8 +34,28 @@
   --metro-muted: #91989e;
   --metro-line: #2a2e31;
 
-  /* Backgrounds: atmosphere that never competes with type or tile edges. */
+  /*
+   * Backgrounds: atmosphere that never competes with type or tile edges.
+   *
+   * One hue -- the signature cyan -- at three densities, and the densest of the
+   * three is the ceiling this design allows a background to reach. 0.08 of
+   * #00a4ef over #07090a paints rgb(6, 21, 28), which costs the muted grey that
+   * sits on it half a contrast point (6.83:1 to 6.35:1) and body text nothing
+   * that matters (18.09:1 to 16.82:1).
+   *
+   * Those four are WCAG 2.x ratios computed from these tokens over that
+   * composite, not readings off a screen: a reader never meets the full
+   * density behind a whole line, only a trace crossing part of one, and what
+   * that costs is measured glyph by glyph in the E2E sweep instead. A pattern
+   * is a texture at these alphas and a shape above them.
+   */
   --metro-bg-trace: rgba(0, 164, 239, 0.08); /* low-contrast cyan node traces */
+  /* The line between two traced nodes, and the transit grid's cross-lines:
+     always quieter than the node itself, so a lattice reads as dots first. */
+  --metro-bg-trace-line: rgba(0, 164, 239, 0.045);
+  /* The quietest of the three: Blog's horizontal rules, which run the whole
+     width of a reading pivot and so must be the least insistent thing on it. */
+  --metro-bg-rule: rgba(0, 164, 239, 0.03);
   /* The one veil, and it has one consumer: `.photo .media::after` in
      MetroTile.module.css, which paints it bottom-up to a 60% stop so a picture
      tile's caption and note sit on a guaranteed floor whatever the photograph
@@ -77,6 +97,69 @@
    */
   --metro-press-perspective: 700px;
   --metro-press-scale: 0.985;
+
+  /*
+   * The tile entrance, in the three numbers the stagger is made of.
+   *
+   * `--metro-tile-entrance` names the keyframes a newly active panel hands its
+   * tiles (see `metroTileRise` below and `.panel[data-active="true"]` in
+   * Panorama.module.css). Naming it through a custom property rather than in
+   * the rule is what lets a CSS Module reach a global keyframe at all: a module
+   * that wrote the ident itself would have it rewritten to that module's own
+   * scope, where nothing declares it.
+   *
+   * The stagger is 40ms per tile, capped at 240ms. The cap is the whole
+   * restraint: Me lays out nine tiles, so an uncapped 40ms step would still be
+   * introducing the last one 320ms after the first, and the panel would read as
+   * a list being dealt out rather than a screen arriving. Measured on Me, the
+   * delays are 0, 40, 80, 120, 160, 200, 240, 240, 240 -- from the seventh tile
+   * on they arrive together, and the whole panel is in within 660ms.
+   */
+  --metro-tile-entrance: metroTileRise;
+  --metro-tile-stagger: 40ms;
+  --metro-tile-stagger-cap: 240ms;
+  /* The distance a tile rises through, and the only spatial part of the
+     entrance. Half a grid step: enough to read as arrival, too small to read as
+     a slide. */
+  --metro-tile-lift: 8px;
+}
+
+/*
+ * A tile arriving with its panel. Declared globally, and deliberately: the
+ * panel that switches it on (Panorama.module.css), the tile that runs it
+ * (MetroTile.module.css) and the one tile that composes it with a second
+ * animation (PortfolioPanorama.module.css) are three separate CSS Modules, and
+ * a keyframe name is scoped to the module that declares it. One global
+ * `metro`-prefixed pair is the honest way for all three to mean the same
+ * animation; the alternative is three copies that can silently drift.
+ *
+ * `translate` rather than a `transform`: every interactive tile also carries
+ * `.pressable`, which owns `transform` for the press tilt, and two rules
+ * fighting over one property is how a tile ends up either untiltable or
+ * unenterable. The two compose in the browser's own transform pipeline instead.
+ */
+@keyframes metroTileRise {
+  from {
+    opacity: 0;
+    translate: 0 var(--metro-tile-lift);
+  }
+
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+/* The reduced-motion mechanism, and a different animation rather than the same
+   one slowed to nothing: no spatial movement exists to be removed. */
+@keyframes metroTileFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 * {
@@ -112,6 +195,14 @@ a {
     --metro-duration-fast: 1ms;
     --metro-duration-base: 1ms;
     --metro-duration-slow: 1ms;
+    /* A different animation, not the same one slowed down: `metroTileFade`
+       has no spatial part to remove. And no stagger -- the rule below collapses
+       every duration to 1ms but says nothing about delay, so a capped 240ms
+       delay would hold the last tiles of a panel invisible for a quarter of a
+       second. Evidence is never hidden from a reader who asked for less
+       motion. */
+    --metro-tile-entrance: metroTileFade;
+    --metro-tile-stagger: 0ms;
   }
   *,
   *::before,

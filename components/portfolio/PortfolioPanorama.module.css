@@ -7,11 +7,126 @@
 .shell {
   composes: dockedPage from "../metro/AppBarDock.module.css";
 
+  /*
+   * A stacking context of its own, so the atmosphere below can sit at
+   * `z-index: -1` and mean "behind this page's content" rather than "behind
+   * this page" -- without the isolation a negative index drops the layer under
+   * the shell's own opaque ink and out of sight, which is the same mistake the
+   * picture hub's backdrop had to solve one block down.
+   *
+   * `position: relative` gives the layer its rectangle and nothing else: it is
+   * not a containing block for the two fixed things on this page (the contact
+   * panel and the application bar's dock), which take the viewport, as they
+   * did before.
+   */
+  position: relative;
+  isolation: isolate;
   overflow: hidden;
-  background:
-    linear-gradient(90deg, rgb(0 164 239 / 8%) 1px, transparent 1px) 0 0 / 25vw
-      100%,
-    var(--metro-ink);
+  background: var(--metro-ink);
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * The atmosphere
+ * ---------------------------------------------------------------------------
+ *
+ * One layer behind the whole page, and the pivot on the shell picks what it
+ * draws: cyan node traces for the systems work on Me, transit lines for the
+ * evidence grid on Projects, quiet rules for the reading pivot, and nothing at
+ * all on Photography, whose own blurred backdrop is already the atmosphere
+ * there and would be fighting a pattern for the same ground.
+ *
+ * Every stop comes from the `--metro-bg-*` tokens, whose ceiling is 0.08 of the
+ * signature cyan -- measured in globals.css as costing muted grey 0.4 of a
+ * contrast point over plain ink. Tiles are opaque, so a tile edge is a tile
+ * edge; what the pattern touches is the ground between them.
+ *
+ * It is `pointer-events: none`, and the application bar's dock -- the one
+ * genuinely opaque surface on the page -- is fixed at `z-index: 5` over it, so
+ * no pattern ever reaches the commands. The status line above the heading is
+ * transparent chrome and the ground does pass behind it; its two lines are
+ * `--metro-muted` at 11.2px, which the pattern costs 0.25 of a contrast point
+ * (6.83:1 to 6.58:1 on Me, 6.44:1 over Projects' transit lines -- the tightest
+ * reading anywhere on the ground, and the one the E2E's glyph sweep watches).
+ */
+.shell::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  /*
+   * The shared ground shifts a little with the panorama's own position: 1.5vw
+   * per pivot, against patterns whose cells are 88px and a quarter of the
+   * viewport. It is parallax by a hair -- enough that moving between pivots
+   * moves the world behind them, far too little to read as a second slide
+   * competing with the plane's.
+   */
+  background-position: calc(var(--panorama-index, 0) * -1.5vw) 0;
+  transition: background-position var(--metro-duration-base)
+    var(--metro-ease-standard);
+}
+
+/*
+ * Me: a node lattice. Dots on an 88px pitch with a hairline running diagonally
+ * between them -- the systems drawing the capability graph on the hero tile
+ * makes explicit, at the density of a watermark.
+ */
+.shell[data-active-pivot="me"]::before {
+  background-image: radial-gradient(
+      circle at 50% 50%,
+      var(--metro-bg-trace) 0 1.5px,
+      transparent 2px
+    ),
+    linear-gradient(
+      45deg,
+      transparent calc(50% - 0.5px),
+      var(--metro-bg-trace-line) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
+  background-size:
+    88px 88px,
+    88px 88px;
+}
+
+/*
+ * Projects: transit lines. The quarter-viewport verticals this shell has always
+ * drawn, now joined by a quieter horizontal at a 120px pitch so the ground under
+ * an evidence grid reads as a plan rather than as stripes -- and now painted on
+ * this pivot alone rather than under all four.
+ */
+.shell[data-active-pivot="projects"]::before {
+  background-image: linear-gradient(
+      90deg,
+      var(--metro-bg-trace) 0 1px,
+      transparent 1px
+    ),
+    linear-gradient(0deg, var(--metro-bg-trace-line) 0 1px, transparent 1px);
+  background-size:
+    25vw 100%,
+    100% 120px;
+}
+
+/*
+ * Blog: horizontal rules on the reading list's own rhythm, at the quietest of
+ * the three densities. A rule that runs the full width of a reading pivot is
+ * the most insistent shape a background here can make, so it is the faintest.
+ */
+.shell[data-active-pivot="blog"]::before {
+  background-image: linear-gradient(
+    0deg,
+    var(--metro-bg-rule) 0 1px,
+    transparent 1px
+  );
+  background-size: 100% 88px;
+}
+
+/*
+ * Photography: nothing. The hub paints its own photographic ground (see
+ * `.hubBackdrop` below), and two atmospheres on one pivot is one too many.
+ */
+.shell[data-active-pivot="photography"]::before {
+  background-image: none;
 }
 
 .bio,
@@ -61,10 +176,14 @@
  */
 
 /*
- * Copy that has to ride above a tile's own graphic. The motifs below are
- * absolutely positioned inside the tile's content region, which puts them in
- * the positioned paint layer; raising the copy is what keeps type on top of a
- * trace instead of under it.
+ * Copy that has to ride above a tile's own graphic -- today that means the
+ * assessment waveform, which is absolutely positioned inside the tile's
+ * content region and so sits in the positioned paint layer; raising the copy
+ * is what keeps type on top of it rather than under it. The wave is band-height
+ * by construction (`--wave-band`), so what it rides above is the gap the claim
+ * leaves, not the claim. The capability graph used to need this too and no
+ * longer does: it is a flex item below the copy at every width, and the two
+ * boxes are disjoint.
  *
  * Same box model as MetroTile's own `.content` (position, min-height, flex
  * column, gap, overflow) -- this is a nested copy span, not a specificity
@@ -138,12 +257,27 @@
  * a low-contrast trace with the current node as the only lit one. Static by
  * design: the Start screen's one moving graphic is the assessment waveform.
  *
- * On a phone the hero is 288x141 and its title and body take almost all of
- * that, so a trace drawn across the whole tile put a lit cyan ring on the word
- * "assessment". Here the graph is instead the last flex item of the content
- * region: `flex: 1 1 0` hands it exactly the height the copy leaves and
- * nothing more, so the two can never intersect however the title wraps. From
- * 48rem the tile is tall enough for the trace to sit behind the copy again.
+ * The graph is the last flex item of the content region, at every width:
+ * `flex: 1 1 0` hands it exactly the height the copy leaves and nothing more,
+ * so the two can never intersect however the title wraps.
+ *
+ * It used to go `position: absolute; inset: 0` from 48rem, on the reasoning
+ * that a tile that tall had room for the trace behind the copy. It does not.
+ * Measured glyph-accurate (the copy shot with the graph visible and hidden,
+ * worst ratio among only the pixels the glyphs inked), the body line read
+ * **2.40:1** at 768 -- the lit cyan ring landing on its second line, the exact
+ * hazard `.graphNode` below is drawn as a ring to avoid -- and 3.89-3.90:1 at
+ * 900, 1024 and 1440 over the 0.22 trace. Below the copy it reads 6.34:1 at
+ * every frame, which is the tile's own blue and nothing else.
+ *
+ * The band this leaves is narrow on a short tile (measured 34.6px at 320,
+ * 38.5px at 768, 92.6px at 1024, 207.3px at 1440) and it is the whole width of
+ * the tile; `preserveAspectRatio="xMidYMid meet"` fits the figure inside it
+ * rather than cropping or distorting it, so on the shortest tiles the graph is
+ * a small centred figure rather than a wide one. A
+ * `min-height` here would not widen that band -- `.content` is the tile's own
+ * height minus the caption, so the only thing a taller graph can take from is
+ * the copy above it, which either clips a sentence or overflows the tile.
  */
 .graphMotif {
   flex: 1 1 0;
@@ -168,9 +302,11 @@
 }
 
 /*
- * The current node is lit as a ring rather than a disc: the copy sits over the
- * motif, and a solid cyan disc under white type is a contrast hazard where a
- * 2px stroke is not.
+ * The current node is lit as a ring rather than a disc: a filled cyan disc is a
+ * block of colour in what is otherwise a line drawing. The ring was also once
+ * the copy's protection, on the reasoning that a 2.5px stroke under white type
+ * is not the hazard a solid disc is. Measured, it was: 2.40:1 at 768. The copy
+ * no longer crosses it, which is the actual fix -- see `.graphMotif`.
  */
 .graphNode {
   fill: none;
@@ -250,20 +386,39 @@
 }
 
 /*
- * The copy region, less the two title lines a claim is allowed to wrap to.
- * `--tile-copy` has already taken out the supporting line's share wherever
- * that line is painted, and its own 2px rounding cushion, which is added back
- * here -- so this is the height left under the claim at any width: 2.8px at
- * 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920. Floored at zero: a
- * band can be too small for a wave, never negative.
+ * The assessment tile: one band, and two animations.
+ *
+ * `--wave-band` is the copy region, less the two title lines a claim is allowed
+ * to wrap to. `--tile-copy` has already taken out the supporting line's share
+ * wherever that line is painted, and its own 2px rounding cushion, which is
+ * added back here -- so this is the height left under the claim at any width:
+ * 2.8px at 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920. Floored at
+ * zero: a band can be too small for a wave, never negative.
+ *
+ * The animations are the reason every part of the entrance stagger is written
+ * the way it is. This is the one tile on the site that runs two.
+ *
+ * The wave drifts forever and the entrance runs once, so the two are a
+ * comma-separated LIST rather than one declaration replacing the other -- a
+ * single `animation` on either side would have stopped the other dead. The
+ * second item restates exactly what `.tile` declares in MetroTile.module.css,
+ * reading the same two properties (`--tile-entrance` from the active panel,
+ * `--tile-entrance-delay` from the tile itself), so the two cannot drift apart
+ * in behaviour even though they are written twice.
+ *
+ * The doubled class is (0,2,0), which beats `.tile`'s (0,1,0) whatever order
+ * the two stylesheets land in -- the same reason `.unitTile.unitTile` and
+ * `.featureTile.featureTile` are doubled elsewhere in this file.
  */
-.assessmentTile {
+.assessmentTile.assessmentTile {
   --wave-band: max(0px, var(--tile-copy) + 2px - 2.3 * var(--tile-title));
 
-  /* This is the tile root's only `animation`. A later entrance stagger
-     (Task 9) must COMPOSE with it (comma-separated: `animation: waveDrift …,
-     entranceStagger …`), not replace it, or the wave stops drifting. */
-  animation: waveDrift 9s linear infinite;
+  animation-name: waveDrift, var(--tile-entrance, none);
+  animation-duration: 9s, var(--metro-duration-base);
+  animation-timing-function: linear, var(--metro-ease-standard);
+  animation-delay: 0s, var(--tile-entrance-delay);
+  animation-iteration-count: infinite, 1;
+  animation-fill-mode: none, backwards;
 }
 
 @keyframes waveDrift {
@@ -278,12 +433,6 @@
 }
 
 @media (min-width: 48rem) {
-  .graphMotif {
-    position: absolute;
-    inset: 0;
-    height: 100%;
-  }
-
   .wave {
     height: min(2rem, var(--wave-band, 2rem));
   }
@@ -334,8 +483,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .assessmentTile {
-    animation: none;
+  /*
+   * The wave stops dead; the entrance stays, because by here it is the
+   * opacity-only `metroTileFade` at the 1ms every duration collapses to. A
+   * blanket `animation: none` would take the tile's arrival with the wave --
+   * correct, but it would also make this the one tile on the Start screen that
+   * behaves differently from its eight neighbours for no reason a reader could
+   * name.
+   */
+  .assessmentTile.assessmentTile {
+    animation-name: var(--tile-entrance, none);
+    animation-duration: var(--metro-duration-base);
+    animation-timing-function: var(--metro-ease-standard);
+    animation-delay: var(--tile-entrance-delay);
+    animation-iteration-count: 1;
+    animation-fill-mode: backwards;
   }
 }
 
@@ -688,10 +850,6 @@
 }
 
 @media (max-width: 720px) {
-  .shell {
-    background: var(--metro-ink);
-  }
-
   .contact {
     flex-direction: column;
   }
@@ -700,5 +858,12 @@
 @media (prefers-reduced-motion: reduce) {
   .contact {
     scroll-behavior: auto;
+  }
+
+  /* The ground still differs per pivot -- it is a state, not a movement -- but
+     it stops travelling there. The 1ms every duration collapses to would be
+     imperceptible anyway; saying `none` is saying it on purpose. */
+  .shell::before {
+    transition: none;
   }
 }

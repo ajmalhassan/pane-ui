@@ -10,6 +10,13 @@
  * equal specificity must never disagree over the same property. `overflow:
  * hidden` also zeroes the grid item's automatic minimum size, so the tile
  * needs no `min-width: 0` of its own to stop long copy blowing out a track.
+ *
+ * That disjointness is why the entrance below animates `opacity` and the
+ * `translate` PROPERTY rather than a transform: a tile's press tilt and a
+ * tile's arrival are two different things happening to the same rectangle, and
+ * the browser's transform pipeline composes `translate` with `transform`
+ * instead of one declaration winning. `animation-*` is likewise `.tile`'s
+ * alone -- `.pressable` declares none of it.
  */
 /*
  * ---------------------------------------------------------------------------
@@ -63,6 +70,22 @@
   /* Every tile knob is a multiple of the 4px grid or a named type step. */
   --tile-pad: calc(var(--metro-grid) * 3);
   --tile-gap-copy: var(--metro-grid);
+
+  /*
+   * This tile's share of the entrance stagger: 40ms per place in the grid,
+   * capped at 240ms, from the `--tile-index` `MetroTile.tsx` writes. An
+   * unnumbered tile -- one outside a `TileGrid` -- falls back to zero and
+   * arrives with the first of them.
+   *
+   * Kept as a property of its own rather than written into `animation-delay`
+   * because the one tile that composes this entrance with a second animation
+   * (`.assessmentTile` in PortfolioPanorama.module.css) has to restate the
+   * whole animation and would otherwise restate this expression with it.
+   */
+  --tile-entrance-delay: min(
+    calc(var(--tile-index, 0) * var(--metro-tile-stagger)),
+    var(--metro-tile-stagger-cap)
+  );
 
   /* Each size restates this beside its own `grid-row: span` below; this is the
      base that keeps `--tile-box` a valid calc() if a tile ever lands without a
@@ -138,6 +161,31 @@
   font: inherit;
   text-align: left;
   text-decoration: none;
+  /*
+   * The entrance, switched on by the panel that owns this tile
+   * (`.panel[data-active="true"]` in Panorama.module.css sets `--tile-entrance`
+   * to the keyframes; everywhere else it resolves to `none`). Longhands rather
+   * than the shorthand on purpose: `none` is a valid `animation-fill-mode`
+   * value as well as a valid `animation-name`, so `animation: none <time>
+   * <ease> <time> backwards` parses `none` as the fill mode and `backwards` as
+   * the NAME -- an animation called "backwards" that does not exist. The
+   * longhands cannot be misread.
+   *
+   * `backwards` and not `both`: the fill has one job, which is to hold a tile
+   * at opacity 0 through its delay so it fades in rather than blinking off and
+   * on. Forwards fill would add nothing -- the keyframes end on the tile's own
+   * resting values -- but it would keep every finished animation permanently
+   * "in effect", which means `getAnimations()` reports nine running animations
+   * on a Start screen where nothing is moving, and `translate` computes to
+   * `0px` instead of `none` forever. Measured both ways in Chromium: with
+   * `both`, a settled Me panel holds 9 animation objects; with `backwards`, 1
+   * -- the waveform, which is the one thing actually moving.
+   */
+  animation-name: var(--tile-entrance, none);
+  animation-duration: var(--metro-duration-base);
+  animation-timing-function: var(--metro-ease-standard);
+  animation-delay: var(--tile-entrance-delay);
+  animation-fill-mode: backwards;
 }
 
 /*
@@ -508,9 +556,16 @@
   display: block;
 }
 
+/*
+ * `backwards` and not `both`, for the same reason `.tile`'s entrance is: a
+ * forwards fill would leave every claim this tile has ever shown parked in the
+ * document's animation registry, so a settled Start screen reported three
+ * running animations where one thing -- the waveform -- was actually moving.
+ * The keyframes end on the claim's own resting opacity, so nothing is lost.
+ */
 .liveItemAnimated {
   animation: tileClaimIn var(--metro-duration-base) var(--metro-ease-standard)
-    both;
+    backwards;
 }
 
 @keyframes tileClaimIn {

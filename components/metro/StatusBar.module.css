@@ -9,6 +9,16 @@
  */
 .statusBar {
   min-height: 2.75rem;
+  /*
+   * Opaque ink, like the app bar at the other end of the screen. The panorama's
+   * atmosphere is a `main::before` layer at `z-index: -1`, which paints over the
+   * shell's own background and therefore behind anything with a background of
+   * its own -- so declaring one here is the whole of it: no stacking context,
+   * no z-index, no change to this line's box. Without it the lattice ran
+   * through the identity line (`AJMAL / PORTFOLIO` measured 6.83 -> 6.58 on Me,
+   * 6.44 over Projects' transit rules); with it the ground stops at the chrome.
+   */
+  background: var(--metro-ink);
   display: flex;
   align-items: center;
   justify-content: space-between;

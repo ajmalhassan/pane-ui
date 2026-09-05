@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import { PRESS_TILT, Pressable } from "./Pressable";
-import type { TileSize } from "./TileGrid";
+import type { TileSize } from "./types";
 import { useDocumentVisible } from "./useDocumentVisible";
 import { useLiveCycle } from "./useLiveCycle";
 import { useReducedMotion } from "./useReducedMotion";
@@ -41,6 +41,20 @@ type BaseTileProps = {
   size?: TileSize;
   accent?: TileAccent;
   className?: string;
+  /**
+   * This tile's 0-based place in the grid that laid it out, in DOM order.
+   *
+   * A consumer never writes it: `TileGrid` numbers its own tiles on the way
+   * through, because the grid is the only thing that sees all of them at once.
+   * The tile publishes it twice -- `data-tile-index` for anything reading the
+   * DOM (Phase 3's transition engine, the E2E suite) and `--tile-index` for the
+   * stylesheet, which turns it into the entrance delay that staggers a panel's
+   * tiles in after its pivot is selected.
+   *
+   * Outside a grid it is absent, and the stylesheet's own `var(--tile-index, 0)`
+   * fallback makes that a zero-delay tile.
+   */
+  index?: number;
 };
 
 export type DisplayTileProps = BaseTileProps & {
@@ -74,7 +88,19 @@ export type LiveTileProps = BaseTileProps & {
    * user gets -- it must stand alone.
    */
   accessibleLabel: string;
+  /**
+   * Must be a positive finite number for the tile to cycle -- zero,
+   * negative, or `NaN` disables cycling (see `useLiveCycle`).
+   */
   intervalMs?: number;
+  /**
+   * The phase this tile cycles on: how far its own grid of change moments sits
+   * behind an unphased tile's. Two live tiles on one screen sharing a beat
+   * change together, which reads as a blink rather than as liveliness. The
+   * phase is spent on the first change and holds for every one after it -- see
+   * `useLiveCycle`.
+   */
+  offsetMs?: number;
 };
 
 /**
@@ -136,6 +162,26 @@ function rootClass(
     .join(" ");
 }
 
+type TileStyle = CSSProperties & { "--tile-index"?: number };
+
+/**
+ * The place-in-the-grid props, spread by every role so no shell can quietly
+ * drop half of the pair.
+ *
+ * Zero is a real index -- the leading tile's -- so the test is for `undefined`
+ * rather than for truthiness; and an unnumbered tile gets neither the attribute
+ * nor the property, which is what leaves the stylesheet's own fallback in
+ * charge instead of putting `--tile-index: undefined` on the element.
+ */
+function tilePlace(index?: number): {
+  "data-tile-index"?: number;
+  style?: TileStyle;
+} {
+  return index === undefined
+    ? {}
+    : { "data-tile-index": index, style: { "--tile-index": index } };
+}
+
 /**
  * The layer beneath the copy. It is a sibling of `.content`, not a child, so
  * its containing block is the tile itself and `inset: 0` means the tile's own
@@ -179,6 +225,7 @@ function DisplayShell({
   accent = "ink",
   children,
   className,
+  index,
   label,
   media,
   size = "small",
@@ -188,6 +235,7 @@ function DisplayShell({
       className={rootClass(size, accent, "", className)}
       data-tile-role="display"
       data-tile-size={size}
+      {...tilePlace(index)}
     >
       <Media media={media} />
       <span className={styles.content}>{children}</span>
@@ -201,6 +249,7 @@ function NavigationShell({
   children,
   className,
   href,
+  index,
   label,
   media,
   size = "small",
@@ -211,6 +260,7 @@ function NavigationShell({
       data-tile-role="navigation"
       data-tile-size={size}
       href={href}
+      {...tilePlace(index)}
       {...PRESS_TILT}
     >
       <Media media={media} />
@@ -225,6 +275,7 @@ function RevealShell({
   back,
   className,
   front,
+  index,
   label,
   media,
   size = "small",
@@ -258,6 +309,7 @@ function RevealShell({
       data-tile-size={size}
       onClick={() => setFlipped((current) => !current)}
       type="button"
+      {...tilePlace(index)}
     >
       <Media media={media} />
       <span className={styles.content}>
@@ -287,10 +339,12 @@ function LiveShell({
   accent = "ink",
   accessibleLabel,
   className,
+  index: place,
   intervalMs = LIVE_INTERVAL_MS,
   items,
   label,
   media,
+  offsetMs,
   size = "small",
 }: LiveTileProps): ReactNode {
   const reduced = useReducedMotion();
@@ -302,6 +356,7 @@ function LiveShell({
   const { advance, index } = useLiveCycle(items.length, {
     enabled: visible,
     intervalMs,
+    offsetMs,
     paused: hovered || focused,
   });
 
@@ -321,6 +376,7 @@ function LiveShell({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       type="button"
+      {...tilePlace(place)}
     >
       <Media media={media} />
       <span className={styles.content}>
@@ -360,6 +416,7 @@ export function MetroTile(props: MetroTileProps): ReactNode {
         <DisplayShell
           accent={props.accent}
           className={props.className}
+          index={props.index}
           label={props.label}
           media={props.media}
           role="display"

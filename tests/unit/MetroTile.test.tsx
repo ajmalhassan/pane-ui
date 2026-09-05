@@ -455,6 +455,91 @@ describe("live tiles", () => {
   });
 });
 
+/*
+ * Every role publishes the same place-in-the-grid, because the entrance stagger
+ * is a stylesheet rule keyed off `--tile-index` and Phase 3 will want the
+ * attribute. A role that dropped either would silently lose its delay -- the
+ * `var(--tile-index, 0)` fallback makes an unnumbered tile a zero-delay tile,
+ * which looks like a tile that simply arrived first.
+ */
+describe("the grid place a tile is given", () => {
+  const roles = {
+    display: (
+      <MetroTile index={3} label="display" role="display">
+        <span>a</span>
+      </MetroTile>
+    ),
+    navigation: (
+      <MetroTile href="/a" index={3} label="navigation" role="navigation">
+        <span>a</span>
+      </MetroTile>
+    ),
+    reveal: (
+      <MetroTile
+        back={<span>b</span>}
+        front={<span>a</span>}
+        index={3}
+        label="reveal"
+        role="reveal"
+      />
+    ),
+    live: (
+      <MetroTile
+        accessibleLabel="live evidence"
+        index={3}
+        items={[<span key="e">e</span>, <span key="f">f</span>]}
+        label="live"
+        role="live"
+      />
+    ),
+  } as const;
+
+  it.each(Object.keys(roles) as (keyof typeof roles)[])(
+    "publishes its index on a %s tile as both an attribute and a property",
+    (role) => {
+      const { container } = render(roles[role]);
+      const root = container.firstElementChild as HTMLElement;
+
+      expect(root).toHaveAttribute("data-tile-index", "3");
+      expect(root.style.getPropertyValue("--tile-index")).toBe("3");
+    },
+  );
+
+  /*
+   * Zero is a real index and the first tile's own. Writing it only when it is
+   * truthy would leave the leading tile of every grid unnumbered.
+   */
+  it("publishes the leading tile's zero rather than treating it as absent", () => {
+    const { container } = render(
+      <MetroTile index={0} label="first" role="display">
+        <span>a</span>
+      </MetroTile>,
+    );
+    const root = container.firstElementChild as HTMLElement;
+
+    expect(root).toHaveAttribute("data-tile-index", "0");
+    expect(root.style.getPropertyValue("--tile-index")).toBe("0");
+  });
+
+  /*
+   * Outside a grid nothing numbers a tile, and the stylesheet's own
+   * `var(--tile-index, 0)` fallback is what it falls back to. Writing an
+   * `undefined` property or an empty attribute here would put a broken
+   * declaration on the element instead.
+   */
+  it("writes nothing at all when no grid numbered it", () => {
+    const { container } = render(
+      <MetroTile label="bare" role="display">
+        <span>a</span>
+      </MetroTile>,
+    );
+    const root = container.firstElementChild as HTMLElement;
+
+    expect(root).not.toHaveAttribute("data-tile-index");
+    expect(root.style.getPropertyValue("--tile-index")).toBe("");
+  });
+});
+
 describe("every role", () => {
   it("renders the tile caption", () => {
     const roles = [

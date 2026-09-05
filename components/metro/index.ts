@@ -9,7 +9,7 @@ export type {
   TileAccent,
 } from "./MetroTile";
 export { TileGrid } from "./TileGrid";
-export type { TileSize } from "./TileGrid";
+export type { TileSize } from "./types";
 export { useLiveCycle } from "./useLiveCycle";
 export { Panorama } from "./Panorama";
 export { PanoramaNav } from "./PanoramaNav";

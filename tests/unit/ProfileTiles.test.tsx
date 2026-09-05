@@ -186,14 +186,71 @@ describe("the live tiles", () => {
     expect(evidence()).toHaveAccessibleName(start.evidence.summary);
   });
 
-  it("cycles the AI assessment tile on the same six-second beat", () => {
-    render(<ProfileTiles />);
-    const assessment = screen.getByRole("button", {
-      name: start.assessment.summary,
-    });
+  function assessment() {
+    return screen.getByRole("button", { name: start.assessment.summary });
+  }
 
-    expect(assessment).toHaveAttribute("data-live-index", "0");
-    advanceBy(12_000);
-    expect(assessment).toHaveAttribute("data-live-index", "2");
+  /*
+   * The same six-second beat, half a beat out of phase. Two live tiles on one
+   * Start screen changing together read as a screen that blinks; offset by
+   * 3000ms they read as a screen that is alive. The offset delays only the
+   * first change, so the two never converge later either.
+   */
+  it("cycles the AI assessment tile on the same beat, three seconds behind", () => {
+    render(<ProfileTiles />);
+
+    expect(assessment()).toHaveAttribute("data-live-index", "0");
+
+    // The evidence tile has already changed here; this one has not.
+    advanceBy(6000);
+    expect(assessment()).toHaveAttribute("data-live-index", "0");
+
+    advanceBy(3000);
+    expect(assessment()).toHaveAttribute("data-live-index", "1");
+
+    advanceBy(6000);
+    expect(assessment()).toHaveAttribute("data-live-index", "2");
+  });
+
+  /*
+   * The claim the offset exists to make, measured rather than reasoned about:
+   * across a whole lap of both tiles, no two changes land inside the same
+   * second. A shared phase would put every one of them on the same tick.
+   */
+  it("never changes both live tiles inside the same second", () => {
+    render(<ProfileTiles />);
+
+    const seen = { evidence: "0", assessment: "0" };
+    const changes: { at: number; tile: string }[] = [];
+
+    for (let elapsed = 250; elapsed <= 30_000; elapsed += 250) {
+      advanceBy(250);
+      const now = {
+        evidence: evidence().getAttribute("data-live-index") ?? "",
+        assessment: assessment().getAttribute("data-live-index") ?? "",
+      };
+      for (const tile of ["evidence", "assessment"] as const) {
+        if (now[tile] !== seen[tile]) changes.push({ at: elapsed, tile });
+        seen[tile] = now[tile];
+      }
+    }
+
+    expect(changes.map((change) => `${change.tile}@${change.at}`)).toEqual([
+      "evidence@6000",
+      "assessment@9000",
+      "evidence@12000",
+      "assessment@15000",
+      "evidence@18000",
+      "assessment@21000",
+      "evidence@24000",
+      "assessment@27000",
+      "evidence@30000",
+    ]);
+
+    for (const [index, change] of changes.entries()) {
+      const previous = changes[index - 1];
+      if (previous)
+        expect(change.at - previous.at).toBeGreaterThanOrEqual(1000);
+    }
   });
 });

@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type JSX,
   type MouseEvent,
 } from "react";
@@ -19,7 +20,7 @@ import {
 } from "@/components/metro";
 import type { PostSummary } from "@/lib/content/posts";
 import type { Project } from "@/lib/content/projects";
-import type { PivotId } from "@/lib/content/pivots";
+import { pivotIndex, type PivotId } from "@/lib/content/pivots";
 import { BioPanel } from "./BioPanel";
 import { BlogPanel } from "./BlogPanel";
 import { ContactPanel } from "./ContactPanel";
@@ -35,6 +36,8 @@ type Props = {
 };
 
 const CONTACT_HASH = "#contact";
+
+type ShellStyle = CSSProperties & { "--panorama-index": number };
 
 function contactIsOpen(): boolean {
   return window.location.hash === CONTACT_HASH;
@@ -141,8 +144,31 @@ export function PortfolioPanorama({
     syncContact();
   }
 
+  const shellStyle: ShellStyle = { "--panorama-index": pivotIndex(active) };
+
   return (
-    <main className={styles.shell}>
+    /*
+     * The shell publishes the pivot twice, for two readers.
+     *
+     * `data-active-pivot` selects the atmosphere painted behind the page --
+     * `.shell::before` in the stylesheet beside this file draws node traces on
+     * Me, transit lines on Projects, quiet rules on Blog, and stands down on
+     * Photography, whose own backdrop is the atmosphere. It is also the hook
+     * Phase 3's transition engine reads, which is why it names the pivot rather
+     * than describing the treatment.
+     *
+     * `--panorama-index` is the number that slides that pattern a little with
+     * the plane. `Panorama` sets the same property on its own root for the
+     * slide it performs, but a custom property only travels downwards and the
+     * atmosphere is painted *above* the panorama in the tree, so the shell
+     * derives it from the same `active` through the same `pivotIndex` rather
+     * than reaching into a descendant for it.
+     */
+    <main
+      className={styles.shell}
+      data-active-pivot={active}
+      style={shellStyle}
+    >
       <StatusBar label={APP_IDENTITY} />
       <Panorama
         active={active}

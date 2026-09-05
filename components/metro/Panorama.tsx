@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   PIVOT_IDS,
+  pivotIndex,
   pivotPanelId,
   pivotTabId,
   type PivotId,
@@ -48,8 +49,9 @@ function assertPanels(children: ReactNode) {
 export function Panorama({ active, navigation, children }: Props) {
   if (process.env.NODE_ENV !== "production") assertPanels(children);
 
-  const activeIndex = PIVOT_IDS.indexOf(active);
-  const panoramaStyle: PanoramaStyle = { "--panorama-index": activeIndex };
+  const panoramaStyle: PanoramaStyle = {
+    "--panorama-index": pivotIndex(active),
+  };
 
   return (
     <div className={styles.panorama} data-panorama style={panoramaStyle}>

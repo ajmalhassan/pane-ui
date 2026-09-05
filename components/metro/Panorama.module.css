@@ -31,9 +31,46 @@
   pointer-events: none;
 }
 
+/*
+ * The active panel is also what switches its tiles' entrance on.
+ *
+ * It is a custom property rather than a rule reaching into the tiles, and that
+ * is what makes the whole stagger work: a descendant selector here would have
+ * to name `.tile`, which lives in another module and is hashed out of reach,
+ * and it would out-specify the one tile on the site that composes the entrance
+ * with a second animation. An inherited property is specificity-free -- every
+ * tile inside this panel reads it, and a tile that needs to say something more
+ * about its own animation still owns that declaration outright.
+ *
+ * Switching it also RESTARTS the animation, which is the behaviour the design
+ * asks for: a pivot the reader comes back to introduces its tiles again,
+ * because arriving is what the motion says. An inactive panel resolves the
+ * property to nothing, so nothing off-screen is animating.
+ */
 .panel[data-active="true"] {
+  --tile-entrance: var(--metro-tile-entrance);
+
   visibility: visible;
   pointer-events: auto;
+}
+
+/*
+ * Nothing off screen gets a compositor frame.
+ *
+ * An inactive panel resolves `--tile-entrance` to nothing, so its tiles are not
+ * arriving -- but a tile that declares an animation of its own keeps it, and Me
+ * carries one: the assessment waveform ran on every pivot, on a panel that is
+ * `visibility: hidden`, drifting a registered custom property nobody could see.
+ *
+ * `animation-play-state` rather than `animation: none`: pausing holds the
+ * animation where it was and hands it straight back when the panel returns,
+ * where cancelling it would restart the wave from zero every time the reader
+ * came back to Me. The universal selector is scoped to the inactive panel by
+ * the attribute -- the active one is never matched, so an arriving panel's
+ * stagger is untouched.
+ */
+.panel[data-active="false"] * {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {

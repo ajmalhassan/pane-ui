@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { profile } from "../../content/profile";
 import { getPostSummaries } from "../../lib/content/posts";
 import { PHOTOGRAPHY_UNITS } from "../../lib/content/photography";
 import { TILE_COPY_BUDGET } from "../../lib/content/tileBudget";
@@ -1193,14 +1194,36 @@ for (const frame of HUB_FRAMES) {
     );
     expect(new Set(names).size, at).toBe(names.length);
 
-    // The reading list does not move, and neither does the tile above it: Me
-    // owns the one live cycle on the site.
+    /*
+     * The reading list does not move. Not "moves less" -- a list that
+     * re-shuffled itself under a reader mid-sentence is the opposite of what
+     * this pivot is for -- so the assertion is on the list itself and it is
+     * zero at every moment, including the frames right after the pivot is
+     * selected, when the tile above it is running its entrance.
+     */
     expect(
-      await panel.evaluate(
-        (root) => root.getAnimations({ subtree: true }).length,
-      ),
+      await panel.evaluate((root) => {
+        const list = root.querySelector("ol");
+        return list ? list.getAnimations({ subtree: true }).length : -1;
+      }),
       at,
     ).toBe(0);
+
+    /*
+     * And once the hub has arrived, nothing on it moves at all: Me owns the
+     * one live cycle on the site, and the entrance stagger is an arrival, not
+     * a state -- it leaves the animation registry when it is done rather than
+     * parking a filled animation on every tile forever.
+     */
+    await expect
+      .poll(
+        () =>
+          panel.evaluate(
+            (root) => root.getAnimations({ subtree: true }).length,
+          ),
+        { message: at },
+      )
+      .toBe(0);
 
     await expect(
       panel.getByRole("link", { name: "Browse the blog" }),
@@ -1700,18 +1723,72 @@ test("Me animates one restrained waveform and stills it for reduced motion", asy
   // A registered custom property interpolates; an unregistered one would jump.
   expect(second.shift).not.toBe(first.shift);
 
-  // The graph carries no animation of its own, at either motion setting.
+  // The waveform is the tile's own animation, beside the entrance every tile
+  // on the panel shares -- and it is the only one of the two still running.
+  expect(first.animated).toContain("waveDrift");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document
+            .querySelector('[data-pivot="me"]')
+            ?.getAnimations({ subtree: true })
+            .filter((animation) => animation.playState === "running").length,
+      ),
+    )
+    .toBe(1);
+
+  /*
+   * The capability graph is a state, not an animation: it carries the shared
+   * entrance and nothing of its own. Naming what is absent rather than
+   * asserting `none` is what survived the entrance arriving -- a bare `none`
+   * would have failed on a tile that is simply arriving with its panel.
+   */
   const graph = page.locator('[data-pivot="me"] [data-tile-size="hero"]');
-  await expect(graph).toHaveCSS("animation-name", "none");
+  await expect(graph).toHaveCSS("animation-name", "metroTileRise");
+
+  /*
+   * ...and it stops when the reader leaves. Me's panel is still in the document
+   * on every other pivot, `visibility: hidden` behind the plane, and the wave
+   * kept drifting there for nobody. Paused rather than cancelled, so coming
+   * back to Me picks the wave up where it was instead of restarting it.
+   */
+  const waveStates = () =>
+    page.evaluate(() =>
+      (document.querySelector('[data-pivot="me"]') as HTMLElement)
+        .getAnimations({ subtree: true })
+        .filter((animation) =>
+          String(
+            (animation as Animation & { animationName?: string })
+              .animationName ?? "",
+          ).includes("waveDrift"),
+        )
+        .map((animation) => animation.playState),
+    );
+
+  await page.getByRole("tab", { name: HEADINGS.projects }).click();
+  await expect.poll(waveStates).toEqual(["paused"]);
+
+  await page.getByRole("tab", { name: HEADINGS.me }).click();
+  await expect.poll(waveStates).toEqual(["running"]);
+  const resumed = await shiftOf();
+  await page.waitForTimeout(1000);
+  expect((await shiftOf()).shift).not.toBe(resumed.shift);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
   const stilled = await shiftOf();
   await page.waitForTimeout(800);
 
-  expect(stilled.animated).toBe("none");
+  // The wave is gone from the tile's animation list; the opacity-only entrance
+  // is what is left, and the drift it drove stands still.
+  expect(stilled.animated).not.toContain("waveDrift");
+  expect(stilled.animated).toBe("metroTileFade");
   expect(stilled.transform).toBe("matrix(1, 0, 0, 1, 0, 0)");
   expect((await shiftOf()).shift).toBe(stilled.shift);
+  expect(
+    await page.evaluate(() => document.getAnimations().length),
+  ).toBe(0);
 });
 
 /*
@@ -2498,4 +2575,1060 @@ test.describe("without JavaScript", () => {
     expect(box).not.toBeNull();
     expect(Math.abs((box?.x ?? 0) - inset)).toBeLessThanOrEqual(1);
   });
+});
+
+/*
+ * ===========================================================================
+ * Phase 2 motion, and the atmosphere behind it
+ * ===========================================================================
+ *
+ * The whole of the motion policy, measured rather than described: a tile
+ * entrance staggered by its place in the grid, two live tiles that never change
+ * in the same second, one continuous waveform, a ground that differs per pivot
+ * and moves with the plane, a reduced-motion mode with no spatial movement left
+ * in it, and native scrolling nobody has trapped.
+ */
+
+/** 40ms per tile, capped at 240ms -- the tokens in `app/globals.css`. */
+const TILE_STAGGER_MS = 40;
+const TILE_STAGGER_CAP_MS = 240;
+/** `--metro-tile-lift`: the whole spatial part of the entrance. */
+const TILE_LIFT_PX = 8;
+/** The alpha no background stop is allowed to exceed. */
+const BACKGROUND_ALPHA_CEILING = 0.08;
+
+/** The delay each tile of the active panel is running its entrance on. */
+function entranceDelays(root: Element): { index: string; delay: string; name: string }[] {
+  return [...root.querySelectorAll<HTMLElement>("[data-tile-role]")].map((tile) => {
+    const style = getComputedStyle(tile);
+    return {
+      index: tile.dataset.tileIndex ?? "",
+      // The last item of the list, because the one tile that also drifts a
+      // waveform puts that first: the entrance is what this reads.
+      delay: style.animationDelay.split(", ").at(-1) ?? "",
+      name: style.animationName,
+    };
+  });
+}
+
+test("tiles arrive staggered by their place in the grid, capped", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=me");
+
+  const me = page.locator('[data-pivot="me"]');
+  const meDelays = await me.evaluate(entranceDelays);
+
+  // Me lays out nine tiles, so the cap is what stops the last one arriving a
+  // third of a second after the first.
+  expect(meDelays.map((tile) => tile.index)).toEqual([
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+  ]);
+  expect(meDelays.map((tile) => tile.delay)).toEqual([
+    "0s",
+    "0.04s",
+    "0.08s",
+    "0.12s",
+    "0.16s",
+    "0.2s",
+    "0.24s",
+    "0.24s",
+    "0.24s",
+  ]);
+  for (const [index, tile] of meDelays.entries()) {
+    const expected = Math.min(index * TILE_STAGGER_MS, TILE_STAGGER_CAP_MS);
+    expect(Number.parseFloat(tile.delay) * 1000, `tile ${index}`).toBeCloseTo(
+      expected,
+      3,
+    );
+  }
+
+  // The one tile with a second animation composes them: the wave is not
+  // replaced by the entrance, and the entrance is not swallowed by the wave.
+  expect(meDelays[ASSESSMENT].name).toMatch(/waveDrift/);
+  expect(meDelays[ASSESSMENT].name).toMatch(/metroTileRise$/);
+  // Every other tile runs the entrance alone.
+  for (const [index, tile] of meDelays.entries()) {
+    if (index !== ASSESSMENT) expect(tile.name, `tile ${index}`).toBe("metroTileRise");
+  }
+
+  /*
+   * Selecting a pivot is what starts the entrance, so the tiles of the panel
+   * that has just arrived are the ones running -- and they are the ONLY things
+   * running on it.
+   */
+  await page.getByRole("tab", { name: HEADINGS.projects }).click();
+  const projects = page.locator('[data-pivot="projects"]');
+
+  /*
+   * The spatial half of the entrance, read while it is still happening. The
+   * delays above pin when each tile arrives and the names pin what it runs;
+   * neither notices an entrance that has stopped moving, and an opacity-only
+   * fade passes every one of them.
+   *
+   * Three things at once. The tiles are lifted, by no more than the half grid
+   * step `--metro-tile-lift` allows. They are lifted by the `translate`
+   * PROPERTY -- and `transform`, which the press tilt owns, reads exactly what
+   * it reads at rest, which is the composition the entrance was written this
+   * way for. `backwards` fill puts even a tile still inside its delay on the
+   * `from` frame, so every tile of the panel is lifted at this moment.
+   */
+  const positions = (root: Element) =>
+    [...root.querySelectorAll<HTMLElement>("[data-tile-role]")].map((tile) => {
+      const style = getComputedStyle(tile);
+      return { transform: style.transform, translate: style.translate };
+    });
+  const rising = await projects.evaluate(positions);
+  const lifted = rising.filter((tile) => tile.translate !== "none");
+  expect(lifted.length, JSON.stringify(rising)).toBeGreaterThan(0);
+  for (const tile of lifted) {
+    // Computed as a pair, "0px 8px", however the keyframe wrote it.
+    const y = Math.abs(Number.parseFloat(tile.translate.split(" ")[1] ?? "0"));
+    expect(y, tile.translate).toBeGreaterThan(0);
+    expect(y, tile.translate).toBeLessThanOrEqual(TILE_LIFT_PX);
+  }
+
+  const running = await projects.evaluate((root) =>
+    root
+      .getAnimations({ subtree: true })
+      .map((animation) => [
+        (animation as CSSAnimation).animationName,
+        (animation.effect as KeyframeEffect | null)?.target?.getAttribute(
+          "data-tile-role",
+        ),
+      ]),
+  );
+  expect(running).toHaveLength(PROJECT_TILES);
+  for (const [name, role] of running) {
+    expect(name).toBe("metroTileRise");
+    expect(role).toBe("navigation");
+  }
+
+  const projectDelays = await projects.evaluate(entranceDelays);
+  expect(projectDelays.map((tile) => tile.delay)).toEqual([
+    "0s",
+    "0.04s",
+    "0.08s",
+    "0.12s",
+    "0.16s",
+  ]);
+
+  // Nothing outside the tiles moves: not the panorama heading, not the reading
+  // list one pivot away, not the picture hub's backdrop.
+  const elsewhere = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("*")]
+      .filter((node) => {
+        const name = getComputedStyle(node).animationName;
+        return name !== "none" && !node.hasAttribute("data-tile-role");
+      })
+      .map(
+        (node) =>
+          `${node.tagName}.${node.className}:${getComputedStyle(node).animationName}`,
+      ),
+  );
+  // The live tile's own claim fade is the one exception, and it is inside a
+  // tile rather than beside one.
+  expect(
+    elsewhere.filter((entry) => !/tileClaimIn/.test(entry)),
+  ).toEqual([]);
+
+  // And it settles: an entrance is an arrival, not a state a tile stays in.
+  await expect
+    .poll(() =>
+      projects.evaluate((root) => root.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+
+  // Settled means the lift is spent and the tilt's transform is where it was
+  // all along: the two properties never touched each other.
+  const settled = await projects.evaluate(positions);
+  expect(settled.map((tile) => tile.translate)).toEqual(rising.map(() => "none"));
+  expect(settled.map((tile) => tile.transform)).toEqual(
+    rising.map((tile) => tile.transform),
+  );
+});
+
+/*
+ * Two live tiles on one Start screen changing together read as a blink. The
+ * phase between them is the whole claim, so it is measured over three laps
+ * rather than asserted from the stylesheet -- and measured after a reader has
+ * touched one of the two, which is the only thing on this page that can spend
+ * the phase.
+ *
+ * A hover pauses a tile, and a paused tile rebuilds its timer on release. A
+ * phase carried by the timer rather than by a schedule is therefore re-applied
+ * from the moment the hover ended: the 2.5s hold below releases mid-beat,
+ * which leaves the two tiles a second apart for the rest of the session, and a
+ * release on a multiple of the interval leaves them changing in the same
+ * instant. What is measured after it is 20 seconds of the pair, untouched.
+ */
+test("the two Me evidence tiles never change in the same second", async ({
+  page,
+}) => {
+  test.slow();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=me");
+  await page.waitForTimeout(500);
+
+  // The second live tile is the phased one, so it is the one to disturb.
+  const assessment = page
+    .locator('[data-pivot="me"] [data-tile-role="live"]')
+    .nth(1);
+  await assessment.hover();
+  await page.waitForTimeout(2500);
+  await page.mouse.move(4, 4);
+
+  const changes = await page.evaluate(async () => {
+    const tiles = [
+      ...document.querySelectorAll<HTMLElement>(
+        '[data-pivot="me"] [data-tile-role="live"]',
+      ),
+    ];
+    const seen = tiles.map((tile) => tile.dataset.liveIndex);
+    const log: { at: number; tile: number }[] = [];
+    const started = performance.now();
+
+    await new Promise<void>((resolve) => {
+      const poll = setInterval(() => {
+        const now = performance.now() - started;
+        tiles.forEach((tile, i) => {
+          if (tile.dataset.liveIndex !== seen[i]) {
+            seen[i] = tile.dataset.liveIndex;
+            log.push({ at: now, tile: i });
+          }
+        });
+        if (now > 20_000) {
+          clearInterval(poll);
+          resolve();
+        }
+      }, 100);
+    });
+
+    return log;
+  });
+
+  // Both tiles turned over inside the window, so the gap below is measuring
+  // something rather than passing over an empty log.
+  const trace = changes
+    .map((change) => `${change.tile}@${Math.round(change.at)}`)
+    .join(" ");
+  expect(new Set(changes.map((change) => change.tile)).size, trace).toBe(2);
+  expect(changes.length, trace).toBeGreaterThanOrEqual(5);
+
+  for (const [index, change] of changes.entries()) {
+    const previous = changes[index - 1];
+    if (!previous) continue;
+    expect(
+      change.at - previous.at,
+      `${previous.tile}@${Math.round(previous.at)} then ${change.tile}@${Math.round(change.at)}`,
+    ).toBeGreaterThan(1000);
+  }
+});
+
+/**
+ * The 8px cells of the viewport that nothing but the shell's own ground paints.
+ *
+ * Runs inside the page. `elementFromPoint` alone cannot answer this: the
+ * panorama's plane and its four panels cover the page and are perfectly
+ * transparent, so the element under any open point is one of them and never
+ * `<main>`. Ground means that nothing between the cell and the shell inks
+ * anything -- no background, no border, no outline, no glyph, no image -- so
+ * what a screenshot finds there is the ink and whatever the atmosphere drew on
+ * it. Painted boxes are grown by 6px first, which keeps antialiasing, focus
+ * rings and the odd sub-pixel edge out of the sample.
+ */
+function groundCells(): [number, number][] {
+  const main = document.querySelector("main") as HTMLElement;
+  const bounds = main.getBoundingClientRect();
+  const painted: [number, number, number, number][] = [];
+
+  for (const el of main.querySelectorAll<HTMLElement>("*")) {
+    const style = getComputedStyle(el);
+    const inks =
+      style.backgroundColor !== "rgba(0, 0, 0, 0)" ||
+      style.backgroundImage !== "none" ||
+      style.borderTopWidth !== "0px" ||
+      style.borderBottomWidth !== "0px" ||
+      style.borderLeftWidth !== "0px" ||
+      style.borderRightWidth !== "0px" ||
+      style.outlineStyle !== "none" ||
+      el.matches("svg, img, canvas, video, hr") ||
+      [...el.childNodes].some(
+        (node) => node.nodeType === 3 && node.textContent?.trim(),
+      );
+    if (!inks) continue;
+    const box = el.getBoundingClientRect();
+    if (box.width < 1 || box.height < 1) continue;
+    painted.push([box.left - 6, box.top - 6, box.right + 6, box.bottom + 6]);
+  }
+
+  const cells: [number, number][] = [];
+  const size = 8;
+  for (let y = 0; y + size <= window.innerHeight; y += size) {
+    for (let x = 0; x + size <= window.innerWidth; x += size) {
+      if (x < bounds.left || y < bounds.top) continue;
+      if (x + size > bounds.right || y + size > bounds.bottom) continue;
+      const clear = painted.every(
+        ([left, top, right, bottom]) =>
+          x >= right || x + size <= left || y >= bottom || y + size <= top,
+      );
+      if (clear) cells.push([x, y]);
+    }
+  }
+  return cells;
+}
+
+/**
+ * What the ground actually paints, as the per-channel spread of every pixel on
+ * it -- 0 where the whole ground is one flat colour.
+ *
+ * The computed-style assertions beside this one read the layer's declarations,
+ * and a layer can be declared perfectly and still be invisible: `.shell` paints
+ * its own opaque ink in the positioned-auto layer, so without the shell's
+ * `isolation: isolate` the pattern's `z-index: -1` puts it under the page
+ * rather than behind its content, with every declaration intact. Only pixels
+ * can tell those apart.
+ *
+ * The whole ground rather than one window of it, because the patterns repeat at
+ * 88 to 120px and a 64px window can sit between two rules and read flat while
+ * the layer paints perfectly. `scale: "css"` keeps the image in the cells' own
+ * coordinates on a device-pixel-ratio the mobile project doubles.
+ */
+async function groundSpread(
+  page: Page,
+): Promise<{ cells: number; spread: number }> {
+  const cells = await page.evaluate(groundCells);
+  const shot = (await page.screenshot({ scale: "css" })).toString("base64");
+
+  return page.evaluate(
+    async ([data, sample]) => {
+      const image = await new Promise<HTMLImageElement>((resolve) => {
+        const loaded = new Image();
+        loaded.onload = () => resolve(loaded);
+        loaded.src = `data:image/png;base64,${data}`;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, image.width, image.height).data;
+      const scale = image.width / window.innerWidth;
+      const low = [255, 255, 255];
+      const high = [0, 0, 0];
+
+      for (const [cellX, cellY] of sample) {
+        const x0 = Math.round(cellX * scale);
+        const y0 = Math.round(cellY * scale);
+        const side = Math.round(8 * scale);
+        for (let y = y0; y < y0 + side; y += 1) {
+          for (let x = x0; x < x0 + side; x += 1) {
+            const at = (y * image.width + x) * 4;
+            for (let channel = 0; channel < 3; channel += 1) {
+              low[channel] = Math.min(low[channel], pixels[at + channel]);
+              high[channel] = Math.max(high[channel], pixels[at + channel]);
+            }
+          }
+        }
+      }
+
+      return {
+        cells: sample.length,
+        spread: Math.max(...high.map((value, i) => value - low[i])),
+      };
+    },
+    [shot, cells] as [string, [number, number][]],
+  );
+}
+
+/** Every alpha in a computed `background-image`, as numbers. */
+function gradientAlphas(image: string): number[] {
+  return [...image.matchAll(/rgba?\(([^)]*)\)/g)].map((match) => {
+    const parts = match[1].split(",").map((part) => Number.parseFloat(part));
+    return parts.length > 3 ? parts[3] : 1;
+  });
+}
+
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 1440, height: 900 },
+] as const) {
+  test(`each pivot paints its own low-contrast ground at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    const seen = new Map<string, { image: string; position: string }>();
+
+    for (const [index, view] of VIEWS.entries()) {
+      await page.goto(`/?view=${view}`);
+      await page.waitForTimeout(700);
+      const at = `${view}@${frame.width}`;
+
+      // The shell publishes the pivot, and the layer is selected by it.
+      await expect(page.locator("main"), at).toHaveAttribute(
+        "data-active-pivot",
+        view,
+      );
+
+      const layer = await page.evaluate(() => {
+        const main = document.querySelector("main") as HTMLElement;
+        const style = getComputedStyle(main, "::before");
+        return {
+          image: style.backgroundImage,
+          position: style.backgroundPosition,
+          zIndex: style.zIndex,
+          pointerEvents: style.pointerEvents,
+          index: getComputedStyle(main)
+            .getPropertyValue("--panorama-index")
+            .trim(),
+        };
+      });
+
+      expect(layer.index, at).toBe(String(index));
+      // Behind the content, and never in the way of it.
+      expect(Number.parseInt(layer.zIndex, 10), at).toBeLessThan(0);
+      expect(layer.pointerEvents, at).toBe("none");
+
+      // Atmosphere, not decoration: nothing is allowed past the approved alpha.
+      for (const alpha of gradientAlphas(layer.image)) {
+        expect(alpha, `${at} ${layer.image}`).toBeLessThanOrEqual(
+          BACKGROUND_ALPHA_CEILING,
+        );
+      }
+
+      // Photography stands its ground down: its own blurred backdrop is the
+      // atmosphere there, and two on one pivot is one too many.
+      if (view === "photography") expect(layer.image, at).toBe("none");
+      else expect(layer.image, at).toContain("gradient");
+
+      /*
+       * And it reaches the glass. Measured on the ground pixels themselves:
+       * three pivots draw something there, and the fourth is one flat ink.
+       * The floor is the noise the compositor leaves on a flat surface (1 per
+       * channel, measured on Photography at both frames); the patterned pivots
+       * read 8 to 28 against it.
+       */
+      const ground = await groundSpread(page);
+      expect(ground.cells, `${at} ground cells`).toBeGreaterThan(20);
+      if (view === "photography")
+        expect(ground.spread, `${at} flat ground`).toBeLessThanOrEqual(2);
+      else expect(ground.spread, `${at} patterned ground`).toBeGreaterThanOrEqual(3);
+
+      seen.set(view, { image: layer.image, position: layer.position });
+
+      // The layer never adds a horizontal scrollbar, at any width.
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        ),
+        at,
+      ).toBe(0);
+    }
+
+    // Four pivots, four grounds -- and four positions, because the shared
+    // ground shifts a little with the plane.
+    const images = [...seen.values()].map((entry) => entry.image);
+    const positions = [...seen.values()].map((entry) => entry.position);
+    expect(new Set(images).size, "one ground per pivot").toBe(VIEWS.length);
+    expect(new Set(positions).size, "one offset per pivot").toBe(VIEWS.length);
+    // Me leads at zero and every pivot after it is further left.
+    const x = positions.map((position) =>
+      Number.parseFloat(position.split(" ")[0]),
+    );
+    expect(x[0]).toBe(0);
+    for (let i = 1; i < x.length; i += 1) expect(x[i]).toBeLessThan(x[i - 1]);
+  });
+}
+
+/*
+ * Glyph-accurate contrast for every line of copy on a pivot -- the copy on the
+ * atmosphere and the copy on the tiles alike.
+ *
+ * Each element is shot twice, visible then hidden, and only the pixels its
+ * glyphs actually inked are measured. That is the difference between "this box
+ * is over a pattern" and "a reader meets this pattern behind this letter", and
+ * it is the only method that catches a thin graphic crossing one line of a
+ * paragraph: the Me hero's capability graph put a lit cyan ring through the
+ * second line of its own body copy and read 2.40:1 there while the box around
+ * it averaged out fine.
+ *
+ * Tile copy is in scope because nothing else covers it. axe's `color-contrast`
+ * rule abstains the moment it finds a background image it cannot resolve, and
+ * the shell's ground is one -- so on Me at 1440 it returns `incomplete` for 36
+ * nodes, 24 of them tile copy on tiles the pattern cannot even reach. Those
+ * abstentions are why the hero's fault survived three reviews.
+ */
+
+/**
+ * What the sweep is supposed to be looking at, per pivot: the same numbers at
+ * 320 and at 1440, because nothing here is painted at one width and dropped at
+ * the other -- the notes a narrow tile cannot show are clipped, not removed.
+ *
+ * Exact rather than a floor, and deliberately brittle. The bounds they replace
+ * (`> 2` ground, `> 0` tile) sat so far below the real counts that the
+ * collector could have lost nine subjects in ten and the sweep would still have
+ * passed, measuring almost nothing and reporting green. Copy that moves these
+ * numbers is copy that moved the coverage, and it should be a deliberate edit.
+ */
+const SWEEP_SUBJECTS = {
+  me: { ground: 14, tile: 24 },
+  projects: { ground: 13, tile: 13 },
+  blog: { ground: 20, tile: 3 },
+  photography: { ground: 14, tile: 6 },
+} as const;
+
+/** Whichever claim each live tile is showing has to be one of its own. */
+const LIVE_CLAIMS: Record<"evidence" | "assessment", string[]> = {
+  evidence: profile.start.evidence.claims.map((claim) => claim.claim),
+  assessment: profile.start.assessment.claims.map((claim) => claim.claim),
+};
+
+/** Publishes the sweep's subjects on `window.__nodes`, and counts them. */
+function contrastSubjects(): {
+  ground: number;
+  tile: number;
+  live: string[];
+} {
+  const out: HTMLElement[] = [];
+  const live: string[] = [];
+  let ground = 0;
+  let tile = 0;
+  for (const el of document.querySelectorAll<HTMLElement>("main *")) {
+    // Only the panel a reader is actually on.
+    const panel = el.closest<HTMLElement>('[role="tabpanel"]');
+    if (panel && panel.dataset.active !== "true") continue;
+    /*
+     * A reveal tile's turned-away face: `aria-hidden` and rotated edge-on, so
+     * for the length of the flip it paints its old claim through the new one.
+     * The face on show is the one a reader is reading, and it is measured.
+     *
+     * Only this one thing is skipped for being hidden -- NOT `aria-hidden`
+     * broadly. A live tile wraps its visible claim in `aria-hidden` (the
+     * button's own label already carries every claim), and so does the status
+     * line, which is decoration in the phone's idiom rather than content.
+     * Skipping the attribute outright would drop the identity line on all four
+     * pivots and both of Me's live claims -- the copy closest to the one moving
+     * graphic on the site -- which is most of what this sweep is for.
+     */
+    if (el.closest('[data-face][aria-hidden="true"]')) continue;
+    // A `<text>` element inside a motif is a drawing, not a line of copy.
+    if (el.closest("svg")) continue;
+    const text = [...el.childNodes]
+      .filter((node) => node.nodeType === 3)
+      .map((node) => node.textContent)
+      .join("")
+      .trim();
+    if (!text) continue;
+    const box = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    if (box.width < 1 || box.height < 1) continue;
+    /*
+     * Copy with no pixels cannot be measured -- and one thing on this page is
+     * invisible only briefly: the pause rule parks an inactive panel's
+     * `tileClaimIn` on its `from` frame, so a live claim that turned over
+     * off-screen sits at opacity 0 for the ~420ms its fade takes on return.
+     * The caller waits for both faces to reach 1 before collecting, which is
+     * what keeps this skip a guard against genuinely hidden copy instead of
+     * the thing that silently drops the two claims closest to the only moving
+     * graphic on the site.
+     */
+    if (style.visibility === "hidden" || style.opacity === "0") continue;
+    if (el.closest("[data-tile-role]")) tile += 1;
+    else ground += 1;
+    if (el.closest('[aria-live="off"]')) live.push(text);
+    out.push(el);
+  }
+  (window as unknown as { __nodes: HTMLElement[] }).__nodes = out;
+  return { ground, tile, live };
+}
+
+/**
+ * Holds every live tile on its current claim for the rest of the test.
+ *
+ * The sweep below takes two screenshots per subject and there are up to 38 of
+ * them, so it runs for several seconds -- long enough for a six-second claim to
+ * turn over underneath it and leave a measured element detached from the
+ * document. `useDocumentVisible` reads `document.hidden`, and a live tile with
+ * no reader stops spending timers, so this is the product's own pause rather
+ * than a lever invented for the test: nothing about layout or paint changes,
+ * only the timer stops.
+ */
+async function freezeLiveTiles(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  // Whatever claim was arriving when the timer stopped still has to land.
+  await page.waitForTimeout(600);
+}
+
+/**
+ * The worst contrast ratio among the pixels subject `index` inked, or `null`
+ * where it inked none (a clipped line, a subject smaller than its own clip).
+ *
+ * The element's colour is composited through its whole opacity chain before it
+ * is compared, because `--metro-white` at `opacity: 0.86` is not white.
+ */
+async function glyphContrast(
+  page: Page,
+  index: number,
+): Promise<{ name: string; inTile: boolean; ratio: number } | null> {
+  const meta = await page.evaluate((i) => {
+    const el = (window as unknown as { __nodes: HTMLElement[] }).__nodes[i];
+    el.scrollIntoView({ block: "center" });
+    const box = el.getBoundingClientRect();
+    let alpha = 1;
+    for (
+      let node: HTMLElement | null = el;
+      node && node !== document.body;
+      node = node.parentElement
+    )
+      alpha *= Number.parseFloat(getComputedStyle(node).opacity || "1");
+    const x = Math.max(0, Math.floor(box.x) - 2);
+    const y = Math.max(0, Math.floor(box.y) - 2);
+    return {
+      name: (el.textContent ?? "").replace(/\s+/g, " ").slice(0, 30),
+      inTile: Boolean(el.closest("[data-tile-role]")),
+      color: getComputedStyle(el).color,
+      alpha,
+      clip: {
+        x,
+        y,
+        width: Math.min(Math.ceil(box.width) + 4, window.innerWidth - x),
+        height: Math.min(Math.ceil(box.height) + 4, window.innerHeight - y),
+      },
+    };
+  }, index);
+  if (meta.clip.width < 2 || meta.clip.height < 2) return null;
+
+  const inked = (await page.screenshot({ clip: meta.clip })).toString("base64");
+  await page.evaluate(
+    (i) =>
+      ((window as unknown as { __nodes: HTMLElement[] }).__nodes[
+        i
+      ].style.visibility = "hidden"),
+    index,
+  );
+  const bare = (await page.screenshot({ clip: meta.clip })).toString("base64");
+  await page.evaluate(
+    (i) =>
+      ((window as unknown as { __nodes: HTMLElement[] }).__nodes[
+        i
+      ].style.visibility = ""),
+    index,
+  );
+
+  const measured = await page.evaluate(
+    async ([inked, bare, color, alpha]) => {
+      const load = (data: string) =>
+        new Promise<HTMLImageElement>((resolve) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.src = `data:image/png;base64,${data}`;
+        });
+      const pixels = (image: HTMLImageElement) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, image.width, image.height).data;
+      };
+      const [a, b] = await Promise.all([load(inked), load(bare)]);
+      const on = pixels(a);
+      const off = pixels(b);
+      const channel = (value: number) => {
+        const x = value / 255;
+        return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+      };
+      const luminance = ([r, g, bl]: number[]) =>
+        0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(bl);
+      const parsed = (color as string).match(/[\d.]+/g)?.map(Number) ?? [];
+      const [cr, cg, cb, ca = 1] = parsed;
+      const opacity = ca * (alpha as number);
+      let worst = Infinity;
+      let glyphs = 0;
+      for (let i = 0; i < on.length; i += 4) {
+        const delta =
+          Math.abs(on[i] - off[i]) +
+          Math.abs(on[i + 1] - off[i + 1]) +
+          Math.abs(on[i + 2] - off[i + 2]);
+        if (delta < 90) continue;
+        glyphs += 1;
+        const ground = [off[i], off[i + 1], off[i + 2]];
+        const ink = [
+          cr * opacity + ground[0] * (1 - opacity),
+          cg * opacity + ground[1] * (1 - opacity),
+          cb * opacity + ground[2] * (1 - opacity),
+        ];
+        const high = Math.max(luminance(ink), luminance(ground));
+        const low = Math.min(luminance(ink), luminance(ground));
+        const ratio = (high + 0.05) / (low + 0.05);
+        if (ratio < worst) worst = ratio;
+      }
+      return { glyphs, worst };
+    },
+    [inked, bare, meta.color, meta.alpha] as const,
+  );
+
+  if (!measured.glyphs) return null;
+  return { name: meta.name, inTile: meta.inTile, ratio: measured.worst };
+}
+
+test.describe("every line clears 4.5:1, ground and tile alike", () => {
+  for (const frame of [
+    { width: 320, height: 568 },
+    { width: 1440, height: 900 },
+  ] as const) {
+    for (const view of VIEWS) {
+      test(`${view} keeps every line above 4.5:1 at ${frame.width}px`, async ({
+        page,
+      }) => {
+        test.slow();
+        await page.setViewportSize(frame);
+        await page.goto(`/?view=${view}`);
+        await page.waitForTimeout(900);
+        await freezeLiveTiles(page);
+
+        /*
+         * Both live faces are fully in before anything is collected. Their fade
+         * is the one thing on the page that holds real copy at opacity 0, and
+         * the collector skips what it cannot measure -- so this wait is what
+         * makes the two live claims subjects of the sweep rather than an
+         * accident of two unrelated timings.
+         */
+        const faces = page.locator(
+          '[role="tabpanel"][data-active="true"] [data-tile-role="live"] [aria-live="off"]',
+        );
+        for (let face = 0; face < (await faces.count()); face += 1)
+          await expect(faces.nth(face)).toHaveCSS("opacity", "1");
+
+        // A pivot whose copy the collector missed would pass this vacuously,
+        // and both halves have to be there: the ground carries the heading and
+        // the identity line, and every pivot has tiles.
+        const subjects = await page.evaluate(contrastSubjects);
+        const at = `${view}@${frame.width}`;
+        expect(subjects.ground, `${at} ground subjects`).toBe(
+          SWEEP_SUBJECTS[view].ground,
+        );
+        expect(subjects.tile, `${at} tile subjects`).toBe(
+          SWEEP_SUBJECTS[view].tile,
+        );
+        // Me's two live claims are in the sweep by name, whichever pair of them
+        // the cycle happens to be holding.
+        if (view === "me") {
+          expect(
+            subjects.live.filter((text) => LIVE_CLAIMS.evidence.includes(text)),
+            `${at} evidence claim`,
+          ).toHaveLength(1);
+          expect(
+            subjects.live.filter((text) =>
+              LIVE_CLAIMS.assessment.includes(text),
+            ),
+            `${at} assessment claim`,
+          ).toHaveLength(1);
+        } else {
+          expect(subjects.live, `${at} live claims`).toEqual([]);
+        }
+
+        for (let i = 0; i < subjects.ground + subjects.tile; i += 1) {
+          const measured = await glyphContrast(page, i);
+          if (!measured) continue;
+          expect(
+            measured.ratio,
+            `${at} ${measured.inTile ? "tile" : "ground"} "${measured.name}"`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      });
+    }
+  }
+});
+
+/*
+ * Reduced motion takes the movement out and leaves the evidence in. Nothing
+ * spatial survives -- no tilt, no press scale, no rise, no plane slide, no
+ * travelling ground -- and no tile is ever held invisible waiting for a delay.
+ */
+test("reduced motion removes every spatial transform and hides no evidence", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  for (const view of VIEWS) {
+    await page.goto(`/?view=${view}`);
+    await page.waitForTimeout(400);
+    const at = `${view} reduced`;
+
+    const tiles = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll<HTMLElement>(
+          '[data-active="true"] [data-tile-role]',
+        ),
+      ].map((tile) => {
+        const style = getComputedStyle(tile);
+        return {
+          name: style.animationName,
+          delay: style.animationDelay,
+          translate: style.translate,
+          transform: style.transform,
+          opacity: style.opacity,
+          rotateX: style.getPropertyValue("--press-rotate-x").trim(),
+        };
+      }),
+    );
+
+    expect(tiles.length, at).toBeGreaterThan(0);
+    for (const tile of tiles) {
+      // Opacity only, and instantly: no rise, and no delay to be hidden by.
+      expect(tile.name, at).toBe("metroTileFade");
+      expect(tile.delay, at).toBe("0s");
+      expect(tile.translate, at).toBe("none");
+      expect(tile.transform, at).toBe("none");
+      expect(tile.opacity, at).toBe("1");
+      expect(tile.rotateX, at).toBe("");
+    }
+
+    // The ground still differs per pivot -- that is a state, not a movement --
+    // but it stops travelling to get there.
+    await expect(page.locator("main"), at).toHaveAttribute(
+      "data-active-pivot",
+      view,
+    );
+    expect(
+      await page.evaluate(
+        () =>
+          getComputedStyle(document.querySelector("main") as HTMLElement, "::before")
+            .transitionProperty,
+      ),
+      at,
+    ).toBe("none");
+
+    // Nothing at all is animating, on any pivot.
+    expect(
+      await page.evaluate(() => document.getAnimations().length),
+      at,
+    ).toBe(0);
+  }
+});
+
+/*
+ * The handoff kept native vertical scrolling, and Phase 2 does not get to take
+ * it. No wheel or touch listener is installed, nothing declares a `touch-action`
+ * lock or an `overscroll-behavior` trap, and the page moves under a real wheel.
+ */
+test("the page still scrolls natively and traps no gesture", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 851 });
+
+  /*
+   * Catch the listeners a trapping implementation would have to add, from
+   * before any of this page's own scripts have run.
+   *
+   * What is recorded is the ones that could actually cancel a gesture:
+   * `passive: true` listeners cannot call `preventDefault()` at all, and both
+   * React's own root delegation and Next's development overlay register
+   * several of those. A non-passive `wheel` or `touchmove` handler is the
+   * thing this page must never grow. (Measured on the production build: zero
+   * listeners of either kind, passive included.)
+   */
+  await page.addInitScript(() => {
+    const trapped: string[] = [];
+    (window as unknown as { __trapped: string[] }).__trapped = trapped;
+    const add = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function patched(
+      this: EventTarget,
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | AddEventListenerOptions,
+    ) {
+      const cancellable =
+        typeof options !== "object" || options.passive !== true;
+      if (["wheel", "touchstart", "touchmove"].includes(type) && cancellable) {
+        const node = this as Partial<Element>;
+        trapped.push(`${type} on ${node.tagName ?? String(this)}`);
+      }
+      return add.call(this, type, listener, options);
+    } as typeof add;
+  });
+
+  await page.goto("/?view=me");
+  await page.waitForTimeout(600);
+
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __trapped: string[] }).__trapped,
+    ),
+  ).toEqual([]);
+
+  const locks = await page.evaluate(() => {
+    const of = (node: Element) => {
+      const style = getComputedStyle(node);
+      return { touchAction: style.touchAction, overscroll: style.overscrollBehavior };
+    };
+    return {
+      html: of(document.documentElement),
+      body: of(document.body),
+      main: of(document.querySelector("main") as HTMLElement),
+      panorama: of(document.querySelector("[data-panorama]") as HTMLElement),
+    };
+  });
+  for (const [where, style] of Object.entries(locks)) {
+    expect(style.touchAction, where).toBe("auto");
+    expect(style.overscroll, where).toBe("auto");
+  }
+
+  const before = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(before);
+});
+
+/*
+ * The press, in the browser that actually composes it.
+ *
+ * jsdom can assert which custom properties a handler wrote; only a real engine
+ * can say what the two rules that read them add up to. The three claims here
+ * are the ones a unit test cannot make: a touch press leans the surface exactly
+ * as a mouse press does, `:active` composes its scale WITH that lean instead of
+ * replacing it, and reduced motion leaves no spatial transform at all.
+ */
+test("a press leans the tile it is on, and the release scale composes with the lean", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=projects");
+  await page.waitForTimeout(700);
+
+  const tile = page
+    .locator('[data-active="true"] [data-tile-role="navigation"]')
+    .first();
+  const box = await tile.boundingBox();
+  if (!box) throw new Error("the lead project tile has no box to press");
+
+  const state = () =>
+    tile.evaluate((node) => ({
+      x: node.style.getPropertyValue("--press-rotate-x"),
+      y: node.style.getPropertyValue("--press-rotate-y"),
+      scale: getComputedStyle(node).getPropertyValue("--press-scale").trim(),
+      transform: getComputedStyle(node).transform,
+    }));
+
+  const IDENTITY = /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, [-\d.e]+, 0, 0, 0, 1\)$/;
+  expect((await state()).transform, "a tile at rest carries only its perspective").toMatch(
+    IDENTITY,
+  );
+
+  /*
+   * Touch parity. A dispatched pointer event rather than `touchscreen.tap`,
+   * because the claim is about the pointer TYPE reaching the handler -- and a
+   * tap gives no moment in the middle to measure.
+   */
+  await tile.evaluate((node, at) => {
+    for (const type of ["pointerover", "pointerenter", "pointerdown"]) {
+      node.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          clientX: at.x,
+          clientY: at.y,
+          isPrimary: true,
+          pointerId: 1,
+          pointerType: "touch",
+        }),
+      );
+    }
+  }, { x: box.x + box.width * 0.75, y: box.y + box.height * 0.25 });
+  await page.waitForTimeout(250);
+
+  const touched = await state();
+  // Upper-right quadrant: a quarter of the way out on both axes, at the
+  // 4-degree intensity, is one degree each -- and both read positive there.
+  expect(Number.parseFloat(touched.x)).toBeCloseTo(1, 5);
+  expect(Number.parseFloat(touched.y)).toBeCloseTo(1, 5);
+  expect(touched.transform, "a touch press must actually lean the tile").not.toMatch(
+    IDENTITY,
+  );
+
+  await tile.evaluate((node) =>
+    node.dispatchEvent(
+      new PointerEvent("pointercancel", {
+        bubbles: true,
+        pointerId: 1,
+        pointerType: "touch",
+      }),
+    ),
+  );
+  await page.waitForTimeout(250);
+  expect(await state()).toMatchObject({ x: "", y: "" });
+
+  // The mouse path, and the composition. Held down, so `:active` applies.
+  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.25);
+  await page.waitForTimeout(120);
+  const hovered = await state();
+  expect(Number.parseFloat(hovered.x)).toBeCloseTo(1, 5);
+
+  await page.mouse.down();
+  await page.waitForTimeout(250);
+  const pressed = await state();
+  expect(pressed.scale, "the press depression").toBe("0.985");
+  // Still leaning: the rotation survived the press rather than being replaced
+  // by the scale, which is the whole point of composing them.
+  expect(Number.parseFloat(pressed.x)).toBeCloseTo(1, 1);
+  const scaled = pressed.transform.match(/^matrix3d\(([-\d.e]+)/);
+  expect(scaled, pressed.transform).not.toBeNull();
+  // A pure rotation of one degree leaves m11 at 0.9998; a composed
+  // rotate-then-scale takes it to ~0.985. A replaced transform would be
+  // exactly 0.985 with no rotation left in the other cells.
+  expect(Number.parseFloat(scaled?.[1] ?? "1")).toBeLessThan(0.99);
+  expect(pressed.transform).not.toMatch(
+    /^matrix3d\(0.985, 0, 0, 0, 0, 0.985, 0, 0/,
+  );
+
+  // Released away from the tile, so the anchor is not followed.
+  await page.mouse.move(2, 2);
+  await page.mouse.up();
+});
+
+test("reduced motion leaves a pressed tile with no transform at all", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=projects");
+  await page.waitForTimeout(400);
+
+  const tile = page
+    .locator('[data-active="true"] [data-tile-role="navigation"]')
+    .first();
+  const box = await tile.boundingBox();
+  if (!box) throw new Error("the lead project tile has no box to press");
+
+  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.25);
+  await page.mouse.down();
+  await page.waitForTimeout(200);
+
+  expect(
+    await tile.evaluate((node) => ({
+      x: node.style.getPropertyValue("--press-rotate-x"),
+      transform: getComputedStyle(node).transform,
+    })),
+  ).toEqual({ x: "", transform: "none" });
+
+  await page.mouse.move(2, 2);
+  await page.mouse.up();
 });

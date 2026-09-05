@@ -10,6 +10,21 @@ export function pivotHref(pivot: PivotId): string {
   return `/?view=${pivot}`;
 }
 
+/**
+ * A pivot's place in the panorama, which is also how far the plane has
+ * travelled: the stylesheets multiply it into a translation for the panels and
+ * into a slower drift for the ground behind them (`--panorama-index`).
+ *
+ * It is derived in two places for one good reason -- a custom property only
+ * travels downwards, and the two elements that need it are on different
+ * branches -- and so it belongs here, next to the other two names the same
+ * `PIVOT_IDS` order gives out, rather than as two `indexOf` calls that can
+ * drift apart.
+ */
+export function pivotIndex(id: PivotId): number {
+  return PIVOT_IDS.indexOf(id);
+}
+
 export function pivotTabId(id: PivotId): string {
   return `pivot-tab-${id}`;
 }
