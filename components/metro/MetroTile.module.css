@@ -11,15 +11,118 @@
  * hidden` also zeroes the grid item's automatic minimum size, so the tile
  * needs no `min-width: 0` of its own to stop long copy blowing out a track.
  */
+/*
+ * ---------------------------------------------------------------------------
+ * The type budget
+ * ---------------------------------------------------------------------------
+ *
+ * A tile clips; it never grows. So every step below is derived from the height
+ * the tile actually has, and capped at the absolute step the design asks for.
+ *
+ * The height is `--tile-unit`, which TileGrid publishes (TileGrid.module.css)
+ * as the same expression it lays its rows out with. That is load-bearing:
+ * the absolute steps used to go *up* at 48rem while the unit went *down* --
+ * eight columns instead of four takes a unit from 171px at 767 to 81px at 768
+ * -- and the copy on a `wide` tile needed 81px of a 27px budget. Deriving from
+ * the unit is what makes the two move together.
+ *
+ * What a tile has to spend, per size:
+ *
+ *   --tile-box   rows x unit + the gutters between those rows
+ *   --tile-copy  --tile-box, less the padding on both edges, less the caption
+ *                line and the gap above it, less anything a consumer has
+ *                reserved, less a 2px cushion for rounding
+ *
+ * and what it spends it on -- the honest model, not an approximation:
+ *
+ *   title  lines x 1.15 (`.title`'s own line-height) x --tile-title
+ *   body   lines x 1.4  (`.body`'s)                  x --tile-body
+ *   value  1 line at line-height 1                   x --tile-value-size
+ *
+ * so `--tile-*-lead` below is that per-line multiplier times the line count
+ * the size's clamp allows, and dividing the size's share of the budget by it
+ * gives the largest step that fits. Where the derived step is bigger than the
+ * design's own, the design's wins (the `clamp` ceiling); where a container is
+ * narrower than the 320px frame this design supports, a legible floor wins and
+ * the tile clips rather than painting 3px type.
+ *
+ * The proof that a tile with a body fits is arithmetic, not luck: when neither
+ * step is at its ceiling the two shares add back up to exactly `--tile-copy`
+ * (0.46 + 0.54), and a step held at its ceiling only ever spends less.
+ *
+ * OUTSIDE A TileGrid there is no `--tile-unit`, so `--tile-box` falls back to
+ * 40rem per row -- a box large enough that every clamp a size paints lands on
+ * its ceiling. (`small` and `wide` paint no body line at all, and their zero
+ * body budget leaves `--tile-body` on its floor there; nothing reads it.)
+ * A bare `<MetroTile>` therefore computes *exactly* the absolute
+ * steps this file declared before the derivation existed, which is what
+ * `tests/unit/MetroTile.test.tsx` renders and what a consumer outside a grid
+ * gets.
+ */
 .tile {
   /* Every tile knob is a multiple of the 4px grid or a named type step. */
   --tile-pad: calc(var(--metro-grid) * 3);
   --tile-gap-copy: var(--metro-grid);
-  --tile-title: 1rem;
-  --tile-body: 0.8rem;
+
+  /* Each size restates this beside its own `grid-row: span` below; this is the
+     base that keeps `--tile-box` a valid calc() if a tile ever lands without a
+     size class. */
+  --tile-rows: 1;
+  --tile-box: calc(
+    var(--tile-rows) * var(--tile-unit, 40rem) + (var(--tile-rows) - 1) *
+      var(--tile-gap, 0px)
+  );
+  /*
+   * A consumer's own claim on the copy region, for copy this file knows
+   * nothing about. The Me Start screen reserves its supporting line here
+   * (`.unitTile` in PortfolioPanorama.module.css); everything else leaves it
+   * at zero.
+   */
+  --tile-copy-reserved: 0px;
+  --tile-copy: calc(
+    var(--tile-box) - 2 * var(--tile-pad) - var(--tile-gap-copy) -
+      var(--metro-text-label) * 1.2 - var(--tile-copy-reserved) - 2px
+  );
+
+  /* Two title lines (`.title`'s clamp) at its 1.15 line-height. */
+  --tile-title-lead: 2.3;
+  /* Two body lines at `.body`'s 1.4. */
+  --tile-body-lead: 2.8;
+  --tile-title-min: 0.6rem;
+  --tile-body-min: 0.7rem;
+  --tile-value-min: 0.75rem;
+  --tile-title-max: 1rem;
+  --tile-body-max: 0.8rem;
   /* The `value` budget's own step: a numeral is the whole content of the tiles
      that have no room for a body line, so it scales with the tile. */
-  --tile-value-size: 1.75rem;
+  --tile-value-max: 1.75rem;
+
+  /*
+   * The split a tile with both a title and a body line makes. 0.46/0.54 is the
+   * proportion the absolute steps have always had -- at the wide-layout step
+   * (>= 48rem, not the `wide` size), two title lines are 46px against three
+   * body lines' 57.12px -- rounded so that
+   * a 4x2 hero on a 320px frame still lands exactly on its 1.15rem ceiling.
+   */
+  --tile-title-budget: calc((var(--tile-copy) - var(--tile-gap-copy)) * 0.46);
+  --tile-body-budget: calc((var(--tile-copy) - var(--tile-gap-copy)) * 0.54);
+
+  --tile-title: clamp(
+    var(--tile-title-min),
+    calc(var(--tile-title-budget) / var(--tile-title-lead)),
+    var(--tile-title-max)
+  );
+  --tile-body: clamp(
+    var(--tile-body-min),
+    calc(var(--tile-body-budget) / var(--tile-body-lead)),
+    var(--tile-body-max)
+  );
+  /* One line at line-height 1, so the whole copy region is its budget. */
+  --tile-value-size: clamp(
+    var(--tile-value-min),
+    var(--tile-copy),
+    var(--tile-value-max)
+  );
 
   position: relative;
   box-sizing: border-box;
@@ -42,63 +145,103 @@
  * 4x2. Rows are square by construction there, so these spans are the whole of
  * a tile's geometry.
  */
+/* `--tile-rows` is the budget's copy of `grid-row: span`, so the two are
+   declared together: a size whose span changes without its row count is a tile
+   budgeting against a height it does not have. */
 .small {
   grid-column: span 1;
   grid-row: span 1;
+  --tile-rows: 1;
 }
 
 .wide {
   grid-column: span 2;
   grid-row: span 1;
+  --tile-rows: 1;
 }
 
 .large {
   grid-column: span 2;
   grid-row: span 2;
+  --tile-rows: 2;
 }
 
 .hero {
   grid-column: span 4;
   grid-row: span 2;
+  --tile-rows: 2;
 }
 
-/* One-unit-tall tiles hold a caption and a short title, so they inset less. */
+/*
+ * One-unit-tall tiles hold a caption and a short title, so they inset less --
+ * and they paint no body line at any width (`.small .body, .wide .body` below),
+ * so the whole copy region is the title's, or the numeral's. A zero body
+ * budget leaves `--tile-body` sitting on its floor here; nothing paints it.
+ */
 .small,
 .wide {
   --tile-pad: calc(var(--metro-grid) * 2);
-  --tile-title: 0.85rem;
+  /*
+   * A floor of its own, higher than `.tile`'s 0.6rem. Derived alone, a `wide`
+   * headline computes to 11.25px at 768 -- 0.05px larger than the 11.2px
+   * caption under it, which reads as a second caption rather than a headline at
+   * a first-class frame. 12px is the smallest step that separates them.
+   *
+   * It is not free: two lines of 12px at 1.15 is 27.594px of the 27.875px
+   * fractional copy region a one-unit tile has at 768, so the margin there
+   * falls from 2.00px to 0.28px. Me's assessment tile spends that margin on
+   * its waveform motif: the band falls from a 2.00px hairline to 0.27px,
+   * below one device pixel at 1x. Measured clean -- no clipped line, nothing
+   * ellipsised -- on Me and Projects at 4px steps through 744-860 and at all
+   * seven test frames.
+   */
+  --tile-title-min: 0.75rem;
+  --tile-title-max: 0.85rem;
+  --tile-title-budget: var(--tile-copy);
+  --tile-body-budget: 0px;
+}
+
+/* `.small .title` is clamped to one line, so it buys one line of lead. */
+.small {
+  --tile-title-lead: 1.15;
 }
 
 .large {
-  --tile-value-size: 2.5rem;
+  --tile-value-max: 2.5rem;
 }
 
 .hero {
-  --tile-title: 1.15rem;
-  --tile-value-size: 3rem;
+  --tile-title-max: 1.15rem;
+  --tile-value-max: 3rem;
 }
 
 @media (min-width: 48rem) {
   .tile {
     --tile-pad: calc(var(--metro-grid) * 4);
     --tile-gap-copy: var(--metro-gap-tile);
-    --tile-title: 1.25rem;
-    --tile-body: 0.85rem;
-    --tile-value-size: 2rem;
+    --tile-title-max: 1.25rem;
+    --tile-body-max: 0.85rem;
+    --tile-value-max: 2rem;
   }
 
   .small,
   .wide {
-    --tile-title: 0.95rem;
+    --tile-title-max: 0.95rem;
+  }
+
+  .large,
+  .hero {
+    /* Three body lines from here (`.large .body, .hero .body` below). */
+    --tile-body-lead: 4.2;
   }
 
   .large {
-    --tile-value-size: 3rem;
+    --tile-value-max: 3rem;
   }
 
   .hero {
-    --tile-title: 1.6rem;
-    --tile-value-size: 3.5rem;
+    --tile-title-max: 1.6rem;
+    --tile-value-max: 3.5rem;
   }
 }
 
@@ -244,18 +387,20 @@
   line-clamp: 1;
 }
 
+/*
+ * A body line needs a two-unit-tall tile, at every width. A `wide` tile is one
+ * unit high -- 67px at 320, and 81px at 768, where the grid doubles to eight
+ * columns -- and once its padding, caption and two title lines are taken out
+ * there is nothing left: painting a body there used to cost the tile 81px of
+ * copy out of a 27px budget, and the reader got a clamped fragment of a
+ * sentence. One unit carries a headline (or a numeral) and its caption.
+ */
 .small .body,
 .wide .body {
   display: none;
 }
 
 @media (min-width: 48rem) {
-  .wide .body {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
   .large .body,
   .hero .body {
     -webkit-line-clamp: 3;

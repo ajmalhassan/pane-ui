@@ -130,53 +130,31 @@
 }
 
 /*
- * A 1x1 or 2x1 tile is exactly one grid unit high, and the grid derives that
- * unit from the frame's own inline size. The tile system's type steps are
- * absolute, so at the 48rem breakpoint -- where the grid goes from four units
- * across to eight, and a unit drops from 171px to 81px -- a 2rem numeral or a
- * second title line no longer fits inside one. These budgets are therefore
- * derived from the same measurement the grid itself uses, so copy shrinks with
- * its tile instead of spilling out of it. `--unit` itself is not re-derived:
- * `--tile-units` and `--tile-gap` are ordinary inheriting custom properties
- * TileGrid sets on `.grid` (TileGrid.module.css), and a tile is a child of
- * `.grid`, so its own `--unit` is the grid's own row-height expression,
- * verbatim -- it cannot drift from the grid the way a hand-copied restatement
- * could.
+ * A tile whose copy region has to give a share back.
  *
- * The value cap is the tile system's own step for the sizes `.unitTile` is
- * actually used on -- `1.75rem` below 48rem and `2rem` from 48rem, `.tile`'s
- * own `--tile-value-size` for `small`/`wide` (MetroTile.module.css:22,87) --
- * never `.large`'s `3rem`, which a 1x1 or 2x1 tile never renders at.
+ * MetroTile already derives its own title, body and numeral steps from the
+ * grid unit (`--tile-copy` in MetroTile.module.css), so nothing about the unit
+ * is restated here any more. All that is left is the one thing MetroTile
+ * cannot know: these tiles carry a supporting line of their own, painted from
+ * 84rem, and that line's height has to come out of the copy budget before the
+ * type steps are derived from it. `--tile-copy-reserved` is MetroTile's own
+ * extension point for exactly that.
  *
- * `--unit-copy` is what is left for copy: the unit, less the tile's own
- * padding, its caption line, `--tile-gap-copy` (`.label`'s own `padding-top`
- * in MetroTile, not a gap between copy lines), the supporting line's share
- * where that is painted, and a 2px cushion so a line whose computed height
- * rounds up does not tip the clamp. The doubled class, `.unitTile.unitTile`,
- * is (0,2,0) specificity; it out-specifies every selector it overrides in
- * MetroTile.module.css -- `.tile`, `.small`, `.wide`, all (0,1,0), including
- * inside MetroTile's own 48rem media query -- whatever order the two
- * stylesheets land in. It would only stop winning if MetroTile grew a
- * two-class selector (e.g. `.hero .value`) for the same custom properties.
+ * The doubled class, `.unitTile.unitTile`, is (0,2,0) specificity; it
+ * out-specifies every selector it overrides in MetroTile.module.css --
+ * `.tile`, `.small`, `.wide`, all (0,1,0), including inside MetroTile's own
+ * 48rem media query -- whatever order the two stylesheets land in. It would
+ * only stop winning if MetroTile grew a two-class selector (e.g. `.hero
+ * .value`) for the same custom properties. Only the 84rem block below needs
+ * that doubling; the three `--tile-note-*` names are unique to this file, and
+ * below 84rem the note is unpainted and reserves nothing -- `.tile`'s own
+ * `--tile-copy-reserved: 0px` already says so, so restating it here would be a
+ * no-op.
  */
 .unitTile.unitTile {
-  --unit: calc(
-    (100cqw - (var(--tile-units) - 1) * var(--tile-gap)) / var(--tile-units)
-  );
-  --unit-note: 0px;
   --tile-note-size: 0.85rem;
   --tile-note-lines: 2;
   --tile-note-leading: 1.4;
-  --unit-copy: calc(
-    var(--unit) - 2 * var(--tile-pad) - var(--metro-text-label) * 1.2 -
-      var(--tile-gap-copy) - var(--unit-note) - 2px
-  );
-
-  /* Floored as well as capped: a container narrower than the supported 320px
-     frame must land on a small numeral, never on a negative one. */
-  --tile-value-size: clamp(0.75rem, var(--unit-copy), 1.75rem);
-  /* Two title lines at the tile system's own 1.15 line-height. */
-  --tile-title: clamp(0.6rem, calc(var(--unit-copy) / 2.3), 0.85rem);
 }
 
 /*
@@ -297,13 +275,14 @@
 
 /*
  * The copy region, less the two title lines a claim is allowed to wrap to.
- * `--unit-copy` has already taken out the supporting line's share wherever
- * that line is painted, so this is the height left under the claim at any
- * width -- 2.8px at 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920.
- * Floored at zero: a band can be too small for a wave, never negative.
+ * `--tile-copy` has already taken out the supporting line's share wherever
+ * that line is painted, and its own 2px rounding cushion, which is added back
+ * here -- so this is the height left under the claim at any width: 2.8px at
+ * 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920. Floored at zero: a
+ * band can be too small for a wave, never negative.
  */
 .assessmentTile {
-  --wave-band: max(0px, var(--unit-copy) + 2px - 2.3 * var(--tile-title));
+  --wave-band: max(0px, var(--tile-copy) + 2px - 2.3 * var(--tile-title));
 
   /* This is the tile root's only `animation`. A later entrance stagger
      (Task 9) must COMPOSE with it (comma-separated: `animation: waveDrift …,
@@ -323,11 +302,6 @@
 }
 
 @media (min-width: 48rem) {
-  .unitTile.unitTile {
-    --tile-value-size: clamp(0.75rem, var(--unit-copy), 2rem);
-    --tile-title: clamp(0.6rem, calc(var(--unit-copy) / 2.3), 0.95rem);
-  }
-
   .graphMotif {
     position: absolute;
     inset: 0;
@@ -376,7 +350,7 @@
 
   /* Painted from here, so it takes its share of the tile's copy budget. */
   .unitTile.unitTile {
-    --unit-note: calc(
+    --tile-copy-reserved: calc(
       var(--tile-note-lines) * var(--tile-note-size) * var(--tile-note-leading) +
         var(--tile-gap-copy)
     );

@@ -17,9 +17,6 @@
 .grid {
   --tile-units: 4;
   --tile-gap: var(--metro-tile-gap);
-
-  display: grid;
-  grid-template-columns: repeat(var(--tile-units), minmax(0, 1fr));
   /*
    * The row height is the column width, restated: `100cqw` is the frame's own
    * inline size, so subtracting the gutters and dividing by the unit count
@@ -27,12 +24,29 @@
    * 2x2 tile square, and a 4x2 tile two units tall at any width -- with no
    * measurement, no resize observer, and no aspect-ratio guess.
    *
+   * It is a custom property rather than a value written straight into
+   * `grid-auto-rows` because the unit is also the only honest budget a tile's
+   * own type has: MetroTile derives its title, body and numeral steps from it
+   * (MetroTile.module.css). `grid-auto-rows` below then *uses* this property,
+   * so the number a tile budgets against and the number the grid lays out
+   * cannot drift apart -- that drift is exactly what broke at 48rem, where the
+   * type steps went up while the unit halved.
+   *
+   * Only a tile inside this grid inherits it. Outside one there is no
+   * container to resolve `100cqw` against, so MetroTile falls back to its own
+   * absolute steps rather than to a plausible-looking wrong number.
+   */
+  --tile-unit: calc(
+    (100cqw - (var(--tile-units) - 1) * var(--tile-gap)) / var(--tile-units)
+  );
+
+  display: grid;
+  grid-template-columns: repeat(var(--tile-units), minmax(0, 1fr));
+  /*
    * Visual order is DOM order: no `grid-auto-flow: dense`, because a reader
    * tabbing through navigation tiles must meet them in the order they are read.
    */
-  grid-auto-rows: calc(
-    (100cqw - (var(--tile-units) - 1) * var(--tile-gap)) / var(--tile-units)
-  );
+  grid-auto-rows: var(--tile-unit);
   gap: var(--tile-gap);
 }
 

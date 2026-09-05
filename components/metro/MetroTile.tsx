@@ -65,17 +65,23 @@ export type MetroTileProps =
 /**
  * The line budgets tile copy has to live inside. A tile clips whatever exceeds
  * them, so consumer content declares which budget it is asking for.
+ *
+ * The *sizes* of these three are not fixed: inside a `TileGrid` each one is
+ * derived from the grid's own unit and capped at the design's absolute step,
+ * so copy shrinks with its tile instead of spilling out of it. What is fixed
+ * is the line count each budget promises, which is what the strings below have
+ * to be written against.
  */
 export const tileTextClass = {
   /**
    * Secondary copy under a title, clamped to 2 lines (3 on `large` and `hero`
    * from 48rem).
    *
-   * **It is not always painted.** `body` is `display: none` on `small` at every
-   * width, and on `wide` below 48rem -- a one-unit-tall tile is 67px at 320px,
-   * which is a title and its caption and nothing else. A consumer that needs
-   * text visible on a small tile at every width must ask for `value` instead,
-   * which is never clamped and never hidden.
+   * **It is painted on `large` and `hero` only.** A `small` or `wide` tile is
+   * one grid unit tall -- 67px at 320px, and 81px at 768px, where the grid
+   * doubles to eight columns -- which is a headline and a caption and nothing
+   * else. A consumer that needs a second line on a one-unit tile must ask for
+   * `value` instead, which is never clamped and never hidden.
    */
   body: styles.body,
   /** The tile's own headline, clamped to 2 lines (1 on `small`). */
@@ -83,10 +89,10 @@ export const tileTextClass = {
   /**
    * One large numeral or short token -- the evidence a small tile exists to
    * carry. Never clamped and never hidden: always a single line, ellipsised
-   * rather than wrapped when it overflows. Approximate budgets at 320px:
-   * `small` ~3 characters, `wide` ~8, `large` ~8 at its larger size, `hero`
-   * wider still -- consumers must keep values within budget (Task 5 sets copy
-   * accordingly).
+   * rather than wrapped when it overflows, so the budget is a *width* and the
+   * consumer owns it. Measured inner widths at the two tightest frames (320,
+   * then 768 where the grid doubles to eight columns): `small` 51.5 / 49.3px,
+   * `wide` 125 / 138.6px, `large` 117 / 138.6px, `hero` 264 / 317.3px.
    */
   value: styles.value,
 } as const;

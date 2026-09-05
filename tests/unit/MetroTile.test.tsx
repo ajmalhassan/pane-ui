@@ -482,6 +482,41 @@ describe("the tile stylesheet", () => {
     );
   });
 
+  /*
+   * Inside a `TileGrid` every type step is derived from `--tile-unit`, which
+   * the grid publishes. Every tile in this file is rendered WITHOUT one, and so
+   * is any consumer outside a grid -- there is no query container for `100cqw`
+   * to resolve against, so a derivation there would compute a plausible-looking
+   * wrong number instead of failing. The fallback box is what stops that: it is
+   * large enough that every clamp lands on its ceiling, which is the absolute
+   * step the design declared before the derivation existed.
+   *
+   * jsdom resolves no `var()` at all -- `getComputedStyle(...).fontSize` on a
+   * tile in this file is the literal string `var(--tile-title)` -- so the
+   * declaration is the only thing assertable here. Measured in Chromium on a
+   * tile appended straight to `<body>`: small 13.6/15.2px title and 28/32px
+   * value, wide the same, large 16/20 and 12.8/13.6 and 40/48, hero 18.4/25.6
+   * and 12.8/13.6 and 48/56 -- each pair being below and above 48rem, and each
+   * number this file's own step.
+   */
+  it("falls back to the design's absolute steps outside a TileGrid", () => {
+    const { container } = render(
+      <MetroTile label="bare" role="display" size="large">
+        <span>evidence</span>
+      </MetroTile>,
+    );
+
+    const box = getComputedStyle(
+      container.firstElementChild as HTMLElement,
+    ).getPropertyValue("--tile-box");
+
+    // The whole declaration, not a substring: `toContain` would still pass if
+    // the expression multiplied the fallback term by zero.
+    expect(box.replace(/\s+/g, "")).toBe(
+      "calc(var(--tile-rows)*var(--tile-unit,40rem)+(var(--tile-rows)-1)*var(--tile-gap,0px))",
+    );
+  });
+
   it("exports one class per text budget, including the always-painted one", () => {
     expect(tileTextClass).toEqual({
       body: styles.body,
