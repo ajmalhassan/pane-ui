@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
-import { applyPressTilt, clearPressTilt, Pressable } from "./Pressable";
+import { PRESS_TILT, Pressable } from "./Pressable";
 import type { TileSize } from "./TileGrid";
 import { useDocumentVisible } from "./useDocumentVisible";
 import { useLiveCycle } from "./useLiveCycle";
@@ -211,8 +211,7 @@ function NavigationShell({
       data-tile-role="navigation"
       data-tile-size={size}
       href={href}
-      onPointerLeave={clearPressTilt}
-      onPointerMove={applyPressTilt}
+      {...PRESS_TILT}
     >
       <Media media={media} />
       <span className={styles.content}>{children}</span>

@@ -33,6 +33,28 @@ function setReducedMotion(reduced: boolean) {
   );
 }
 
+/**
+ * jsdom lays nothing out, so every `getBoundingClientRect()` is all zeros and
+ * the tilt helpers' zero-size guard returns before any pointer-type check runs.
+ * A real box is the only way a unit test can see a tilt written.
+ */
+function stubBox(
+  element: Element,
+  { width, height }: { width: number; height: number },
+) {
+  vi.spyOn(element, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    width,
+    height,
+    right: width,
+    bottom: height,
+    toJSON: () => ({}),
+  } as DOMRect);
+}
+
 /*
  * `document.hidden` is a getter on `Document.prototype`, so overriding it puts
  * an own property on the instance that outlives the test that wrote it. The
@@ -107,6 +129,48 @@ describe("navigation tiles", () => {
     expect(
       within(link).getByText("Lumia Metro Revival", { selector: "strong" }),
     ).toBeVisible();
+  });
+
+  /*
+   * A navigation tile is a real anchor, so it cannot be a `Pressable` -- it
+   * spreads the same shared tilt bundle instead. This is what proves it is
+   * wired to that bundle rather than to a second copy of the maths: both
+   * halves of the parity contract (a touch press tilts, a moving touch pointer
+   * does not) have to be visible on the tile itself.
+   */
+  it("presses with the same touch parity every other surface has", () => {
+    render(
+      <MetroTile
+        href="/projects/metro-revival"
+        label="Lumia Metro Revival"
+        role="navigation"
+        size="hero"
+      >
+        <strong>Lumia Metro Revival</strong>
+      </MetroTile>,
+    );
+
+    const link = screen.getByRole("link");
+    stubBox(link, { width: 100, height: 50 });
+
+    fireEvent.pointerMove(link, {
+      clientX: 75,
+      clientY: 12.5,
+      pointerType: "touch",
+    });
+    expect(link.style.getPropertyValue("--press-rotate-x")).toBe("");
+
+    fireEvent.pointerDown(link, {
+      clientX: 75,
+      clientY: 12.5,
+      pointerType: "touch",
+    });
+    expect(link.style.getPropertyValue("--press-rotate-x")).toMatch(/deg$/);
+    expect(link.style.getPropertyValue("--press-rotate-y")).toMatch(/deg$/);
+
+    fireEvent.pointerCancel(link);
+    expect(link.style.getPropertyValue("--press-rotate-x")).toBe("");
+    expect(link.style.getPropertyValue("--press-rotate-y")).toBe("");
   });
 });
 

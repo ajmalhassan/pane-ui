@@ -62,6 +62,21 @@
   --metro-duration-slow: 560ms;
   --metro-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
   --metro-ease-exit: ease;
+
+  /*
+   * The press, in the two numbers a stylesheet owns: how deep the box a
+   * pressed surface leans inside is, and how far it settles into the page
+   * while it is held.
+   *
+   * The third number is `PRESS_TILT_INTENSITY` in
+   * `components/metro/Pressable.tsx` -- 4 degrees of lean at the far edge --
+   * and it stays in TypeScript because the handlers derive the angle from the
+   * pointer's place in the box. All three describe one gesture, so the two
+   * that CSS can hold are named here beside the rest of the motion rather than
+   * written into the one rule that happens to need them.
+   */
+  --metro-press-perspective: 700px;
+  --metro-press-scale: 0.985;
 }
 
 * {

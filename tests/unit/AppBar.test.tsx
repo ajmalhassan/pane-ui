@@ -15,9 +15,9 @@ function command(label: string) {
 
 /**
  * jsdom never lays anything out, so every `getBoundingClientRect()` is all
- * zeros and `applyPressTilt`'s zero-size guard would return before any
- * pointer-type check runs. Giving the element a real box is the only way a
- * unit test can see past that guard.
+ * zeros and the zero-size guard inside `pressTiltHandlers` (spread here as
+ * `PRESS_TILT`) returns before it writes anything. Giving the element a real
+ * box is the only way a unit test can see past that guard.
  */
 function stubBox(
   element: Element,
@@ -198,23 +198,31 @@ it("writes the shared press tilt onto the anchor command it rendered", () => {
   expect(resume.style.getPropertyValue("--press-rotate-x")).toBe("");
 });
 
-it("presses the command itself and keeps touch free of pointer tilt", () => {
+it("presses the command itself and tilts a touch press like a mouse press", () => {
   render(<AppBar actions={PRIMARY} />);
   const contact = command("Contact");
 
   expect(contact.querySelectorAll("a, button")).toHaveLength(0);
 
-  // Give the anchor a real, measurable box first so a touch decline is a
-  // deliberate opt-out and not just the zero-size guard returning early.
+  // Give the anchor a real, measurable box first, so every result below is the
+  // tilt model speaking rather than the zero-size guard returning early.
   stubBox(contact, { width: 100, height: 50 });
 
+  // A moving touch pointer is a scroll in progress and writes nothing...
   fireEvent.pointerMove(contact, { clientX: 30, clientY: 10, pointerType: "touch" });
   expect(contact.style.getPropertyValue("--press-rotate-x")).toBe("");
   expect(contact.style.getPropertyValue("--press-rotate-y")).toBe("");
 
-  // Control: the same measurable box and the same coordinates, but a mouse
-  // pointer -- the variables should now be written, proving the touch result
-  // above was an opt-out rather than an unmeasurable surface.
+  // ...but a touch PRESS tilts from its own point, exactly as a mouse does.
+  fireEvent.pointerDown(contact, { clientX: 30, clientY: 10, pointerType: "touch" });
+  expect(contact.style.getPropertyValue("--press-rotate-x")).toMatch(/deg$/);
+  expect(contact.style.getPropertyValue("--press-rotate-y")).toMatch(/deg$/);
+
+  fireEvent.pointerUp(contact);
+  expect(contact.style.getPropertyValue("--press-rotate-x")).toBe("");
+  expect(contact.style.getPropertyValue("--press-rotate-y")).toBe("");
+
+  // The hover path is the mouse's own, and it lands on the same variables.
   fireEvent.pointerMove(contact, { clientX: 30, clientY: 10, pointerType: "mouse" });
   expect(contact.style.getPropertyValue("--press-rotate-x")).toMatch(/deg$/);
   expect(contact.style.getPropertyValue("--press-rotate-y")).toMatch(/deg$/);

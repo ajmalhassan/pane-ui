@@ -1,14 +1,45 @@
+/*
+ * The press contract, in one file: a 44px target, a pointer tilt, a release
+ * scale, a focus ring, and the reduced-motion opt-out for all of it.
+ *
+ * The tilt and the press scale are ONE transform, composed from two custom
+ * properties the handlers in Pressable.tsx and the `:active` rule below write
+ * independently. They used to be two competing declarations -- `:active`
+ * replaced the whole transform with `scale(0.985)`, so pressing a tile threw
+ * away the lean the pointer had just written and the surface snapped flat under
+ * the finger that was tilting it. Composing them means a press is the lean plus
+ * the depression, which is what a Windows Phone tile actually does.
+ */
 .pressable {
   min-width: var(--metro-target-min);
   min-height: var(--metro-target-min);
-  transform: perspective(700px) rotateX(var(--press-rotate-x, 0deg)) rotateY(var(--press-rotate-y, 0deg));
+  transform: perspective(var(--metro-press-perspective))
+    rotateX(var(--press-rotate-x, 0deg)) rotateY(var(--press-rotate-y, 0deg))
+    scale(var(--press-scale, 1));
   transform-origin: center;
   transition: transform var(--metro-duration-fast) var(--metro-ease-exit);
 }
 
-.pressable:active { transform: perspective(700px) scale(0.985); }
+/*
+ * One knob, not a second transform: the rotation above survives the press.
+ *
+ * `--press-scale` is the knob -- unset until a press, which is why the rule
+ * above falls back to 1 -- and `--metro-press-scale` is the depth the design
+ * system gives it, beside the perspective and the tilt intensity it belongs
+ * with (see the press block in app/globals.css).
+ */
+.pressable:active {
+  --press-scale: var(--metro-press-scale);
+}
+
 .pressable:focus-visible { outline: 3px solid var(--metro-text); outline-offset: 3px; }
 
+/*
+ * Reduced motion removes the tilt AND the depression -- there is no spatial
+ * transform left on a pressed surface at all. The handlers make the same
+ * promise in JavaScript by never writing the variables; this keeps a no-JS or
+ * pre-hydration render honest.
+ */
 @media (prefers-reduced-motion: reduce) {
   .pressable, .pressable:active { transform: none; }
 }

@@ -3,7 +3,7 @@
 import type { MouseEvent, Ref } from "react";
 import { useState } from "react";
 import { MetroIcon, type MetroIconName } from "./MetroIcon";
-import { applyPressTilt, clearPressTilt } from "./Pressable";
+import { PRESS_TILT } from "./Pressable";
 import styles from "./AppBar.module.css";
 
 type CommandBase = {
@@ -83,8 +83,7 @@ function AppBarCommand({ action }: { action: AppAction }) {
 
           action.onSelect?.(event);
         }}
-        onPointerLeave={clearPressTilt}
-        onPointerMove={applyPressTilt}
+        {...PRESS_TILT}
         ref={action.ref}
       >
         {face}
@@ -96,8 +95,7 @@ function AppBarCommand({ action }: { action: AppAction }) {
     <button
       className={styles.command}
       onClick={action.onSelect}
-      onPointerLeave={clearPressTilt}
-      onPointerMove={applyPressTilt}
+      {...PRESS_TILT}
       type="button"
     >
       {face}
@@ -131,8 +129,7 @@ export function AppBar({ actions }: Props) {
         aria-label={expanded ? "Hide app bar labels" : "Show app bar labels"}
         className={`${styles.command} ${styles.overflow}`}
         onClick={() => setExpanded((current) => !current)}
-        onPointerLeave={clearPressTilt}
-        onPointerMove={applyPressTilt}
+        {...PRESS_TILT}
         type="button"
       >
         <CommandFace icon="ellipsis" />
