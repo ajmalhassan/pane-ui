@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { TILE_COPY_BUDGET } from "../../lib/content/projects";
 
 const VIEWS = ["me", "projects", "blog", "photography"] as const;
 // The panorama heading is the navigation, so each pivot's tab is its heading.
@@ -13,6 +14,91 @@ const NARROW_FRAMES = [
   { width: 393, height: 851 },
 ] as const;
 const APP_BAR = 'nav[aria-label="Page actions"]';
+
+/**
+ * Every way a tile can silently lose the copy it was given, measured on a whole
+ * grid at one frame. Runs inside the page (`locator.evaluate(tileCopyFaults)`),
+ * so it closes over nothing and reads no module scope.
+ *
+ * Three faults, and each of them is invisible from the outside:
+ *  - copy painted outside its own tile;
+ *  - a line the `-webkit-line-clamp` cut off, which looks like a shorter
+ *    sentence rather than a truncated one;
+ *  - a single-line box showing an ellipsis, measured with a `Range` rather than
+ *    `scrollWidth`, because a caption overflowing by half a pixel is already
+ *    ellipsised and `scrollWidth` is an integer.
+ *
+ * The clamp check tolerates one pixel and no more. It used to allow half a
+ * line-height, which absorbed the very fault it exists to name: with the type
+ * derivation switched off, a `wide` headline at 768 loses the bottom 7px of its
+ * second line and 7 is under `lineHeight * 0.5`. The tolerance was there for
+ * `.value`, whose glyph box exceeds its `line-height: 1` box by ~7px at 40px
+ * type -- so that class of element is skipped by what actually makes it
+ * single-line, `white-space: nowrap`, and it is still covered by the `Range`
+ * ellipsis check below.
+ *
+ * Both Start screens use it -- Me and Projects -- so a size or budget change in
+ * MetroTile is caught on both at once.
+ */
+function tileCopyFaults(root: Element): string[] {
+  const found: string[] = [];
+
+  for (const tile of root.querySelectorAll<HTMLElement>("[data-tile-role]")) {
+    const box = tile.getBoundingClientRect();
+    // A grid holds two `large` tiles and two `wide` ones, so the size alone
+    // cannot say which tile a fault came from. The destination, or failing that
+    // the caption, can.
+    const which =
+      tile.getAttribute("href") ??
+      (tile.lastElementChild?.textContent ?? "").trim();
+    const name = `${tile.dataset.tileSize} tile${which ? ` (${which})` : ""}`;
+
+    for (const child of tile.querySelectorAll<HTMLElement>("*")) {
+      // An SVG's own geometry is decoration and is clipped by its viewport.
+      if (child.closest("svg")) continue;
+
+      const style = getComputedStyle(child);
+      const rect = child.getBoundingClientRect();
+      /*
+       * Deliberately clipped: copy kept in the accessibility tree, unpainted.
+       * Selected by the rectangle every visually-hidden technique leaves
+       * behind rather than by the one this codebase happens to use today --
+       * `clip-path: inset(50%)` is `.tileNote`'s current implementation, and
+       * Task 10 extracts a shared utility that may well use another.
+       */
+      if (rect.width <= 1 && rect.height <= 1) continue;
+
+      const text = (child.textContent ?? "").slice(0, 30);
+
+      if (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        (rect.left < box.left - 0.5 ||
+          rect.right > box.right + 0.5 ||
+          rect.top < box.top - 0.5 ||
+          rect.bottom > box.bottom + 0.5)
+      ) {
+        found.push(`${name}: "${text}" outside its tile`);
+      }
+
+      if (style.overflow !== "visible" && style.whiteSpace !== "nowrap") {
+        if (child.scrollHeight > child.clientHeight + 1) {
+          found.push(`${name}: "${text}" lost a line to its clamp`);
+        }
+      }
+
+      if (child.childElementCount === 0 && (child.textContent ?? "").trim()) {
+        const range = document.createRange();
+        range.selectNodeContents(child);
+        if (range.getBoundingClientRect().width > rect.width + 0.1) {
+          found.push(`${name}: "${text}" is ellipsised`);
+        }
+      }
+    }
+  }
+
+  return found;
+}
 
 async function tabTo(page: Page, target: Locator, attempts = 24) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -303,50 +389,404 @@ for (const frame of NARROW_FRAMES) {
   });
 }
 
-test("every project tile owns one destination and keeps its copy inside", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?view=projects");
+/*
+ * Projects is five evidence tiles over 20 grid units: five complete rows of
+ * four on a phone, and at eight columns two complete rows plus a half row. A
+ * ragged last row is fine; a hole in the middle is not, and asserting the
+ * grid's own height is what proves there is none -- a hole would push the block
+ * onto another row.
+ *
+ * Extending this grid: the sizes have to keep filling each four-column band
+ * exactly, with every tile in a band the same number of rows tall
+ * (`tests/unit/ProjectContent.test.ts` owns that arithmetic). Both
+ * `PROJECT_TILES` and `PROJECT_UNITS` move together, or this fails on purpose.
+ */
+const PROJECT_TILES = 5;
+const PROJECT_UNITS = 20;
+/** The `large` tile that carries the one approved public number. */
+const LEAD_PLATFORM = "/projects/lead-platform";
 
-  const tiles = page
-    .getByRole("tabpanel", { name: HEADINGS.projects })
-    .getByRole("link");
-  const count = await tiles.count();
-  expect(count).toBeGreaterThan(0);
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 393, height: 851 },
+  // The tightest frame: the grid doubles to eight columns at 48rem, so a unit
+  // is 81px here -- half of what it is one pixel below the breakpoint.
+  { width: 768, height: 1024 },
+  { width: 900, height: 700 },
+  { width: 1024, height: 768 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+] as const) {
+  test(`every project tile owns one destination and keeps its copy inside at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=projects");
 
-  for (let index = 0; index < count; index += 1) {
-    const tile = tiles.nth(index);
-    const at = `project tile ${index}`;
+    const at = `${frame.width}px`;
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
+    const grid = panel.locator("[data-tile-grid]");
+    const tiles = panel.getByRole("link");
 
-    // One interactive owner: the tile is the link, and holds no second one.
-    expect(await tile.locator("a").count(), at).toBe(0);
-    expect(await tile.locator("button").count(), at).toBe(0);
+    await expect(tiles).toHaveCount(PROJECT_TILES);
+    await expect(panel.locator("[data-tile-role]")).toHaveCount(PROJECT_TILES);
+    // Every tile is a navigation tile: the rectangle is the destination.
+    await expect(panel.locator('[data-tile-role="navigation"]')).toHaveCount(
+      PROJECT_TILES,
+    );
 
-    // Line budgets, not luck: nothing a tile paints may leave its rectangle.
-    const spilling = await tile.evaluate((root) => {
-      const box = root.getBoundingClientRect();
+    // One interactive owner per tile, and no second one inside it.
+    expect(await panel.locator("a a").count(), at).toBe(0);
+    expect(await panel.locator("button").count(), at).toBe(0);
 
-      return Array.from(root.querySelectorAll("*"))
-        .filter((child) => {
-          const rect = child.getBoundingClientRect();
-          if (rect.width === 0 || rect.height === 0) return false;
+    const packing = await grid.evaluate((node, units) => {
+      const style = getComputedStyle(node);
+      const columns = style.gridTemplateColumns.split(" ").length;
+      const gap = Number.parseFloat(style.columnGap);
+      const unit = Number.parseFloat(style.gridAutoRows);
+      // 20 units over 8 columns is two full rows and a half one: the last row
+      // is ragged by design, so the row count rounds up rather than dividing.
+      const rows = Math.ceil(units / columns);
 
-          return (
-            rect.left < box.left - 0.5 ||
-            rect.right > box.right + 0.5 ||
-            rect.top < box.top - 0.5 ||
-            rect.bottom > box.bottom + 0.5
-          );
-        })
-        .map(
-          (child) => `${child.tagName}: ${child.textContent?.slice(0, 40) ?? ""}`,
-        );
+      return {
+        columns,
+        rows,
+        height: node.getBoundingClientRect().height,
+        expected: rows * unit + (rows - 1) * gap,
+      };
+    }, PROJECT_UNITS);
+
+    expect(packing.columns, at).toBe(frame.width < 768 ? 4 : 8);
+    expect(packing.rows, at).toBe(frame.width < 768 ? 5 : 3);
+    expect(Math.abs(packing.height - packing.expected), at).toBeLessThanOrEqual(
+      1,
+    );
+
+    // Nothing a tile paints may leave its rectangle, lose a line to a clamp, or
+    // be ellipsised away -- the same sweep the Me Start screen runs.
+    expect(await panel.evaluate(tileCopyFaults), at).toEqual([]);
+
+    /*
+     * The step is *derived* from the grid unit, not read off the absolute
+     * ladder. The wide headline is where the two disagree most: eight columns
+     * make a unit 81px here, and two title lines of the 0.95rem absolute step
+     * would not fit its 27.9px copy region. Without this the whole derivation
+     * could be switched off and every Projects frame would still pass -- the
+     * shortened copy on these faces fits the absolute steps too, so only Me
+     * would notice a mechanism this screen is now the largest consumer of.
+     */
+    if (frame.width === 768) {
+      const wideTitle = await panel
+        .locator('[data-tile-size="wide"] strong')
+        .first()
+        .evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
+
+      expect(wideTitle, at).toBeLessThan(13);
+    }
+
+    /*
+     * The budget model, not the copy that happens to be in it.
+     *
+     * MetroTile.module.css proves its 0.46/0.54 split by arithmetic -- "when
+     * neither step is at its ceiling the two shares add back up to exactly
+     * --tile-copy" -- and nothing measured that proof: the shipped strings wrap
+     * to fewer lines than their clamps allow, so an overspending split is
+     * absorbed by slack. This asserts the model instead: a tile that paints a
+     * title and a body must fit the maximum lines its clamps allow, and a
+     * one-unit tile's title alone must fit the single (`small`) or double
+     * (`wide`) line its own clamp allows.
+     *
+     * Every size compares against `content.getBoundingClientRect().height`, a
+     * fractional value, rather than the integer `clientHeight`/`scrollHeight`:
+     * a one-unit tile's copy region is 27.875px at 768, and rounding that to
+     * the integer 28 hides a clip of up to ~1.6px on a 28px tile -- exactly
+     * the margin `--tile-title-min` spends down to 0.28px in
+     * MetroTile.module.css:186-195.
+     *
+     * The constants mirror MetroTile.module.css and have to move with it:
+     * 1.15 is `.title`'s line-height (also `.small .title`'s and `.wide
+     * .title`'s), 1.4 is `.body`'s, 2 is `.title`'s `-webkit-line-clamp` on
+     * `large`/`hero` (1 for `.small .title`, 2 for `.wide .title`), and
+     * `.body`'s clamp is 2 below 48rem and 3 from it.
+     */
+    const overspend = await panel.evaluate(
+      (root, wideLayout) =>
+        [...root.querySelectorAll<HTMLElement>("[data-tile-size]")].flatMap(
+          (tile) => {
+            const size = tile.dataset.tileSize;
+            const content = tile.firstElementChild as HTMLElement;
+            const have = content.getBoundingClientRect().height;
+
+            if (size === "small" || size === "wide") {
+              const title = content.querySelector("strong");
+              if (!title) return [];
+
+              const lines = size === "small" ? 1 : 2; // `.small .title` clamps to 1
+              const t = Number.parseFloat(getComputedStyle(title).fontSize);
+              const need = lines * 1.15 * t;
+
+              return need <= have + 0.5
+                ? []
+                : [
+                    `${size} (${tile.getAttribute("href")}): needs ${need.toFixed(1)} of ${have.toFixed(1)}`,
+                  ];
+            }
+
+            if (size !== "large" && size !== "hero") return [];
+
+            const title = content.querySelector("strong");
+            // The face is `[value] <strong> [body]`, so the body is the span
+            // after the headline -- structure rather than a hashed class name.
+            const after = title ? [...content.children].indexOf(title) + 1 : 0;
+            const body = [...content.children]
+              .slice(after)
+              .find((node): node is HTMLElement => node.tagName === "SPAN");
+            if (!title || !body || getComputedStyle(body).display === "none") {
+              return [];
+            }
+
+            const t = Number.parseFloat(getComputedStyle(title).fontSize);
+            const b = Number.parseFloat(getComputedStyle(body).fontSize);
+            const gap = Number.parseFloat(getComputedStyle(content).rowGap);
+            const need = 2 * 1.15 * t + gap + (wideLayout ? 3 : 2) * 1.4 * b;
+
+            return need <= have + 0.5
+              ? []
+              : [
+                  `${size} (${tile.getAttribute("href")}): needs ${need.toFixed(1)} of ${have.toFixed(1)}`,
+                ];
+          },
+        ),
+      frame.width >= 768,
+    );
+
+    expect(overspend, at).toEqual([]);
+
+    /*
+     * Two destinations whose rectangles overlap are one destination a reader
+     * can miss, and the failure mode this panel was rebuilt out of: it used to
+     * lay a "View <project>" link over a full-tile button.
+     */
+    const overlaps = await panel.evaluate((root) => {
+      const boxes = [...root.querySelectorAll("a")].map((link) => ({
+        href: link.getAttribute("href") ?? "",
+        rect: link.getBoundingClientRect(),
+      }));
+      const collisions: string[] = [];
+
+      for (const [index, one] of boxes.entries()) {
+        for (const other of boxes.slice(index + 1)) {
+          const overlapX =
+            Math.min(one.rect.right, other.rect.right) -
+            Math.max(one.rect.left, other.rect.left);
+          const overlapY =
+            Math.min(one.rect.bottom, other.rect.bottom) -
+            Math.max(one.rect.top, other.rect.top);
+          if (overlapX > 0.5 && overlapY > 0.5) {
+            collisions.push(`${one.href} overlaps ${other.href}`);
+          }
+        }
+      }
+
+      return collisions;
     });
 
-    expect(spilling, at).toEqual([]);
-  }
-});
+    expect(overlaps, at).toEqual([]);
+
+    /*
+     * The one approved public number, on the face of the one project cleared to
+     * carry it -- painted, inside its own tile, and not ellipsised, at every
+     * frame. It is the single strongest piece of evidence on this screen, so it
+     * is asserted by itself rather than left to the sweep above.
+     */
+    const platform = panel.locator(`a[href="${LEAD_PLATFORM}"]`);
+    const metric = platform.getByText("₹1Cr+");
+    await expect(metric).toBeVisible();
+
+    const fits = await metric.evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+
+      return {
+        drawn: range.getBoundingClientRect().width,
+        box: node.getBoundingClientRect().width,
+      };
+    });
+
+    expect(fits.drawn, at).toBeGreaterThan(0);
+    expect(fits.drawn, at).toBeLessThanOrEqual(fits.box + 0.1);
+
+    /*
+     * Four of the five case studies are drafts, and a reader meets the tile
+     * long before the detail page. The marker has to be legible on the face at
+     * every frame -- present in the DOM behind an ellipsis is not legible --
+     * so each caption is measured against its own box with a `Range`.
+     *
+     * The same pass reads each link's text, which is what Chromium
+     * concatenates when it computes the link's accessible name: it joins
+     * adjacent inline boxes with nothing between them, so a missing space node
+     * here is a tile announced as "Revenue contributionlead platform".
+     */
+    const captions = await panel.evaluate((root) =>
+      [...root.querySelectorAll("a")].map((link) => {
+        const caption = link.lastElementChild as HTMLElement;
+        const range = document.createRange();
+        range.selectNodeContents(caption);
+
+        return {
+          href: link.getAttribute("href") ?? "",
+          text: caption.textContent ?? "",
+          linkText: link.textContent ?? "",
+          drawn: range.getBoundingClientRect().width,
+          box: caption.getBoundingClientRect().width,
+        };
+      }),
+    );
+
+    expect(
+      captions.filter((caption) => /draft/.test(caption.text)).length,
+      at,
+    ).toBe(4);
+
+    for (const caption of captions) {
+      const where = `${at} ${caption.href}`;
+      expect(caption.drawn, where).toBeGreaterThan(0);
+      expect(caption.drawn, where).toBeLessThanOrEqual(caption.box + 0.1);
+      expect(caption.linkText.endsWith(` ${caption.text}`), where).toBe(true);
+    }
+
+    expect(
+      captions.find((caption) => caption.href === LEAD_PLATFORM)?.linkText,
+      at,
+    ).toBe("₹1Cr+ Revenue contribution lead platform · draft");
+  });
+}
+
+/*
+ * The character budgets are measured px capacities frozen into numbers, and
+ * they were tested only for *enforcement*: a string one character over throws.
+ * Nothing measured whether the numbers themselves are still right. If
+ * `--tile-pad`, `--metro-text-label`, a `--tile-*-max` or the 48rem column
+ * count moved, every budget would quietly become wrong and the suite would stay
+ * green until real copy happened to use the slack -- the shipped strings sit at
+ * 64-77% of capacity.
+ *
+ * So: clone one tile of every face shape on the screen and stretch each slot's
+ * own copy to the whole budget for that slot, then run the same sweep on the
+ * clones. The clones go into the real grid, so they take the real unit.
+ *
+ * Each slot is filled with its *own* text repeated, not with a run of the
+ * widest glyph. That is deliberate and it is the honest limit of a character
+ * budget: 21 of the widest lowercase glyph measure 205.8px in the 117px box
+ * this budget calls 21 characters, and no character count can promise
+ * otherwise, because a string of N characters wraps into as many lines as its
+ * word breaks demand. Cycling the face's own prose keeps the alphabet and the
+ * word lengths the budgets were calibrated over and stretches them to the
+ * number, which is what makes a shrunken box or a grown type step fail here.
+ * It found one: `large.headline` was 24 and 24 characters of this prose wrap to
+ * three lines under a two-line clamp, at 320 and again at 768.
+ *
+ * 320 and 768 are the two binding frames -- the smallest unit and the tightest
+ * type step -- which are the two the budget doc block is written against.
+ */
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 768, height: 1024 },
+] as const) {
+  test(`a face still fits copy stretched to the whole character budget at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=projects");
+
+    const at = `${frame.width}px`;
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
+    const grid = panel.locator("[data-tile-grid]");
+
+    const filled = await grid.evaluate((root, budgets) => {
+      // The slot's own text, repeated with its space and cut to exactly the
+      // budget -- so the filler wraps the way real copy does.
+      const stretch = (text: string | null, count: number) =>
+        count <= 0 || !text
+          ? ""
+          : (text + " ")
+              .repeat(Math.ceil(count / (text.length + 1)) + 1)
+              .slice(0, count);
+
+      const seen = new Set<string>();
+      const made: string[] = [];
+
+      for (const tile of root.querySelectorAll<HTMLElement>(
+        "[data-tile-size]",
+      )) {
+        const size = tile.dataset.tileSize ?? "";
+        const budget = budgets[size as keyof typeof budgets];
+        if (!budget) continue;
+
+        const clone = tile.cloneNode(true) as HTMLElement;
+        const content = clone.firstElementChild as HTMLElement;
+        const caption = clone.lastElementChild as HTMLElement;
+        const headline = content.querySelector("strong");
+        /*
+         * The face is `[value] <strong> [body]` (ProjectsPanel.tsx), so the
+         * numeral is the span before the headline and the claim the span after
+         * it -- structure rather than a hashed CSS-module class name.
+         */
+        const slots = [...content.children];
+        const lead = headline ? slots.indexOf(headline) : slots.length;
+        const value = slots
+          .slice(0, lead)
+          .find((node): node is HTMLElement => node.tagName === "SPAN");
+        const body = slots
+          .slice(lead + 1)
+          .find((node): node is HTMLElement => node.tagName === "SPAN");
+
+        // One clone per face *shape*, not merely per size: the two `large`
+        // tiles differ, and only one of them paints a numeral.
+        const shape = [size, value ? "value" : "", body ? "claim" : ""].join(
+          ":",
+        );
+        if (seen.has(shape)) continue;
+        seen.add(shape);
+
+        caption.textContent = stretch(caption.textContent, budget.label);
+        if (headline) {
+          headline.textContent = stretch(headline.textContent, budget.headline);
+        }
+        if (value) value.textContent = stretch(value.textContent, budget.value);
+        if (body) body.textContent = stretch(body.textContent, budget.claim);
+
+        clone.dataset.worstCase = shape;
+        root.append(clone);
+        made.push(shape);
+      }
+
+      return made;
+    }, TILE_COPY_BUDGET);
+
+    // Every non-zero budget used by the shipped face shapes is exercised: a
+    // hero and a large headline with a claim under it, a large numeral over a
+    // headline, a wide headline on its own, and the caption budget on all
+    // four. `TILE_COPY_BUDGET.hero.value` (6) is not exercised here -- no
+    // hero on this screen carries a numeral.
+    expect(filled, at).toEqual([
+      "hero::claim",
+      "large::claim",
+      "large:value:",
+      "wide::",
+    ]);
+
+    const faults = await grid.evaluate(tileCopyFaults);
+
+    await grid.evaluate((root) => {
+      for (const clone of root.querySelectorAll("[data-worst-case]")) {
+        clone.remove();
+      }
+    });
+
+    expect(faults, at).toEqual([]);
+  });
+}
 
 for (const frame of [
   { width: 320, height: 568 },
@@ -476,67 +916,9 @@ for (const frame of [
       1,
     );
 
-    /*
-     * Nothing a tile paints may leave its rectangle, lose a line to a clamp, or
-     * be ellipsised away. The last one is measured with a Range rather than
-     * `scrollWidth`: a caption that overflows its box by half a pixel is
-     * already showing an ellipsis, and `scrollWidth` is an integer.
-     */
-    const faults = await panel.evaluate((root) => {
-      const found: string[] = [];
-
-      for (const tile of root.querySelectorAll<HTMLElement>(
-        "[data-tile-role]",
-      )) {
-        const box = tile.getBoundingClientRect();
-        const name = `${tile.dataset.tileSize} tile`;
-
-        for (const child of tile.querySelectorAll<HTMLElement>("*")) {
-          // An SVG's own geometry is decoration and is clipped by its viewport.
-          if (child.closest("svg")) continue;
-
-          const style = getComputedStyle(child);
-          // Deliberately clipped: copy kept in the accessibility tree, unpainted.
-          if (style.clipPath === "inset(50%)") continue;
-
-          const rect = child.getBoundingClientRect();
-          const text = (child.textContent ?? "").slice(0, 30);
-
-          if (
-            rect.width > 0 &&
-            rect.height > 0 &&
-            (rect.left < box.left - 0.5 ||
-              rect.right > box.right + 0.5 ||
-              rect.top < box.top - 0.5 ||
-              rect.bottom > box.bottom + 0.5)
-          ) {
-            found.push(`${name}: "${text}" outside its tile`);
-          }
-
-          if (style.overflow !== "visible") {
-            const line = Number.parseFloat(style.lineHeight) || 0;
-            if (child.scrollHeight > child.clientHeight + line * 0.5) {
-              found.push(`${name}: "${text}" lost a line to its clamp`);
-            }
-          }
-
-          if (
-            child.childElementCount === 0 &&
-            (child.textContent ?? "").trim()
-          ) {
-            const range = document.createRange();
-            range.selectNodeContents(child);
-            if (range.getBoundingClientRect().width > rect.width + 0.1) {
-              found.push(`${name}: "${text}" is ellipsised`);
-            }
-          }
-        }
-      }
-
-      return found;
-    });
-
-    expect(faults, at).toEqual([]);
+    // Nothing a tile paints may leave its rectangle, lose a line to a clamp, or
+    // be ellipsised away.
+    expect(await panel.evaluate(tileCopyFaults), at).toEqual([]);
 
     /*
      * The facts the spec names for a face -- `full stack`, the three notions of

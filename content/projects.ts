@@ -1,5 +1,19 @@
 import type { Project } from "@/lib/content/projects";
 
+/*
+ * Reading order is packing order. The grid places tiles in DOM order without
+ * dense flow, so these five sizes fill 20 units: five complete rows of four on
+ * a phone, and at eight columns two complete rows with a half row under them --
+ * a ragged last row is fine, an interior hole is not.
+ *
+ * Every face carries its own evidence, so a reader never has to open a case
+ * study to learn why the project matters. The budgets those faces are written
+ * against are measured, and enforced by `validateProjects` in
+ * `lib/content/projects.ts`.
+ *
+ * Four of the five case studies are drafts, and each says so on its face -- the
+ * caption carries a `draft` marker at every frame, not only on the detail page.
+ */
 export const projects = [
   {
     slug: "metro-revival",
@@ -8,6 +22,12 @@ export const projects = [
       "An in-progress design-system concept giving Lumia's interaction spirit a second life on the modern web.",
     status: "in-progress",
     accent: "cyan",
+    tileSize: "hero",
+    tileRole: "navigation",
+    tileLabel: "metro revival",
+    tileHeadline: "A Lumia application containing a portfolio",
+    tileClaim:
+      "In progress — the proving ground for this interaction language.",
     sections: [
       {
         heading: "Problem and users",
@@ -43,13 +63,35 @@ export const projects = [
       },
     ],
   },
+  /*
+   * This tile inverts the usual headline/caption roles on purpose: the
+   * headline carries the project name ("Capability graph") and the caption
+   * carries the framing plus the draft marker ("current work · draft"),
+   * because the natural pairing doesn't fit -- `capability graph · draft`
+   * measures 121.05px against this tile's 117px caption box at 320, over the
+   * 21-character budget by three. Putting the name on the headline and the
+   * "current work" framing on the caption is what both the spec ("capability
+   * graph as current work") and the character budget can hold at once.
+   */
   {
     slug: "capability-graph",
     title: "Draft example — Capability graph",
     summary:
       "An anonymized dummy case study about connecting learning capabilities across a product organization.",
-    status: "concept",
+    /*
+     * Accepted contradiction: the case-study header prints "Status: in
+     * progress" above a `Draft example` heading. "Current work" is the
+     * approved fact about this project and the tile caption says it, so the
+     * status stays -- unlike `agent-ready-foundations`, which is a concept and
+     * had no such claim behind it.
+     */
+    status: "in-progress",
     accent: "blue",
+    tileSize: "large",
+    tileRole: "navigation",
+    tileLabel: "current work · draft",
+    tileHeadline: "Capability graph",
+    tileClaim: "Curriculum to placement.",
     sections: [
       {
         heading: "Problem and users",
@@ -65,7 +107,7 @@ export const projects = [
       },
       {
         heading: "System or product approach",
-        body: "Draft example: model capabilities as reusable relationships that product, learning, and assessment workflows can reference.",
+        body: "Draft example: an organization-level capability graph built from curriculum, assignment rubrics, and job-market corpus, connecting course creation, learning materials, assessment, placement, and future adaptive learning.",
       },
       {
         heading: "Important decisions and trade-offs",
@@ -73,7 +115,7 @@ export const projects = [
       },
       {
         heading: "Outcome and evidence",
-        body: "Draft example: outcome details require approval before publication; no internal metrics are claimed here.",
+        body: "Draft example: this is current work. Outcome details require approval before publication; no internal metrics are claimed here.",
       },
       {
         heading: "What failed or changed",
@@ -86,48 +128,6 @@ export const projects = [
     ],
   },
   {
-    slug: "live-ai-assessment",
-    title: "Draft example — Live AI assessment",
-    summary:
-      "An anonymized dummy case study about finding a useful, evidence-grounded role for live AI assessment.",
-    status: "concept",
-    accent: "ink",
-    sections: [
-      {
-        heading: "Problem and users",
-        body: "Draft example: learners need timely assessment feedback without treating a generative model as an unquestionable evaluator.",
-      },
-      {
-        heading: "Role and team context",
-        body: "Draft example: the work joins AI product thinking, full-stack delivery, learning design, and assessment expertise.",
-      },
-      {
-        heading: "Constraints and risks",
-        body: "Draft example: latency, model variability, learner trust, evidence quality, and privacy require careful product boundaries.",
-      },
-      {
-        heading: "System or product approach",
-        body: "Draft example: constrain the live AI interaction around observable evidence and clear escalation paths rather than broad judgment.",
-      },
-      {
-        heading: "Important decisions and trade-offs",
-        body: "Draft example: narrower automation can be more useful and trustworthy than a feature that attempts to assess everything.",
-      },
-      {
-        heading: "Outcome and evidence",
-        body: "Draft example: outcome details require approval before publication; this entry makes no performance or learner-impact claim.",
-      },
-      {
-        heading: "What failed or changed",
-        body: "Draft example: rejected assumptions and revised model boundaries will be documented only when disclosure is approved.",
-      },
-      {
-        heading: "Lessons and next questions",
-        body: "Draft example: what evidence should a live AI system be allowed to interpret, and when should it defer to a person?",
-      },
-    ],
-  },
-  {
     slug: "lead-platform",
     title: "Draft example — Lead platform",
     summary:
@@ -135,6 +135,11 @@ export const projects = [
     status: "shipped",
     metric: "₹1Cr+",
     accent: "cyan",
+    tileSize: "large",
+    tileRole: "navigation",
+    tileLabel: "lead platform · draft",
+    tileHeadline: "Revenue contribution",
+    showsMetric: true,
     sections: [
       {
         heading: "Problem and users",
@@ -150,7 +155,7 @@ export const projects = [
       },
       {
         heading: "System or product approach",
-        body: "Draft example: bring lead collection, URL shortening, and CRM-connected workflows into one product surface.",
+        body: "Draft example: an internal lead-collection forms platform built end to end — CRM integration, URL shortening, fast forms, and near-zero platform-side submission-to-agent latency.",
       },
       {
         heading: "Important decisions and trade-offs",
@@ -158,7 +163,7 @@ export const projects = [
       },
       {
         heading: "Outcome and evidence",
-        body: "Draft example: the approved public outcome is ₹1Cr+ associated revenue. No additional internal metric is claimed.",
+        body: "Draft example: the approved public outcome is ₹1Cr+ associated revenue contribution. No additional internal metric is claimed.",
       },
       {
         heading: "What failed or changed",
@@ -167,6 +172,98 @@ export const projects = [
       {
         heading: "Lessons and next questions",
         body: "Draft example: where should a lead platform stay product-specific, and where does shared infrastructure earn its cost?",
+      },
+    ],
+  },
+  {
+    slug: "live-ai-assessment",
+    title: "Draft example — Live AI assessment",
+    summary:
+      "An anonymized dummy case study about finding a useful, evidence-grounded role for live AI assessment.",
+    status: "concept",
+    accent: "ink",
+    tileSize: "wide",
+    tileRole: "navigation",
+    tileLabel: "ai assessment · draft",
+    tileHeadline: "A gap interview, not a grader",
+    sections: [
+      {
+        heading: "Problem and users",
+        body: "Draft example: learners need timely assessment feedback without treating a generative model as an unquestionable evaluator.",
+      },
+      {
+        heading: "Role and team context",
+        body: "Draft example: the work joins AI product thinking, full-stack delivery, learning design, and assessment expertise.",
+      },
+      {
+        heading: "Constraints and risks",
+        body: "Draft example: latency, model variability, learner trust, evidence quality, and privacy require careful product boundaries.",
+      },
+      {
+        heading: "System or product approach",
+        body: "Draft example: a real-time assessment platform using Gemini Live for spoken English, role play, and profile work, with assessment experimentation alongside it.",
+      },
+      {
+        heading: "Important decisions and trade-offs",
+        body: "Draft example: narrower automation can be more useful and trustworthy than a feature that attempts to assess everything.",
+      },
+      {
+        heading: "Outcome and evidence",
+        body: "Draft example: outcome details require approval before publication; this entry makes no performance or learner-impact claim.",
+      },
+      {
+        heading: "What failed or changed",
+        body: "Draft example: generic assignment grading needed more grounding evidence than it had, so the AI was repositioned as a targeted gap interview and drill-down layer rather than a general evaluator.",
+      },
+      {
+        heading: "Lessons and next questions",
+        body: "Draft example: what evidence should a live AI system be allowed to interpret, and when should it defer to a person?",
+      },
+    ],
+  },
+  {
+    slug: "agent-ready-foundations",
+    title: "Draft example — Agent-ready harness",
+    summary:
+      "An anonymized dummy case study about agent-ready engineering harnesses: standards, stop hooks, and strategically triggered skills.",
+    status: "concept",
+    accent: "blue",
+    tileSize: "wide",
+    tileRole: "navigation",
+    tileLabel: "agent harness · draft",
+    tileHeadline: "Standards, stop hooks, skills",
+    sections: [
+      {
+        heading: "Problem and users",
+        body: "Draft example: cross-disciplinary contributors need engineering harnesses that hold work to shared standards; the specific context requires approval before publication.",
+      },
+      {
+        heading: "Role and team context",
+        body: "Draft example: role and team details require approval before publication.",
+      },
+      {
+        heading: "Constraints and risks",
+        body: "Draft example: constraints and risks require approval before publication.",
+      },
+      {
+        heading: "System or product approach",
+        body: "Draft example: agent-ready engineering harnesses carrying explicit standards, stop hooks, and strategically triggered skills.",
+      },
+      {
+        heading: "Important decisions and trade-offs",
+        body: "Draft example: decisions and trade-offs require approval before publication.",
+      },
+      {
+        heading: "Outcome and evidence",
+        body: "Draft example: the reported effect is improved cross-disciplinary contribution and turnaround time. No metric is claimed here, and further outcome detail requires approval before publication.",
+      },
+      {
+        heading: "What failed or changed",
+        body: "Draft example: what failed or changed requires approval before publication.",
+      },
+      {
+        heading: "Lessons and next questions",
+        body: "Draft example: which parts of an engineering standard are worth encoding as a harness, and which are better left to a person?",
       },
     ],
   },

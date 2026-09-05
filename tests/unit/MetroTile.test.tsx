@@ -430,6 +430,23 @@ describe("every role", () => {
     }
   });
 
+  it("separates the caption from the face so a computed name reads as words", () => {
+    // Chromium concatenates adjacent inline boxes with nothing between them, so
+    // the space node in `Caption` is what stops "evidencelabel". jsdom's own
+    // name computation inserts a separator regardless, so textContent is the
+    // only thing here that can see it -- and until this assertion existed the
+    // space was defended only by a consumer's test in
+    // `tests/unit/ProjectsPanel.test.tsx`, one directory away from the
+    // component a refactor of `Caption` would be done in.
+    const { container } = render(
+      <MetroTile label="b" role="display">
+        <span>A</span>
+      </MetroTile>,
+    );
+
+    expect(container.firstElementChild?.textContent).toBe("A b");
+  });
+
   it("carries its size and accent on the root so the grid can place it", () => {
     const { container } = render(
       <MetroTile

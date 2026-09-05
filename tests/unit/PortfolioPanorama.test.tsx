@@ -155,11 +155,11 @@ it("updates the selected pivot without taking URL ownership from the link", () =
 
   expect(projectsTab).toHaveAttribute("aria-selected", "true");
   expect(projectsTab).toHaveAttribute("href", "/?view=projects");
-  // A project tile prints its name twice for now -- as the tile title and as
-  // the bottom caption -- so this asks for the title specifically.
-  expect(
-    screen.getByText("Lumia Metro Revival", { selector: "strong" }),
-  ).toBeVisible();
+  // The panel is now on screen, which the leading tile's own evidence proves.
+  // It asks for the face rather than the caption: those are deliberately
+  // different strings, and which one appears is `ProjectsPanel.test.tsx`'s
+  // business, not this file's.
+  expect(screen.getByText(projects[0].tileHeadline)).toBeVisible();
 });
 
 it("restores selection when server query state changes", () => {

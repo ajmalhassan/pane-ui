@@ -110,12 +110,25 @@ function rootClass(
     .join(" ");
 }
 
-/** Every role ends with the same bottom-aligned caption. */
+/**
+ * Every role ends with the same bottom-aligned caption.
+ *
+ * The leading space is load-bearing, not formatting. A navigation tile's
+ * accessible name is computed from its contents, and Chromium concatenates
+ * adjacent inline boxes with nothing between them: without it, the lead
+ * platform tile is announced as "Revenue contributionlead platform". The
+ * fragment costs no layout -- an anonymous flex item holding only white space
+ * is not rendered (CSS Flexbox 4), and both `.tile` and `.content` are flex
+ * containers -- so the caption's own box is unchanged.
+ */
 function Caption({ id, label }: { id?: string; label: string }): ReactNode {
   return (
-    <span className={styles.label} id={id}>
-      {label}
-    </span>
+    <>
+      {" "}
+      <span className={styles.label} id={id}>
+        {label}
+      </span>
+    </>
   );
 }
 
