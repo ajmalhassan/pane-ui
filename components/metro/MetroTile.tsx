@@ -17,6 +17,27 @@ type BaseTileProps = {
    * name. On a navigation tile it names the destination.
    */
   label: string;
+  /**
+   * Imagery, and anything else that belongs *behind* the copy rather than
+   * beside it: it is rendered on the tile ROOT, before `.content`, so it fills
+   * the whole rectangle instead of the padded content box. That distinction is
+   * the whole point of the slot -- a picture tile whose photo stops at the ink
+   * padding is a framed photo, not a Windows Phone picture tile.
+   *
+   * The slot adds no `aria-hidden` of its own. An image's `alt` is the only
+   * description a reader gets of a picture tile, so hiding the layer wholesale
+   * would delete it; decoration inside the slot (a wash, a scrim) carries its
+   * own `aria-hidden`, exactly as it would anywhere else.
+   *
+   * That reaches the reader on `display` and `navigation`, whose names are
+   * computed from their contents. It does NOT on `reveal` or `live`: those
+   * shells set `aria-labelledby` and `aria-label` respectively, and an
+   * authoritative name source excludes contained content -- an `alt` in the
+   * slot is still in the tree as an image, but it is not part of the button's
+   * name. A picture that has to be announced *as the control's name* belongs on
+   * one of the first two roles.
+   */
+  media?: ReactNode;
   size?: TileSize;
   accent?: TileAccent;
   className?: string;
@@ -24,7 +45,12 @@ type BaseTileProps = {
 
 export type DisplayTileProps = BaseTileProps & {
   role: "display";
-  children: ReactNode;
+  /**
+   * Optional, because a picture tile's content is its `media` and its caption:
+   * a Windows Phone photo tile writes no copy across the image. Every other
+   * display tile passes children.
+   */
+  children?: ReactNode;
 };
 
 export type NavigationTileProps = BaseTileProps & {
@@ -111,6 +137,18 @@ function rootClass(
 }
 
 /**
+ * The layer beneath the copy. It is a sibling of `.content`, not a child, so
+ * its containing block is the tile itself and `inset: 0` means the tile's own
+ * rectangle -- padding included.
+ *
+ * Nothing is rendered at all when the slot is empty, so a tile without imagery
+ * keeps exactly the box tree it had before the slot existed.
+ */
+function Media({ media }: { media?: ReactNode }): ReactNode {
+  return media ? <span className={styles.media}>{media}</span> : null;
+}
+
+/**
  * Every role ends with the same bottom-aligned caption.
  *
  * The leading space is load-bearing, not formatting. A navigation tile's
@@ -142,6 +180,7 @@ function DisplayShell({
   children,
   className,
   label,
+  media,
   size = "small",
 }: DisplayTileProps): ReactNode {
   return (
@@ -150,6 +189,7 @@ function DisplayShell({
       data-tile-role="display"
       data-tile-size={size}
     >
+      <Media media={media} />
       <span className={styles.content}>{children}</span>
       <Caption label={label} />
     </div>
@@ -162,6 +202,7 @@ function NavigationShell({
   className,
   href,
   label,
+  media,
   size = "small",
 }: NavigationTileProps): ReactNode {
   return (
@@ -173,6 +214,7 @@ function NavigationShell({
       onPointerLeave={clearPressTilt}
       onPointerMove={applyPressTilt}
     >
+      <Media media={media} />
       <span className={styles.content}>{children}</span>
       <Caption label={label} />
     </Link>
@@ -185,6 +227,7 @@ function RevealShell({
   className,
   front,
   label,
+  media,
   size = "small",
 }: RevealTileProps): ReactNode {
   const reduced = useReducedMotion();
@@ -217,6 +260,7 @@ function RevealShell({
       onClick={() => setFlipped((current) => !current)}
       type="button"
     >
+      <Media media={media} />
       <span className={styles.content}>
         <span
           aria-hidden={flipped}
@@ -247,6 +291,7 @@ function LiveShell({
   intervalMs = LIVE_INTERVAL_MS,
   items,
   label,
+  media,
   size = "small",
 }: LiveTileProps): ReactNode {
   const reduced = useReducedMotion();
@@ -278,6 +323,7 @@ function LiveShell({
       onPointerLeave={() => setHovered(false)}
       type="button"
     >
+      <Media media={media} />
       <span className={styles.content}>
         <span
           aria-hidden="true"
@@ -316,6 +362,7 @@ export function MetroTile(props: MetroTileProps): ReactNode {
           accent={props.accent}
           className={props.className}
           label={props.label}
+          media={props.media}
           role="display"
           size={props.size}
         >

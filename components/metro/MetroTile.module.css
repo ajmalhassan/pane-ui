@@ -265,23 +265,89 @@
   color: var(--metro-text);
 }
 
-/* Imagery is the content: an image child fills the tile and the copy rides above it. */
+/* Imagery is the content: the media layer fills the tile and the copy rides above it. */
 .photo {
   background: var(--metro-ink);
   color: var(--metro-white);
 }
 
-.photo :where(img) {
+/*
+ * The media slot (`media` in MetroTile.tsx). It is a child of the tile ROOT,
+ * not of `.content`, which is the whole reason it exists: `.content` is inset
+ * by `--tile-pad` and gives up its bottom edge to the caption, so an image
+ * positioned against it is a framed photo with an ink mount on four sides.
+ * Against the tile itself, `inset: 0` is the rectangle the grid laid down.
+ *
+ * `object-fit: cover` is the promise a picture tile makes about a source whose
+ * ratio is not the tile's: fill the rectangle, crop, never distort. The crop is
+ * steered by `object-position`, which the consumer sets from its own content.
+ */
+.media {
   position: absolute;
   z-index: 0;
   inset: 0;
+  display: block;
+  overflow: hidden;
+}
+
+.media :where(img) {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.photo .content,
-.photo .label {
+/*
+ * A caption printed straight onto a photograph is legible or not depending on
+ * the photograph. This is the guarantee that it is: a bottom-up veil inside the
+ * media layer, under the copy and over the image, painted from
+ * `--metro-bg-veil` -- the token this repo declares for exactly this job,
+ * keeping type legible over imagery. (It is this rule's alone; the app bar
+ * reaches for `--metro-ink`.)
+ *
+ * The veil is at FULL density across the whole copy band and only fades above
+ * it. A gradient still fading where the copy begins backs the caption and
+ * abandons the line above it: at 320 that put the picture hub's note over a
+ * blurred highlight at 2.3:1.
+ *
+ * 60% is the stop, and it is chosen against the tightest copy band on the site
+ * with room to spare: a `large` photo tile at 320 is 141px tall and its note
+ * starts at 75.75px, so the copy occupies the lower 46.28% and the veil is
+ * solid over all of it with 13.72 percentage points of margin. (56px is 40% of
+ * 141 -- the veil's own stop read backwards, not a measurement of the copy.)
+ * The margin is what the stop may be traded against: `tests/e2e/portfolio.spec.ts`
+ * parses this number out of the computed gradient and fails if it ever rises
+ * above the measured band.
+ */
+.photo .media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--metro-bg-veil) 0 60%,
+    transparent 100%
+  );
+}
+
+/*
+ * The copy rides above the media layer on EVERY accent, not only `photo`.
+ *
+ * `.media` is positioned at `z-index: 0`, and the copy beside it is not: an
+ * unpositioned `.label` paints in the in-flow phase, which is *below* any
+ * positioned box, and `.content`'s `z-index: auto` only puts it after the media
+ * by tree order. Scoped to `.photo` -- which is where this rule started, because
+ * that was the only accent shipping a picture -- a `cyan`, `blue` or `ink` tile
+ * given a `media` layer painted it straight over its own caption, and the E2E
+ * copy sweep measured clipping rather than occlusion, so nothing said so.
+ *
+ * Keyed off `.media` rather than declared on the base classes because that is
+ * the actual condition: a tile with no media layer has nothing to be lifted
+ * above, and should not grow a stacking context for it. `tileCopyFaults` in
+ * `tests/e2e/portfolio.spec.ts` hit-tests the result at every frame.
+ */
+.media ~ .content,
+.media ~ .label {
   position: relative;
   z-index: 1;
 }
@@ -325,8 +391,10 @@
   font-size: var(--metro-text-label);
   font-weight: 400;
   line-height: 1.2;
-  /* Windows Phone sets tile names lowercase; the author's own casing survives
-     in the accessible name because this is presentation only. */
+  /* Windows Phone sets tile names lowercase. Chromium's accessible-name
+     computation applies `text-transform`, so this is what a screen reader
+     announces too -- the caption is authored to read correctly lowercased
+     rather than relying on the author's casing surviving. */
   text-transform: lowercase;
   text-overflow: ellipsis;
   white-space: nowrap;

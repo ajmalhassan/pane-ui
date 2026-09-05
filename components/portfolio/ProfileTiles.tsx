@@ -141,21 +141,28 @@ export function ProfileTiles(): ReactNode {
       <MetroTile
         accent="photo"
         label={start.portrait.label}
+        /* The image is the tile, so it belongs in the media slot rather than in
+           the content region: against `.content` it was inset by the tile's ink
+           padding on three sides and by the caption band on the fourth, which
+           is a framed photo, not a Windows Phone picture tile. */
+        media={
+          <>
+            <Image
+              alt={start.portrait.alt}
+              className={styles.portrait}
+              height={512}
+              priority
+              sizes="(min-width: 48rem) 25vw, 50vw"
+              src={start.portrait.src}
+              width={512}
+            />
+            {/* Monochrome under a cyan blend: the restrained treatment, one asset. */}
+            <span aria-hidden="true" className={styles.portraitWash} />
+          </>
+        }
         role="display"
         size="large"
-      >
-        <Image
-          alt={start.portrait.alt}
-          className={styles.portrait}
-          height={512}
-          priority
-          sizes="(min-width: 48rem) 25vw, 50vw"
-          src={start.portrait.src}
-          width={512}
-        />
-        {/* Monochrome under a cyan blend: the restrained treatment, one asset. */}
-        <span aria-hidden="true" className={styles.portraitWash} />
-      </MetroTile>
+      />
 
       <MetroTile
         accent="cyan"

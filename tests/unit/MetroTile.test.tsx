@@ -447,6 +447,85 @@ describe("every role", () => {
     expect(container.firstElementChild?.textContent).toBe("A b");
   });
 
+  /*
+   * The slot's whole value is *where* it renders. `.content` is inset by the
+   * tile's padding and gives its bottom edge to the caption, so an image
+   * positioned against it is a framed photo; the same image on the tile root
+   * fills the rectangle the grid laid down. Asserting the parent chain -- media
+   * is a child of the root and a sibling that precedes `.content` -- is what
+   * pins that, because a `position: absolute; inset: 0` image looks identical
+   * in jsdom either way.
+   */
+  it("renders its media layer on the tile root, ahead of the content", () => {
+    const roles = [
+      <MetroTile
+        href="/a"
+        key="navigation"
+        label="navigation"
+        media={<img alt="a photograph" src="/portrait.jpg" />}
+        role="navigation"
+      >
+        <span>a</span>
+      </MetroTile>,
+      <MetroTile
+        key="display"
+        label="display"
+        media={<img alt="a photograph" src="/portrait.jpg" />}
+        role="display"
+      />,
+      <MetroTile
+        back={<span>d</span>}
+        front={<span>c</span>}
+        key="reveal"
+        label="reveal"
+        media={<img alt="a photograph" src="/portrait.jpg" />}
+        role="reveal"
+      />,
+      <MetroTile
+        accessibleLabel="live evidence"
+        items={[<span key="e">e</span>, <span key="f">f</span>]}
+        key="live"
+        label="live"
+        media={<img alt="a photograph" src="/portrait.jpg" />}
+        role="live"
+      />,
+    ];
+
+    for (const tile of roles) {
+      const { container, unmount } = render(tile);
+      const root = container.firstElementChild as HTMLElement;
+      const media = container.querySelector(`.${styles.media}`);
+      const content = container.querySelector(`.${styles.content}`);
+
+      expect(media, String(tile.key)).not.toBeNull();
+      expect(media?.parentElement, String(tile.key)).toBe(root);
+      expect(root.firstElementChild, String(tile.key)).toBe(media);
+      expect(media?.nextElementSibling, String(tile.key)).toBe(content);
+      // The image's alt is the only description of a picture tile there is, so
+      // the layer is never hidden wholesale.
+      expect(media).not.toHaveAttribute("aria-hidden");
+      expect(
+        screen.getByRole("img", { name: "a photograph" }),
+        String(tile.key),
+      ).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("renders no media layer at all when the slot is empty", () => {
+    const { container } = render(
+      <MetroTile label="display" role="display">
+        <span>a</span>
+      </MetroTile>,
+    );
+
+    expect(styles.media).toBeTruthy();
+    expect(container.querySelector(`.${styles.media}`)).toBeNull();
+    expect(container.firstElementChild?.firstElementChild).toHaveClass(
+      styles.content,
+    );
+  });
+
   it("carries its size and accent on the root so the grid can place it", () => {
     const { container } = render(
       <MetroTile
@@ -488,6 +567,7 @@ describe("the tile stylesheet", () => {
         "photo",
         "navigation",
         "action",
+        "media",
         "content",
         "face",
         "title",
