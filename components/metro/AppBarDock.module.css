@@ -1,0 +1,74 @@
+/*
+ * The application bar's dock, and the page that reserves room for it. One
+ * implementation, because a Lumia application has one bar: the panorama, a
+ * project case study, a field note, the note index and the résumé all pin the
+ * same strip to the bottom of the same content column.
+ *
+ * `AppBar` deliberately owns no inline inset of its own -- see its `Props`
+ * docblock -- so the inset lives here, and so does the bottom padding a docked
+ * page needs to keep its own last line clear of the bar. They are declared in
+ * one rule against one pair of custom properties because they are two halves of
+ * a single promise: the bar indents exactly as far as the page it floats over,
+ * and the page ends exactly where the bar begins.
+ */
+.dock,
+.dockedPage {
+  /* Matches the panorama's own content inset at every width, and yields to a
+     notched phone in landscape so the bar never indents past the column. */
+  --dock-inset-left: max(
+    clamp(1rem, 4vw, 4.5rem),
+    env(safe-area-inset-left, 0px)
+  );
+  --dock-inset-right: max(
+    clamp(1rem, 4vw, 4.5rem),
+    env(safe-area-inset-right, 0px)
+  );
+
+  width: min(100%, 100rem);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.dock {
+  position: fixed;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0 var(--dock-inset-right) 0 var(--dock-inset-left);
+  background: var(--metro-ink);
+  /* Lifts the bar off whatever scrolls under it without drawing a card: an ink
+     falloff, not a border and not a shadowed panel. */
+  box-shadow: 0 -1.5rem 2.5rem rgb(7 9 10 / 86%);
+}
+
+/*
+ * A page that carries the dock. The bottom padding is the bar's own height
+ * token plus one content inset, so the reserve is derived from the bar rather
+ * than guessed alongside it.
+ */
+.dockedPage {
+  min-height: 100vh;
+  padding: 0 var(--dock-inset-right)
+    calc(
+      var(--metro-appbar-height) + var(--metro-content-inset) +
+        env(safe-area-inset-bottom, 0px)
+    )
+    var(--dock-inset-left);
+}
+
+/*
+ * Print has no application bar, so it has no dock and no reserve either: a
+ * fixed strip would otherwise repeat itself on every sheet and the reserve
+ * would leave 96px of white at the end of the document.
+ */
+@media print {
+  .dock {
+    display: none;
+  }
+
+  .dockedPage {
+    min-height: auto;
+    padding-bottom: 0;
+  }
+}

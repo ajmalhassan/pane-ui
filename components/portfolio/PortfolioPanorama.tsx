@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   AppBar,
+  AppBarDock,
   Panorama,
   PanoramaNav,
   StatusBar,
@@ -141,9 +142,7 @@ export function PortfolioPanorama({
 
   return (
     <main className={styles.shell}>
-      <div className={styles.status}>
-        <StatusBar label="AJMAL / PORTFOLIO" />
-      </div>
+      <StatusBar label="AJMAL / PORTFOLIO" />
       <Panorama
         active={active}
         navigation={
@@ -164,7 +163,7 @@ export function PortfolioPanorama({
         </section>
       </Panorama>
       <ContactPanel open={contactOpen} onClose={closeContact} />
-      <div className={styles.appBar}>
+      <AppBarDock>
         <AppBar
           actions={[
             { label: "Résumé", href: "/resume", icon: "arrow-northeast" },
@@ -177,7 +176,7 @@ export function PortfolioPanorama({
             },
           ]}
         />
-      </div>
+      </AppBarDock>
     </main>
   );
 }

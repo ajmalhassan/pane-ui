@@ -33,9 +33,9 @@ export type AppAction =
 type Props = {
   /**
    * 1-4 primary commands (Windows Phone caps the bar at four); the bar has no
-   * overflow strategy for more. The bar has no inline inset of its own; the
-   * consumer's wrapper owns the horizontal inset and left/right safe areas
-   * (see `components/portfolio/PortfolioPanorama.module.css` `.appBar`).
+   * overflow strategy for more. The bar has no inline inset and no position of
+   * its own; `AppBarDock` owns the horizontal inset, the left/right safe areas
+   * and the fixed strip, for every surface at once.
    */
   actions: readonly AppAction[];
 };

@@ -8,8 +8,8 @@
   /* Two grid units of air above and below the command column. */
   --command-inset-block: calc(var(--metro-grid) * 2);
   /* Four grid units between neighbouring commands. Inter-command gap only --
-     the bar's inline inset belongs to the `.appBar` wrapper, which owns the
-     content column and the left/right safe areas with it. */
+     the bar's inline inset belongs to `AppBarDock`, which owns the content
+     column and the left/right safe areas with it. */
   --command-gap: calc(var(--metro-grid) * 4);
 
   box-sizing: border-box;

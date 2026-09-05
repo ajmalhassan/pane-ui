@@ -18,4 +18,5 @@ export { METRO_ICON_NAMES, MetroIcon } from "./MetroIcon";
 export type { MetroIconName } from "./MetroIcon";
 export { AppBar } from "./AppBar";
 export type { AppAction } from "./AppBar";
+export { AppBarDock } from "./AppBarDock";
 export { StatusBar } from "./StatusBar";

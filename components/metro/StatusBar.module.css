@@ -1,0 +1,28 @@
+/*
+ * The phone's status line, and the application's identity with it. It used to
+ * be styled by whichever page happened to render it, which is why only the
+ * panorama had one; the line is the same line on every surface, so it draws
+ * itself here and a page only has to place it.
+ *
+ * Small, spaced caps in muted grey: present, readable, and never competing with
+ * the heading under it.
+ */
+.statusBar {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--metro-line);
+  color: var(--metro-muted);
+  font-size: var(--metro-text-label);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+/* Screen chrome, not part of the document: a printed page carries neither the
+   phone's status line nor its clock. */
+@media print {
+  .statusBar {
+    display: none;
+  }
+}

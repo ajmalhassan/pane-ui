@@ -1,39 +1,17 @@
+/*
+ * The panorama's page. Its width, inset and app-bar reserve come from the dock
+ * the bar lives in, so the bar and the page it floats over cannot drift apart;
+ * what is left here is what only the panorama has -- the clip box its pivots
+ * peek out of, and the atmosphere behind them.
+ */
 .shell {
-  width: min(100%, 100rem);
-  min-height: 100vh;
-  margin: 0 auto;
-  /* Reserves the fixed app bar's own height plus one content inset, from the
-     token the bar sizes itself with, so the two cannot drift apart. Left and
-     right match .appBar's own inset exactly, so a notched phone in landscape
-     never lets the bar indent further than the content column. */
-  padding: 0 max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-right, 0px))
-    calc(
-      var(--metro-appbar-height) + var(--metro-content-inset) +
-        env(safe-area-inset-bottom, 0px)
-    )
-    max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-left, 0px));
+  composes: dockedPage from "../metro/AppBarDock.module.css";
+
   overflow: hidden;
   background:
     linear-gradient(90deg, rgb(0 164 239 / 8%) 1px, transparent 1px) 0 0 / 25vw
       100%,
     var(--metro-ink);
-}
-
-.status {
-  min-height: 2.75rem;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--metro-line);
-  color: var(--metro-muted);
-  font-size: var(--metro-text-label);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-
-.status > div {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
 }
 
 .bio,
@@ -686,20 +664,6 @@
 .closeContact {
   align-self: flex-start;
   white-space: nowrap;
-}
-
-.appBar {
-  position: fixed;
-  z-index: 5;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  width: min(100%, 100rem);
-  margin: 0 auto;
-  padding: 0 max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-right, 0px)) 0
-    max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-left, 0px));
-  background: var(--metro-ink);
-  box-shadow: 0 -1.5rem 2.5rem rgb(7 9 10 / 86%);
 }
 
 @media (max-width: 720px) {
