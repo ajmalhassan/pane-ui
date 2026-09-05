@@ -344,7 +344,9 @@
  * Keyed off `.media` rather than declared on the base classes because that is
  * the actual condition: a tile with no media layer has nothing to be lifted
  * above, and should not grow a stacking context for it. `tileCopyFaults` in
- * `tests/e2e/portfolio.spec.ts` hit-tests the result at every frame.
+ * `tests/e2e/portfolio.spec.ts` centres each tile in turn and hit-tests it at
+ * every frame, exempting only a hit the fixed app bar owns, an SVG's own
+ * geometry, and a node still off-screen once its tile has been centred.
  */
 .media ~ .content,
 .media ~ .label {

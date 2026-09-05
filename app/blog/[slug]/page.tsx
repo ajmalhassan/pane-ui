@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { statusLabel } from "@/components/portfolio/postMeta";
 import { getPost, getPostSummaries } from "@/lib/content/posts";
 
 type SlugProps = {
@@ -35,9 +36,6 @@ export default async function ArticlePage({ params }: SlugProps) {
     notFound();
   }
 
-  const statusLabel =
-    post.status === "draft-example" ? "Draft example" : "Published";
-
   return (
     <main className="mx-auto min-h-screen w-full max-w-3xl px-4 py-10 sm:px-8 sm:py-16">
       <header className="border-b border-[var(--metro-line)] pb-10 sm:pb-14">
@@ -45,7 +43,7 @@ export default async function ArticlePage({ params }: SlugProps) {
           Lumia / field notes
         </p>
         <p className="mt-5 text-xs font-bold uppercase tracking-[0.1em] text-[var(--metro-cyan)]">
-          {statusLabel}
+          {statusLabel(post.status)}
         </p>
         <h1 className="mt-3 max-w-[15ch] text-4xl font-light leading-[0.98] tracking-[-0.055em] text-balance sm:text-6xl">
           {post.title}

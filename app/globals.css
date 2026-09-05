@@ -36,7 +36,14 @@
 
   /* Backgrounds: atmosphere that never competes with type or tile edges. */
   --metro-bg-trace: rgba(0, 164, 239, 0.08); /* low-contrast cyan node traces */
-  --metro-bg-veil: rgba(7, 9, 10, 0.72); /* keeps nav and commands legible over imagery */
+  /* The one veil, and it has one consumer: `.photo .media::after` in
+     MetroTile.module.css, which paints it bottom-up to a 60% stop so a picture
+     tile's caption and note sit on a guaranteed floor whatever the photograph
+     is. The 0.72 alpha and that stop are two halves of the same guarantee --
+     the stop is derived against the copy band there, and the alpha is what
+     makes the band opaque enough to read on. Nav and commands paint
+     `--metro-ink`, not this. */
+  --metro-bg-veil: rgba(7, 9, 10, 0.72);
 
   /* Typography: prefer Segoe without distributing proprietary font files. */
   --metro-font:

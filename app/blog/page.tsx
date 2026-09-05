@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  getPostSummaries,
-  type PostStatus,
-} from "@/lib/content/posts";
+import { statusLabel } from "@/components/portfolio/postMeta";
+import { getPostSummaries } from "@/lib/content/posts";
 
 export const metadata: Metadata = {
   title: "Field notes — Ajmal Hassan",
   description:
     "Draft field notes on AI product boundaries and connected learning systems.",
 };
-
-function statusLabel(status: PostStatus) {
-  return status === "draft-example" ? "Draft example" : "Published";
-}
 
 export default async function BlogPage() {
   const posts = await getPostSummaries();

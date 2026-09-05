@@ -6,8 +6,7 @@
      token the bar sizes itself with, so the two cannot drift apart. Left and
      right match .appBar's own inset exactly, so a notched phone in landscape
      never lets the bar indent further than the content column. */
-  padding: 0
-    max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-right, 0px))
+  padding: 0 max(clamp(1rem, 4vw, 4.5rem), env(safe-area-inset-right, 0px))
     calc(
       var(--metro-appbar-height) + var(--metro-content-inset) +
         env(safe-area-inset-bottom, 0px)
@@ -72,7 +71,6 @@
   letter-spacing: -0.035em;
 }
 
-.panelIntro p,
 .contact p {
   color: var(--metro-muted);
   line-height: 1.7;
@@ -363,52 +361,130 @@
   }
 }
 
-.panelIntro {
-  max-width: 50rem;
-  margin-bottom: 2rem;
+/*
+ * ---------------------------------------------------------------------------
+ * The content hubs -- Blog and Photography
+ * ---------------------------------------------------------------------------
+ *
+ * Two pivots, two treatments, one shell. Blog is prose, so it takes a reading
+ * measure and spends its width on type; Photography is imagery, so it takes the
+ * whole canvas and spends its width on the picture. Both open on one lede and
+ * then hand over to the composition -- no kicker over the paragraph, because a
+ * small caps line announcing a section the panorama heading has already named
+ * is a card idiom, and the pivot heading is the only heading here.
+ */
+
+.hubLede {
+  max-width: 44rem;
+  margin: 0 0 clamp(1.25rem, 3vw, 2rem);
+  color: var(--metro-muted);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  line-height: 1.6;
 }
 
-.articleList {
+/*
+ * A measure for the prose, and only for the prose. 64rem is what the note list
+ * has always been capped at, and it is what keeps a row's rules and its title
+ * from running 1456px at 1920.
+ *
+ * The feature tile is deliberately outside it. A tile is not prose: it is the
+ * same tile system the Start screen and Projects draw, and a cap around its
+ * grid changes the unit that system is laid out on -- 121px here against
+ * 158.6px one pivot to the left at 1440, which reads as an undersized
+ * rectangle rather than a placed one. The measure caps the reading, the plane
+ * sizes the tiles.
+ */
+.readingHub {
   max-width: 64rem;
+}
+
+/*
+ * The newest note's tile.
+ *
+ * `--tile-body-lead` is MetroTile's own knob for "how many lines is the
+ * secondary copy budgeted for", and this is the one tile on the site that needs
+ * three of them below 48rem rather than two: the shipped summaries are 97 and
+ * 101 characters, and 97 characters wrap to three lines in the 264px a hero has
+ * on a 320px frame at any legible step. Reserving three lines is what makes the
+ * derived step small enough (12.03px) for them to fit -- 42.32 + 4 + 50.53 =
+ * 96.85 of the 99.56px copy region, 2.71px spare.
+ *
+ * The doubled class is (0,2,0), so it beats `.tile` and `.large, .hero` inside
+ * MetroTile's own 48rem block whatever order the two stylesheets land in. From
+ * 48rem it restates the value MetroTile already sets there, which keeps this
+ * one declaration true at every width instead of half of one.
+ */
+.featureTile.featureTile {
+  --tile-body-lead: 4.2;
+}
+
+/*
+ * The summary, painted to that budget. It is `tileTextClass.body` plus this
+ * one override -- the summary carries both classes -- rather than a copy of
+ * MetroTile's `.body` with one number changed. A CSS Module absolutely can
+ * reach another module's rules (`.navigation` composes `pressable`, and
+ * `PhotographyPanel` puts `tileTextClass.body` beside a class of its own three
+ * files away); what it cannot do is win a specificity tie by wishing, and
+ * `.body` and `.featureSummary` are both (0,1,0), so a lone clamp override
+ * would depend on which stylesheet the bundler emitted last.
+ *
+ * The doubled class is (0,2,0) and settles it in both directions, the same
+ * trick `.featureTile.featureTile` uses fifteen lines above.
+ *
+ * It also means the summary now inherits `.small .body, .wide .body
+ * { display: none }`, which is correct and was not true of the copy: a
+ * one-unit tile has room for a headline and a caption, so a feature tile
+ * shrunk to one unit should paint no summary rather than a clamped fragment
+ * of one.
+ */
+.featureSummary.featureSummary {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/*
+ * The reading list: Windows Phone list rhythm, at our scale. The 8.1 kit sets a
+ * row at an 87px pitch on a 480px screen with a ~36px SemiLight primary line
+ * and a ~20px secondary one; scaled to a 320px frame that is a 58px pitch and a
+ * 24px primary, which is the floor of `.noteTitle` below. At 1440 the primary
+ * lands on the kit's own 36px.
+ */
+.noteList {
   margin: 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--metro-line);
 }
 
-.articleList a {
-  min-height: 7rem;
-  display: grid;
-  grid-template-columns: minmax(7rem, 0.25fr) 0.75fr;
-  gap: 0.4rem 1rem;
+/*
+ * One interactive owner per row, and it is the row: a block-level flex column
+ * fills its list item, so the whole width of the line is the destination and
+ * there is no second target beside a headline that is not one.
+ */
+.noteRow {
+  min-height: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   padding: 1.25rem 0;
   border-bottom: 1px solid var(--metro-line);
+  color: inherit;
   text-decoration: none;
 }
 
-.articleList a:hover strong,
-.articleList a:focus-visible strong,
-.textLink:hover,
-.textLink:focus-visible {
-  color: var(--metro-cyan);
+/* The same ring every other focusable surface here draws, from the same token,
+   sized to the bleed the panorama's clip box already reserves. */
+.noteRow:focus-visible {
+  outline: 3px solid var(--metro-text);
+  outline-offset: 3px;
 }
 
-.articleList time,
-.articleList span {
-  color: var(--metro-muted);
-  font-size: 0.85rem;
-}
-
-.articleList strong,
-.articleList span {
-  grid-column: 2;
-}
-
-.articleList .articleMeta {
-  grid-column: 2;
+/* Date, status and reading time: the facts, before the headline that needs
+   them. Cyan and caps so `DRAFT EXAMPLE` cannot be skimmed past. */
+.noteMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 1rem;
+  gap: 0.3rem 1rem;
   color: var(--metro-cyan);
   font-size: 0.72rem;
   font-weight: 700;
@@ -416,9 +492,26 @@
   text-transform: uppercase;
 }
 
-.articleList .articleMeta span {
-  color: inherit;
-  font-size: inherit;
+.noteTitle {
+  font-size: clamp(1.5rem, 3.4vw, 2.25rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.noteSummary {
+  max-width: 46rem;
+  color: var(--metro-muted);
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
+  line-height: 1.6;
+}
+
+/* Colour alone, and deliberately: it enhances a row that is already a whole
+   link, and it carries no information the row does not already print. */
+.noteRow:hover .noteTitle,
+.noteRow:focus-visible .noteTitle {
+  color: var(--metro-cyan);
 }
 
 .emptyState {
@@ -440,74 +533,92 @@
   font-weight: 700;
 }
 
-.photoGrid {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 0.5rem;
+.textLink:hover,
+.textLink:focus-visible {
+  color: var(--metro-cyan);
 }
 
-.photoTile {
-  min-height: 15rem;
-  margin: 0;
+/* The same ring `.noteRow:focus-visible` draws above and `.pressable` draws
+   for every tile: this was the one focusable surface on the hub still falling
+   back to the UA's own 1px outline. Sized to the 6px bleed the panorama's clip
+   box reserves (`--metro-focus-bleed`), so the ring is not clipped at the edge
+   of a pivot. */
+.textLink:focus-visible {
+  outline: 3px solid var(--metro-text);
+  outline-offset: 3px;
+}
+
+/*
+ * The picture hub, and the switch that gives it a photographic ground.
+ *
+ * Everything here hangs off `data-backdrop="photo"` rather than off the class,
+ * so the attribute the markup sets is what actually selects the treatment: a
+ * later pivot that earns a photographic ground names it there and gets this,
+ * and a hub that names nothing gets a plain block with no stacking context it
+ * has no use for. The attribute used to be documented as the switch while both
+ * rules fired unconditionally.
+ *
+ * `isolation: isolate` is what lets the backdrop sit at `z-index: -1`: it stays
+ * behind every tile and every line of copy in this block, and no further than
+ * that -- without the isolation a negative index would drop it behind the panel
+ * itself and out of sight.
+ */
+.pictureHub[data-backdrop="photo"] {
   position: relative;
+  isolation: isolate;
+}
+
+/*
+ * The approved photographic background, and the whole of what "low contrast"
+ * means here: greyscale, blurred past recognition, darkened, and then taken to
+ * 12%. It is clipped to this block, so it never reaches the panorama heading
+ * above it, the status bar, or the app bar -- the surfaces the spec keeps clear
+ * of imagery. `pointer-events: none` keeps it out of the way of everything the
+ * hub is actually for.
+ */
+.pictureHub[data-backdrop="photo"] .hubBackdrop {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
   overflow: hidden;
-  background: var(--metro-surface);
+  pointer-events: none;
 }
 
-.photoTile:first-child {
-  grid-row: span 2;
-}
-
-.photo {
+.pictureHub[data-backdrop="photo"] .hubBackdrop img {
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
-  filter: grayscale(0.25) contrast(1.08);
+  opacity: 0.12;
+  filter: grayscale(1) blur(24px) brightness(0.5);
+  /* The blur's soft edge is pushed outside the clip, so the block does not fade
+     out along its own borders... */
+  transform: scale(1.12);
+  /* ...and this is what stops it ending in one instead: a hard rectangle of
+     12% grey is a shape on the page, which atmosphere is not. The mask carries
+     the ground behind the composition and lets it go before it reaches an
+     edge. */
+  mask-image: radial-gradient(
+    115% 105% at 28% 45%,
+    #000 25%,
+    rgb(0 0 0 / 0%) 100%
+  );
 }
 
-.typeFrame {
-  min-height: 15rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 1rem;
-  overflow: hidden;
-  color: var(--metro-cyan);
-}
-
-.typeFrame span {
-  max-width: 15rem;
-  color: var(--metro-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-.typeFrame strong {
-  font-size: clamp(2.1rem, 6vw, 5.5rem);
-  font-weight: 300;
-  line-height: 0.8;
-  letter-spacing: -0.06em;
-}
-
-.photoTile figcaption {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 0.8rem 1rem;
-  background: rgb(7 9 10 / 86%);
-}
-
-.photoTile figcaption span {
-  color: var(--metro-muted);
-  font-size: 0.75rem;
+/*
+ * The picture tile, and nothing else, anchors its copy to the bottom-left
+ * corner beside the caption. That is a legibility requirement rather than a
+ * preference: the media veil is a bottom-up gradient, so copy anywhere else on
+ * a photo tile is copy over bare photograph -- at 320 the portrait's note sat
+ * on the blurred highlight behind the subject's head, the one part of this
+ * photograph white type cannot be read on.
+ *
+ * Every other tile on the site tops its copy out, this pivot's two plates and
+ * the reading hub's hero included. Where a tile puts its copy is a decision the
+ * tile system makes once, not one each pivot makes for itself.
+ */
+.tileFoot {
+  margin-top: auto;
 }
 
 .contact {
@@ -594,23 +705,6 @@
 @media (max-width: 720px) {
   .shell {
     background: var(--metro-ink);
-  }
-
-  .photoGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .photoTile:first-child {
-    grid-row: auto;
-  }
-
-  .articleList a {
-    grid-template-columns: 1fr;
-  }
-
-  .articleList strong,
-  .articleList span {
-    grid-column: 1;
   }
 
   .contact {

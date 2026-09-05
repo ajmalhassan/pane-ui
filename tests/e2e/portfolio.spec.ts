@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { TILE_COPY_BUDGET } from "../../lib/content/projects";
+import { getPostSummaries } from "../../lib/content/posts";
+import { PHOTOGRAPHY_UNITS } from "../../lib/content/photography";
+import { TILE_COPY_BUDGET } from "../../lib/content/tileBudget";
 
 const VIEWS = ["me", "projects", "blog", "photography"] as const;
 // The panorama heading is the navigation, so each pivot's tab is its heading.
@@ -20,13 +22,18 @@ const APP_BAR = 'nav[aria-label="Page actions"]';
  * grid at one frame. Runs inside the page (`locator.evaluate(tileCopyFaults)`),
  * so it closes over nothing and reads no module scope.
  *
- * Three faults, and each of them is invisible from the outside:
+ * Four faults, and each of them is invisible from the outside:
  *  - copy painted outside its own tile;
  *  - a line the `-webkit-line-clamp` cut off, which looks like a shorter
  *    sentence rather than a truncated one;
  *  - a single-line box showing an ellipsis, measured with a `Range` rather than
  *    `scrollWidth`, because a caption overflowing by half a pixel is already
- *    ellipsised and `scrollWidth` is an integer.
+ *    ellipsised and `scrollWidth` is an integer;
+ *  - copy another layer of the tile is painted *over*: laid out at full size,
+ *    unclipped, and simply not visible. That is what the `media` slot made
+ *    possible -- a layer at `z-index: 0` outranks an unpositioned caption -- and
+ *    the first three checks all measure a rectangle, which occlusion does not
+ *    change.
  *
  * The clamp check tolerates one pixel and no more. It used to allow half a
  * line-height, which absorbed the very fault it exists to name: with the type
@@ -44,6 +51,10 @@ function tileCopyFaults(root: Element): string[] {
   const found: string[] = [];
 
   for (const tile of root.querySelectorAll<HTMLElement>("[data-tile-role]")) {
+    // Centre the tile before measuring anything: a grid taller than the
+    // viewport otherwise leaves most of its tiles off-screen, and the hit
+    // test below skips a point it cannot see.
+    tile.scrollIntoView({ block: "center" });
     const box = tile.getBoundingClientRect();
     // A grid holds two `large` tiles and two `wide` ones, so the size alone
     // cannot say which tile a fault came from. The destination, or failing that
@@ -93,11 +104,98 @@ function tileCopyFaults(root: Element): string[] {
         if (range.getBoundingClientRect().width > rect.width + 0.1) {
           found.push(`${name}: "${text}" is ellipsised`);
         }
+
+        /*
+         * ...and copy that is painted over. Hit-test the centre of the node's
+         * own box: the topmost element there has to be the node, something
+         * inside it, or something it is inside.
+         *
+         * Only occluders *within the tile* count. A tile centred under the
+         * fixed app bar is hit-tested to the app bar, which is page chrome
+         * doing its job rather than a tile hiding its own copy, and is a
+         * different question from the one this sweep asks.
+         *
+         * What this exempts, precisely: boxes with no area (the reveal
+         * tile's away-facing side is rotated edge-on), anything
+         * `visibility: hidden` (that is the reduced-motion mechanism, not an
+         * accident), an SVG's own geometry (skipped above, before this loop
+         * body runs), a node still outside the viewport after its tile has
+         * been centred (a box taller than the viewport can still poke past
+         * both edges), and a hit the fixed app bar owns.
+         *
+         * `!hit.contains(child)` also exempts an occluder that is an
+         * *ancestor* of the text node: a pseudo-element hit-tests as its
+         * originating element, so a future `.content::after` scrim would
+         * occlude the copy and still be reported clean here.
+         */
+        const centre = {
+          x: Math.min(
+            Math.max(rect.left + rect.width / 2, box.left + 0.5),
+            box.right - 0.5,
+          ),
+          y: Math.min(
+            Math.max(rect.top + rect.height / 2, box.top + 0.5),
+            box.bottom - 0.5,
+          ),
+        };
+
+        if (
+          rect.width > 1 &&
+          rect.height > 1 &&
+          style.visibility === "visible" &&
+          centre.x >= 0 &&
+          centre.y >= 0 &&
+          centre.x < document.documentElement.clientWidth &&
+          centre.y < document.documentElement.clientHeight
+        ) {
+          const hit = document.elementFromPoint(centre.x, centre.y);
+
+          if (
+            hit &&
+            tile.contains(hit) &&
+            hit !== child &&
+            !child.contains(hit) &&
+            !hit.contains(child)
+          ) {
+            const over = `${hit.tagName.toLowerCase()}.${hit.getAttribute("class") ?? ""}`;
+            found.push(`${name}: "${text}" is painted over by ${over}`);
+          }
+        }
       }
     }
   }
 
   return found;
+}
+
+/**
+ * Two destinations whose rectangles overlap are one destination a reader can
+ * miss, and the failure mode the Projects panel was rebuilt out of: it used to
+ * lay a "View <project>" link over a full-tile button. Runs inside the page, so
+ * it closes over nothing.
+ */
+function linkOverlaps(root: Element): string[] {
+  const boxes = [...root.querySelectorAll("a")].map((link) => ({
+    href: link.getAttribute("href") ?? "",
+    rect: link.getBoundingClientRect(),
+  }));
+  const collisions: string[] = [];
+
+  for (const [index, one] of boxes.entries()) {
+    for (const other of boxes.slice(index + 1)) {
+      const overlapX =
+        Math.min(one.rect.right, other.rect.right) -
+        Math.max(one.rect.left, other.rect.left);
+      const overlapY =
+        Math.min(one.rect.bottom, other.rect.bottom) -
+        Math.max(one.rect.top, other.rect.top);
+      if (overlapX > 0.5 && overlapY > 0.5) {
+        collisions.push(`${one.href} overlaps ${other.href}`);
+      }
+    }
+  }
+
+  return collisions;
 }
 
 async function tabTo(page: Page, target: Locator, attempts = 24) {
@@ -562,36 +660,7 @@ for (const frame of [
 
     expect(overspend, at).toEqual([]);
 
-    /*
-     * Two destinations whose rectangles overlap are one destination a reader
-     * can miss, and the failure mode this panel was rebuilt out of: it used to
-     * lay a "View <project>" link over a full-tile button.
-     */
-    const overlaps = await panel.evaluate((root) => {
-      const boxes = [...root.querySelectorAll("a")].map((link) => ({
-        href: link.getAttribute("href") ?? "",
-        rect: link.getBoundingClientRect(),
-      }));
-      const collisions: string[] = [];
-
-      for (const [index, one] of boxes.entries()) {
-        for (const other of boxes.slice(index + 1)) {
-          const overlapX =
-            Math.min(one.rect.right, other.rect.right) -
-            Math.max(one.rect.left, other.rect.left);
-          const overlapY =
-            Math.min(one.rect.bottom, other.rect.bottom) -
-            Math.max(one.rect.top, other.rect.top);
-          if (overlapX > 0.5 && overlapY > 0.5) {
-            collisions.push(`${one.href} overlaps ${other.href}`);
-          }
-        }
-      }
-
-      return collisions;
-    });
-
-    expect(overlaps, at).toEqual([]);
+    expect(await panel.evaluate(linkOverlaps), at).toEqual([]);
 
     /*
      * The one approved public number, on the face of the one project cleared to
@@ -827,6 +896,581 @@ for (const frame of [
     ).toBeLessThanOrEqual(2);
     expect(Math.abs((hero?.height ?? 0) - (large?.height ?? 1)), at)
       .toBeLessThanOrEqual(1);
+  });
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * The content hubs
+ * ---------------------------------------------------------------------------
+ *
+ * Blog and Photography are one tile block each over eight grid units, and both
+ * pack into two rows at four columns and at eight: Blog's 4x2 hero, and
+ * Photography's 2x2 picture beside two stacked 2x1 plates. Nothing about that
+ * is a coincidence of the current copy -- Blog's total is the one tile it
+ * draws, and Photography's is summed from its own collection in
+ * `lib/content/photography.ts`, so a frame added there moves the expectation
+ * and the packing together.
+ */
+const HUB_FRAMES = [
+  { width: 320, height: 568 },
+  { width: 393, height: 851 },
+  // The tightest frame: the grid doubles to eight columns at 48rem, so a unit
+  // is 81px here -- half of what it is one pixel below the breakpoint.
+  { width: 768, height: 1024 },
+  { width: 900, height: 700 },
+  { width: 1024, height: 768 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+] as const;
+
+/** One `hero` tile: four columns by two rows. */
+const BLOG_UNITS = 8;
+const HUB_ROWS = 2;
+
+/*
+ * The newest note, read from the content layer at run time instead of pinned
+ * here.
+ *
+ * `lib/content/posts.ts` reads the `posts/` directory with `node:fs/promises`
+ * and parses front matter -- both fine in Playwright's own Node process, which
+ * is where this runs -- so "publish a newer note" is no longer a red build in
+ * three places that have nothing to do with the change.
+ *
+ * The teeth are kept explicitly: the loops below assert that the newest note is
+ * on the tile and is NOT one of the list rows, which means nothing without a
+ * second note to be in the list, so the guard fails loudly rather than passing
+ * over an empty list.
+ */
+let newestHref = "";
+let newestTitle = "";
+let newestSummary = "";
+
+test.beforeAll(async () => {
+  const posts = await getPostSummaries();
+
+  expect(
+    posts.length,
+    "the blog hub needs a newest note on the tile and at least one more in the list",
+  ).toBeGreaterThan(1);
+
+  newestHref = `/blog/${posts[0].slug}`;
+  newestTitle = posts[0].title;
+  newestSummary = posts[0].summary;
+});
+
+/*
+ * The grid's own height, which is what proves there is no hole in it; its unit
+ * total, which is what the hub's own unit count claims; and its width against
+ * the panorama
+ * plane, which is what makes the unit the same number every other pivot draws.
+ *
+ * That last one is the contract a `max-width` around a `TileGrid` breaks
+ * silently: the tiles still pack, the ratios still hold, and the whole Start
+ * screen module is drawn a quarter smaller than it is one pivot to the left.
+ */
+async function hubPacking(grid: Locator, rows: number) {
+  return grid.evaluate((node, expectedRows) => {
+    const style = getComputedStyle(node);
+    const gap = Number.parseFloat(style.columnGap);
+    const unit = Number.parseFloat(style.gridAutoRows);
+    const spans: Record<string, number> = {
+      small: 1,
+      wide: 2,
+      large: 4,
+      hero: 8,
+    };
+    const panel = node.closest('[role="tabpanel"]') as HTMLElement;
+    const plane = panel.parentElement as HTMLElement;
+    const planeStyle = getComputedStyle(plane);
+
+    return {
+      columns: style.gridTemplateColumns.split(" ").length,
+      height: node.getBoundingClientRect().height,
+      expected: expectedRows * unit + (expectedRows - 1) * gap,
+      unit,
+      width: node.getBoundingClientRect().width,
+      planeWidth:
+        plane.getBoundingClientRect().width -
+        Number.parseFloat(planeStyle.paddingLeft) -
+        Number.parseFloat(planeStyle.paddingRight),
+      units: [...node.querySelectorAll<HTMLElement>("[data-tile-size]")].reduce(
+        (total, tile) => total + (spans[tile.dataset.tileSize ?? ""] ?? 0),
+        0,
+      ),
+    };
+  }, rows);
+}
+
+for (const frame of HUB_FRAMES) {
+  test(`Blog leads with one note tile over full-row list links at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=blog");
+
+    const at = `${frame.width}px`;
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.blog });
+    const grid = panel.locator("[data-tile-grid]");
+
+    /*
+     * One tile, and it is the newest note's whole destination. The rest of the
+     * pivot is prose: a wall of note tiles is exactly what this pivot was
+     * rebuilt out of.
+     */
+    const tiles = panel.locator("[data-tile-role]");
+    await expect(tiles).toHaveCount(1);
+    await expect(tiles).toHaveAttribute("data-tile-role", "navigation");
+    await expect(tiles).toHaveAttribute("data-tile-size", "hero");
+    await expect(tiles).toHaveAttribute("href", newestHref);
+    expect(await panel.locator(`a[href="${newestHref}"]`).count(), at).toBe(1);
+
+    expect(await panel.locator("a a").count(), at).toBe(0);
+    expect(await panel.locator("button").count(), at).toBe(0);
+
+    const packing = await hubPacking(grid, HUB_ROWS);
+    expect(packing.columns, at).toBe(frame.width < 768 ? 4 : 8);
+    expect(packing.units, at).toBe(BLOG_UNITS);
+    expect(Math.abs(packing.height - packing.expected), at).toBeLessThanOrEqual(
+      1,
+    );
+
+    /*
+     * The hub draws the tile system at the plane's own unit, like every other
+     * pivot. The reading measure caps the prose below; it does not reach the
+     * grid, and if it ever does again this is the number that moves first.
+     */
+    expect(
+      Math.abs(packing.width - packing.planeWidth),
+      `${at} grid ${packing.width} vs plane ${packing.planeWidth}`,
+    ).toBeLessThanOrEqual(1);
+
+    // Nothing the tile paints may leave its rectangle, lose a line to a clamp,
+    // or be ellipsised away -- the same sweep both Start screens run.
+    expect(await panel.evaluate(tileCopyFaults), at).toEqual([]);
+
+    /*
+     * The newest note appears nowhere else on the pivot, so its date, reading
+     * time and draft marker have to be legible on this one face. They ride the
+     * caption, which is the only line left once the title and a three-line
+     * summary have taken the copy region -- so it is measured against its own
+     * box with a `Range`, not merely asserted to exist.
+     *
+     * The status leads *this* line and no other. A caption is one clipped
+     * line, so whatever ends up first is the part that cannot be lost; the
+     * rows below and `/blog` have room for all three facts and lead with the
+     * date, which is the order the row assertions further down pin.
+     */
+    const face = await tiles.evaluate((tile) => {
+      const caption = tile.lastElementChild as HTMLElement;
+      const range = document.createRange();
+      range.selectNodeContents(caption);
+
+      return {
+        caption: caption.textContent ?? "",
+        drawn: range.getBoundingClientRect().width,
+        box: caption.getBoundingClientRect().width,
+        linkText: (tile.textContent ?? "").replace(/\s+/g, " ").trim(),
+      };
+    });
+
+    expect(face.caption, at).toMatch(
+      /^Draft example · \d{4}-\d{2}-\d{2} · \d+ min read$/,
+    );
+    expect(face.drawn, at).toBeGreaterThan(0);
+    expect(face.drawn, at).toBeLessThanOrEqual(face.box + 0.1);
+    /*
+     * The whole face, against the note the content layer says is newest: the
+     * title, then the summary, then the caption, and nothing else. Derived
+     * rather than pinned, so it says "the tile carries this note's own copy"
+     * instead of "the tile carries these words".
+     */
+    expect(face.linkText, at).toBe(
+      `${newestTitle} ${newestSummary} ${face.caption}`
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
+
+    /*
+     * The budget model behind that face, not the copy that happens to be in it.
+     *
+     * This tile asks MetroTile for a three-line secondary budget at every width
+     * (`--tile-body-lead` on `.featureTile`), which below 48rem is one line more
+     * than the default. Without that the derived step stays on its 0.8rem
+     * ceiling and the same three lines need 100.08px of a 99.56px copy region at
+     * 320 -- a half-pixel clip, invisible to the eye and to the fault sweep,
+     * which is exactly the kind of overspend that rots. The invariant is the
+     * arbiter: what the face paints has to fit what the tile has.
+     *
+     * The constants mirror the stylesheets and move with them: 1.15 is
+     * `.title`'s line-height, 1.4 is `.featureSummary`'s, 2 is `.title`'s clamp
+     * on a hero, and 3 is `.featureSummary`'s own.
+     */
+    const overspend = await tiles.evaluate((tile) => {
+      const content = tile.firstElementChild as HTMLElement;
+      const title = content.querySelector("strong") as HTMLElement;
+      const summary = title.nextElementSibling as HTMLElement;
+      const step = (node: Element) =>
+        Number.parseFloat(getComputedStyle(node).fontSize);
+
+      return {
+        need:
+          2 * 1.15 * step(title) +
+          Number.parseFloat(getComputedStyle(content).rowGap) +
+          3 * 1.4 * step(summary),
+        have: content.getBoundingClientRect().height,
+      };
+    });
+
+    expect(
+      overspend.need,
+      `${at} needs ${overspend.need.toFixed(2)} of ${overspend.have.toFixed(2)}`,
+    ).toBeLessThanOrEqual(overspend.have + 0.5);
+
+    /*
+     * Every remaining note is one row, and the row is the whole width of the
+     * list: a headline that is a link over a summary that is not is the
+     * half-target this list exists to avoid.
+     */
+    const rows = await panel.evaluate((root) => {
+      const list = root.querySelector("ol");
+      if (!list) return [];
+      const listBox = list.getBoundingClientRect();
+
+      return [...list.querySelectorAll<HTMLAnchorElement>("li > a")].map(
+        (row) => {
+          const rect = row.getBoundingClientRect();
+
+          return {
+            href: row.getAttribute("href") ?? "",
+            share: rect.width / listBox.width,
+            pitch: rect.height,
+            inside:
+              rect.left >= listBox.left - 0.5 &&
+              rect.right <= listBox.right + 0.5,
+            nested: row.querySelectorAll("a, button, input, select, textarea")
+              .length,
+            text: (row.textContent ?? "").replace(/\s+/g, " ").trim(),
+          };
+        },
+      );
+    });
+
+    expect(rows.length, at).toBeGreaterThan(0);
+    for (const row of rows) {
+      const where = `${at} ${row.href}`;
+      expect(row.nested, where).toBe(0);
+      expect(row.share, where).toBeGreaterThanOrEqual(0.95);
+      expect(row.inside, where).toBe(true);
+      // The Windows Phone list pitch, floored: `.noteRow`'s own 5.5rem.
+      expect(row.pitch, where).toBeGreaterThanOrEqual(88);
+      expect(row.href, where).not.toBe(newestHref);
+      /*
+       * All three facts, in the row's own order: date, then status, then
+       * reading time -- the order `/blog`'s index uses. It is asserted rather
+       * than assumed because the hero's caption leads with the status instead,
+       * and an unpinned order is how the two silently swapped roles.
+       */
+      expect(row.text, where).toMatch(
+        /^\d{4}-\d{2}-\d{2}\s*(Draft example|Published)\s*\d+ min read/,
+      );
+    }
+
+    // Two destinations whose rectangles overlap are one a reader can miss.
+    expect(await panel.evaluate(linkOverlaps), at).toEqual([]);
+
+    // Every destination on the hub answers to a name of its own.
+    const names = await panel.evaluate((root) =>
+      [...root.querySelectorAll("a")].map((link) =>
+        (link.textContent ?? "").replace(/\s+/g, " ").trim(),
+      ),
+    );
+    expect(new Set(names).size, at).toBe(names.length);
+
+    // The reading list does not move, and neither does the tile above it: Me
+    // owns the one live cycle on the site.
+    expect(
+      await panel.evaluate(
+        (root) => root.getAnimations({ subtree: true }).length,
+      ),
+      at,
+    ).toBe(0);
+
+    await expect(
+      panel.getByRole("link", { name: "Browse the blog" }),
+    ).toHaveAttribute("href", "/blog");
+  });
+}
+
+for (const frame of HUB_FRAMES) {
+  test(`Photography fills its picture tile edge to edge at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/?view=photography");
+
+    const at = `${frame.width}px`;
+    const panel = page.getByRole("tabpanel", { name: HEADINGS.photography });
+    const grid = panel.locator("[data-tile-grid]");
+
+    await expect(panel.locator("[data-tile-role]")).toHaveCount(3);
+    await expect(panel.locator('[data-tile-role="display"]')).toHaveCount(3);
+    // A photograph is not a destination, and neither is a selection that has
+    // not been made: the hub owns no interaction at all.
+    expect(await panel.locator("a").count(), at).toBe(0);
+    expect(await panel.locator("button").count(), at).toBe(0);
+
+    const packing = await hubPacking(grid, HUB_ROWS);
+    expect(packing.columns, at).toBe(frame.width < 768 ? 4 : 8);
+    expect(packing.units, at).toBe(PHOTOGRAPHY_UNITS);
+    expect(Math.abs(packing.height - packing.expected), at).toBeLessThanOrEqual(
+      1,
+    );
+    expect(
+      Math.abs(packing.width - packing.planeWidth),
+      `${at} grid ${packing.width} vs plane ${packing.planeWidth}`,
+    ).toBeLessThanOrEqual(1);
+
+    expect(await panel.evaluate(tileCopyFaults), at).toEqual([]);
+
+    /*
+     * The picture tile's whole point. `cover` is the promise that a 752x648
+     * source in a square span is cropped rather than stretched, and the rect
+     * equality is the promise that it is cropped to the tile the grid laid down
+     * rather than to the padded content box inside it -- the difference between
+     * a Windows Phone picture tile and a framed photograph.
+     *
+     * `naturalRatio` is the source ratio as the browser actually receives it,
+     * which is what "photo tiles respect their source aspect ratios" is about.
+     * It is asserted as a ratio and not as 752x648 because `next/image` serves
+     * a resized variant per frame -- 141x121 at 1440, 196x169 at 393 -- so the
+     * literal pixel counts change while the ratio must not: a `sizes`, `width`
+     * or `height` edit that silently squashed the source would move it.
+     */
+    const SOURCE_RATIO = 752 / 648;
+    const picture = await panel.evaluate((root) => {
+      const img = [...root.querySelectorAll("img")].find(
+        (candidate) => candidate.alt !== "",
+      ) as HTMLImageElement;
+      const tile = img.closest("[data-tile-role]") as HTMLElement;
+      const image = img.getBoundingClientRect();
+      const box = tile.getBoundingClientRect();
+      const style = getComputedStyle(img);
+
+      return {
+        alt: img.alt,
+        size: tile.dataset.tileSize,
+        objectFit: style.objectFit,
+        objectPosition: style.objectPosition,
+        // The media layer is a child of the tile root, ahead of `.content`.
+        inMediaLayer: tile.firstElementChild?.contains(img) ?? false,
+        contentIsSecond:
+          tile.firstElementChild?.nextElementSibling?.contains(img) ?? true,
+        delta: [
+          Math.abs(image.x - box.x),
+          Math.abs(image.y - box.y),
+          Math.abs(image.width - box.width),
+          Math.abs(image.height - box.height),
+        ],
+        naturalRatio: img.naturalWidth / img.naturalHeight,
+      };
+    });
+
+    expect(picture.size, at).toBe("large");
+    expect(picture.objectFit, at).toBe("cover");
+    expect(
+      Math.abs(picture.naturalRatio - SOURCE_RATIO),
+      `${at} natural ratio ${picture.naturalRatio}`,
+    ).toBeLessThan(0.02);
+    expect(picture.objectPosition, at).toBe("50% 50%");
+    expect(picture.inMediaLayer, at).toBe(true);
+    expect(picture.contentIsSecond, at).toBe(false);
+    expect(picture.alt, at).not.toBe("Portrait of Ajmal Hassan");
+    for (const delta of picture.delta) {
+      expect(delta, `${at} bleed`).toBeLessThanOrEqual(1);
+    }
+
+    /*
+     * The veil and the anchor, which are one guarantee and were held by
+     * nothing.
+     *
+     * White copy printed on a photograph is legible or not depending on the
+     * photograph; `.photo .media::after` is what makes it a promise, and it is
+     * a promise only where two numbers agree. The gradient is opaque from the
+     * bottom up to a stop, so it covers the lower `100 - stop` percent of the
+     * tile; the note is pushed to the bottom by `.tileFoot`, so it starts at
+     * some percent down the tile. The copy is backed exactly when the first
+     * number is no larger than the second, and the stop is read out of the
+     * computed gradient rather than restated here.
+     *
+     * Both halves failed silently before this: lowering the stop to 30% and
+     * dropping `.tileFoot` each put the note back on the blurred highlight
+     * behind the subject's head at 2.29:1, with every gate green.
+     *
+     * The 40% floor is the second half, and it is the design's own: the veil is
+     * drawn for the tightest frame on the site and applied at every frame, so
+     * the copy band must not climb above the ceiling that frame set. Measured
+     * band tops are 53.72% at 320 rising to 84.23% at 1920.
+     */
+    const veil = await panel.evaluate((root) => {
+      const img = [...root.querySelectorAll("img")].find(
+        (candidate) => candidate.alt !== "",
+      ) as HTMLImageElement;
+      const tile = img.closest("[data-tile-role]") as HTMLElement;
+      const media = tile.firstElementChild as HTMLElement;
+      const note = (media.nextElementSibling as HTMLElement)
+        .firstElementChild as HTMLElement;
+      const box = tile.getBoundingClientRect();
+      const gradient = getComputedStyle(media, "::after").backgroundImage;
+      /*
+       * Chromium serialises the stop list as `rgba(r, g, b, a) <position>`.
+       * The veil's opaque ceiling is the last stop whose colour is not fully
+       * transparent -- read that way rather than by index, so adding a stop
+       * does not quietly change which number this reads.
+       */
+      const stops = [
+        ...gradient.matchAll(/(rgba?\([^)]*\))\s+([\d.]+)(%|px)/g),
+      ];
+      const opaque = stops.filter(([, colour]) => !/,\s*0\)$/.test(colour));
+      const last = opaque[opaque.length - 1];
+
+      return {
+        gradient,
+        stop: last && last[3] === "%" ? Number.parseFloat(last[2]) : Number.NaN,
+        band: (note.getBoundingClientRect().top - box.top) / box.height,
+        note: (note.textContent ?? "").trim(),
+      };
+    });
+
+    expect(veil.note, at).not.toBe("");
+    expect(
+      veil.band * 100,
+      `${at} the note starts ${(veil.band * 100).toFixed(2)}% down its tile`,
+    ).toBeGreaterThanOrEqual(40);
+    expect(Number.isFinite(veil.stop), `${at} ${veil.gradient}`).toBe(true);
+    expect(
+      100 - veil.stop,
+      `${at} veil opaque over the lower ${(100 - veil.stop).toFixed(2)}%, copy from ${(veil.band * 100).toFixed(2)}%`,
+    ).toBeLessThanOrEqual(veil.band * 100);
+
+    /*
+     * The photographic ground: present, behind everything, and nowhere near the
+     * two surfaces the spec keeps clear of imagery.
+     */
+    const backdrop = await page.evaluate(() => {
+      const layer = document.querySelector(
+        '[data-pivot="photography"] [data-backdrop="photo"] > span[aria-hidden="true"]',
+      ) as HTMLElement;
+      const image = layer.querySelector("img") as HTMLImageElement;
+      const style = getComputedStyle(layer);
+      const imageStyle = getComputedStyle(image);
+      const box = layer.getBoundingClientRect();
+      const hits = (selector: string) => {
+        const other = document.querySelector(selector)!.getBoundingClientRect();
+
+        return (
+          Math.min(box.right, other.right) - Math.max(box.left, other.left) >
+            0.5 &&
+          Math.min(box.bottom, other.bottom) - Math.max(box.top, other.top) >
+            0.5
+        );
+      };
+
+      return {
+        alt: image.alt,
+        /*
+         * The variant the browser actually chose, in device pixels, from the
+         * `w=` `next/image` puts in the URL (falling back to what it decoded).
+         */
+        variant:
+          Number.parseInt(
+            new URL(
+              image.currentSrc || image.src,
+              document.baseURI,
+            ).searchParams.get("w") ?? "",
+            10,
+          ) || image.naturalWidth,
+        dpr: window.devicePixelRatio,
+        opacity: Number.parseFloat(imageStyle.opacity),
+        blurred: /blur\(/.test(imageStyle.filter),
+        pointerEvents: style.pointerEvents,
+        zIndex: style.zIndex,
+        hitsNav: hits('nav[aria-label="Portfolio sections"]'),
+        hitsAppBar: hits('nav[aria-label="Page actions"]'),
+      };
+    });
+
+    expect(backdrop.alt, at).toBe("");
+    /*
+     * What the layer costs, which is the number that matters -- not the
+     * `loading="lazy"` attribute this used to assert. That attribute reads as a
+     * guarantee the layer is deferred and is not one: all four pivots are laid
+     * out on the panorama plane, so the hidden Photography section is inside
+     * the lazy threshold and the backdrop is fetched on whichever pivot a
+     * reader lands on. At `sizes="100vw"` it was a 1920px variant at 1440 and a
+     * 640px one at 393 -- 3.3x the bytes of the portrait a reader can see, for
+     * a layer that is greyscale, blurred 24px and painted at 12%.
+     *
+     * 384 is a device-pixel ceiling, not a CSS-pixel one: a `srcset` candidate
+     * is chosen in device pixels, so a `devicePixelRatio`-scaled ceiling would
+     * pass whatever the layer asked for and assert nothing. 384 is the
+     * largest of `next/image`'s own `imageSizes`, one step above the 352
+     * device pixels the 128px layer asks for on the Pixel 5 project (DPR
+     * 2.75), which absorbs the browser rounding that candidate up; on the
+     * Desktop Chrome project (DPR 1) the same layer asks for 128 outright.
+     */
+    expect(backdrop.variant, at).toBeGreaterThan(0);
+    expect(
+      backdrop.variant,
+      `${at} backdrop variant ${backdrop.variant}px at DPR ${backdrop.dpr}`,
+    ).toBeLessThanOrEqual(384);
+    expect(backdrop.opacity, at).toBeLessThanOrEqual(0.12);
+    expect(backdrop.blurred, at).toBe(true);
+    expect(backdrop.pointerEvents, at).toBe("none");
+    expect(Number.parseFloat(backdrop.zIndex), at).toBeLessThan(0);
+    expect(backdrop.hitsNav, at).toBe(false);
+    expect(backdrop.hitsAppBar, at).toBe(false);
+
+    /*
+     * Captions stay visible and useful: the two working titles are the only
+     * thing on those tiles that says which unmade selection they stand for, and
+     * a caption behind an ellipsis is not a caption.
+     */
+    const captions = await panel.evaluate((root) =>
+      [...root.querySelectorAll<HTMLElement>("[data-tile-role]")].map(
+        (tile) => {
+          const caption = tile.lastElementChild as HTMLElement;
+          const range = document.createRange();
+          range.selectNodeContents(caption);
+
+          return {
+            text: caption.textContent ?? "",
+            drawn: range.getBoundingClientRect().width,
+            box: caption.getBoundingClientRect().width,
+            // Children are `[media?, content, caption]`, so the face is always
+            // the one before the caption, media layer or no media layer.
+            face: (
+              tile.children[tile.children.length - 2]?.textContent ?? ""
+            ).trim(),
+          };
+        },
+      ),
+    );
+
+    expect(
+      captions.map((caption) => caption.text),
+      at,
+    ).toEqual(["Portrait", "streets / in transit", "light / geometry"]);
+    expect(
+      captions.filter((caption) => /Selection in progress/.test(caption.face))
+        .length,
+      at,
+    ).toBe(2);
+    for (const caption of captions) {
+      const where = `${at} ${caption.text}`;
+      expect(caption.drawn, where).toBeGreaterThan(0);
+      expect(caption.drawn, where).toBeLessThanOrEqual(caption.box + 0.1);
+    }
   });
 }
 
