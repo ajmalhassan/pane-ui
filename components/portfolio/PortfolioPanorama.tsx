@@ -23,6 +23,7 @@ import type { PivotId } from "@/lib/content/pivots";
 import { BioPanel } from "./BioPanel";
 import { BlogPanel } from "./BlogPanel";
 import { ContactPanel } from "./ContactPanel";
+import { APP_IDENTITY } from "./identity";
 import { PhotographyPanel } from "./PhotographyPanel";
 import { ProjectsPanel } from "./ProjectsPanel";
 import styles from "./PortfolioPanorama.module.css";
@@ -142,7 +143,7 @@ export function PortfolioPanorama({
 
   return (
     <main className={styles.shell}>
-      <StatusBar label="AJMAL / PORTFOLIO" />
+      <StatusBar label={APP_IDENTITY} />
       <Panorama
         active={active}
         navigation={

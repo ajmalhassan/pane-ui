@@ -16,6 +16,12 @@ const NARROW_FRAMES = [
   { width: 393, height: 851 },
 ] as const;
 const APP_BAR = 'nav[aria-label="Page actions"]';
+/*
+ * The application's identity line. It is `aria-hidden` -- the page's own
+ * heading names the page -- so it is located by the text it paints, which is
+ * also what makes it usable as the content column's left edge below.
+ */
+const IDENTITY = "AJMAL / PORTFOLIO";
 
 /**
  * Every way a tile can silently lose the copy it was given, measured on a whole
@@ -1755,57 +1761,143 @@ test("a focused edge tile keeps its whole focus ring inside the panorama", async
   }
 });
 
-test("app-bar commands keep circular rings and 44px targets on every frame", async ({
-  page,
-}) => {
-  await page.goto("/?view=me");
+/*
+ * Every surface that docks an application bar, and the commands each one
+ * carries. One dock draws all of them (`components/metro/AppBarDock`), so a
+ * change to the strip is measured on the panorama and on all four detail
+ * routes at once -- which is the whole point of there being one of it.
+ *
+ * A function rather than a constant because one of those paths is the newest
+ * note's, which `beforeAll` fills in from the posts directory. The titles below
+ * are built from `name`, which is fixed, so the suite lists the same cases
+ * whatever is published, and each test re-reads its own row once the path is
+ * known.
+ */
+function dockedSurfaces() {
+  return [
+    { name: "/?view=me", path: "/?view=me", commands: 2 },
+    { name: LEAD_PLATFORM, path: LEAD_PLATFORM, commands: 3 },
+    /*
+     * Back plus the two primaries, and the widest bar this application draws:
+     * `field notes` is the longest back label at 56px -- against `projects` 43,
+     * `portfolio` 45, `blog` 23 -- which puts the article's command row at
+     * 176.06px where the case study's is 164, on a bar that is 288px wide at
+     * 320. Nothing else can see that row overflow: the dock is `position:
+     * fixed`, and fixed overflow does not extend document scroll, so the
+     * `rowEnd <= barRight` assertion inside this loop is the whole guard.
+     */
+    { name: "/blog/<newest>", path: newestHref, commands: 3 },
+    { name: "/blog", path: "/blog", commands: 3 },
+    { name: "/resume", path: "/resume", commands: 2 },
+  ] as const;
+}
 
-  for (const frame of [
-    { width: 320, height: 568 },
-    // Straddles the single `48rem` breakpoint: 767 must be a phone and 768 must
-    // not, which is only true while the two media queries tile the axis exactly.
-    { width: 767, height: 800 },
-    { width: 768, height: 800 },
-    { width: 1440, height: 900 },
-  ]) {
-    await page.setViewportSize(frame);
-    const commands = page.locator(`${APP_BAR} :is(a, button)`);
-    const label = `${frame.width}x${frame.height}`;
-    await expect(commands, label).toHaveCount(3);
+const DOCK_FRAMES = [
+  { width: 320, height: 568 },
+  { width: 393, height: 851 },
+  // Straddles the single `48rem` breakpoint: 767 must be a phone and 768 must
+  // not, which is only true while the two media queries tile the axis exactly.
+  { width: 767, height: 800 },
+  { width: 768, height: 800 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+] as const;
 
-    // The overflow command is the last of the three and is a no-op at phone
-    // widths -- labels are unconditional there -- so it is not painted and has
-    // no box to measure. The two real commands are always drawn.
-    const painted = frame.width < 768 ? 2 : 3;
-    const overflow = page.getByRole("button", { name: /app bar labels/ });
+for (const [index, listed] of dockedSurfaces().entries()) {
+  test(`app-bar commands keep circular rings and 44px targets on ${listed.name}`, async ({
+    page,
+  }) => {
+    // Read once `beforeAll` has resolved the newest note into a real path.
+    const surface = dockedSurfaces()[index];
+    await page.goto(surface.path);
 
-    if (painted === 3) {
-      await expect(overflow, label).toBeVisible();
-    } else {
-      await expect(overflow, label).toBeHidden();
+    for (const frame of DOCK_FRAMES) {
+      await page.setViewportSize(frame);
+      const commands = page.locator(`${APP_BAR} :is(a, button)`);
+      const label = `${surface.path} ${frame.width}x${frame.height}`;
+      await expect(commands, label).toHaveCount(surface.commands + 1);
+
+      // The overflow command is the last one and is a no-op at phone widths --
+      // labels are unconditional there -- so it is not painted and has no box
+      // to measure. The named commands are always drawn.
+      const painted =
+        frame.width < 768 ? surface.commands : surface.commands + 1;
+      const overflow = page.getByRole("button", { name: /app bar labels/ });
+
+      if (painted > surface.commands) {
+        await expect(overflow, label).toBeVisible();
+      } else {
+        await expect(overflow, label).toBeHidden();
+      }
+
+      // The bar is the height the page shell reserves for it, from the one
+      // token both read.
+      const barBox = await page.locator(APP_BAR).boundingBox();
+      expect(barBox?.height ?? 0, label).toBeCloseTo(72, 1);
+
+      /*
+       * The dock indents to the content column, not to the viewport: the first
+       * command starts exactly where the identity line does. That is one
+       * measurement rather than two because the dock and the page shell take
+       * their inset from the same pair of custom properties -- if either is
+       * edited alone, this is what says so.
+       */
+      const identity = await page.getByText(IDENTITY).boundingBox();
+      const first = await commands.first().boundingBox();
+      expect(identity, label).not.toBeNull();
+      expect(first?.x ?? -1, label).toBeCloseTo(identity?.x ?? -1, 1);
+
+      let previousRight = -Infinity;
+
+      for (let index = 0; index < painted; index += 1) {
+        const command = commands.nth(index);
+        const ring = command.locator("span").first();
+        const commandBox = await command.boundingBox();
+        const ringBox = await ring.boundingBox();
+        const at = `${label} command ${index}`;
+
+        expect(commandBox, at).not.toBeNull();
+        expect(ringBox, at).not.toBeNull();
+        expect(commandBox?.width ?? 0, at).toBeGreaterThanOrEqual(44);
+        expect(commandBox?.height ?? 0, at).toBeGreaterThanOrEqual(44);
+        expect(ringBox?.width ?? 0, at).toBeCloseTo(34, 1);
+        expect(
+          Math.abs((ringBox?.width ?? 0) - (ringBox?.height ?? 1)),
+          at,
+        ).toBeLessThanOrEqual(0.5);
+        await expect(ring, at).toHaveCSS("border-radius", "50%");
+        await expect(ring, at).toHaveCSS("border-top-width", "2px");
+        await expect(command, at).toHaveCSS("border-radius", "0px");
+
+        /*
+         * Three commands on a 288px bar is the case the row can break, and it
+         * breaks by overflowing rather than by clipping. A label's own box
+         * cannot say so: `.command` is `flex: none` and `.label` has no width
+         * constraint, so every label span is shrink-to-fit and its
+         * `scrollWidth` equals its `clientWidth` by construction -- one
+         * measured 307/307 while hanging 139px outside the bar. The two
+         * assertions that can fail are here and just below: no command starts
+         * before its neighbour ended, and the row ends inside the bar.
+         */
+        expect(commandBox?.x ?? 0, `${at} overlap`).toBeGreaterThanOrEqual(
+          previousRight,
+        );
+        previousRight = (commandBox?.x ?? 0) + (commandBox?.width ?? 0);
+      }
+
+      // ...and the whole row stays inside the bar it is docked in.
+      expect(previousRight, `${label} bar overflow`).toBeLessThanOrEqual(
+        (barBox?.x ?? 0) + (barBox?.width ?? 0) + 0.5,
+      );
+
+      const [scrollWidth, clientWidth] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        document.documentElement.clientWidth,
+      ]);
+      expect(scrollWidth, label).toBe(clientWidth);
     }
-
-    for (let index = 0; index < painted; index += 1) {
-      const command = commands.nth(index);
-      const ring = command.locator("span").first();
-      const commandBox = await command.boundingBox();
-      const ringBox = await ring.boundingBox();
-      const at = `${label} command ${index}`;
-
-      expect(commandBox, at).not.toBeNull();
-      expect(ringBox, at).not.toBeNull();
-      expect(commandBox?.width ?? 0, at).toBeGreaterThanOrEqual(44);
-      expect(commandBox?.height ?? 0, at).toBeGreaterThanOrEqual(44);
-      expect(ringBox?.width ?? 0, at).toBeGreaterThanOrEqual(34);
-      expect(
-        Math.abs((ringBox?.width ?? 0) - (ringBox?.height ?? 1)),
-        at,
-      ).toBeLessThanOrEqual(0.5);
-      await expect(ring, at).toHaveCSS("border-radius", "50%");
-      await expect(command, at).toHaveCSS("border-radius", "0px");
-    }
-  }
-});
+  });
+}
 
 test("a compact phone shows every command label under its ring", async ({
   page,
@@ -1932,6 +2024,425 @@ test("résumé uses a white page canvas when printed", async ({ page }) => {
     html: "rgb(255, 255, 255)",
     resume: "rgb(255, 255, 255)",
   });
+
+  // Black ink on that white canvas, on the root the sheet inherits from.
+  await expect(page.locator("main")).toHaveCSS("color", "rgb(0, 0, 0)");
+
+  /*
+   * Screen chrome does not print. The phone's status line and its application
+   * bar are the application around the document, not the document: a fixed
+   * strip would repeat on every sheet, and a clock is not part of a résumé.
+   */
+  const chrome = await page.evaluate((identity) => {
+    const line = [...document.querySelectorAll<HTMLElement>("div")].find(
+      (node) => node.textContent?.startsWith(identity),
+    );
+    const bar = document.querySelector('nav[aria-label="Page actions"]');
+
+    return {
+      identityFound: Boolean(line),
+      identity: line ? getComputedStyle(line).display : null,
+      barFound: Boolean(bar),
+      dock: bar ? getComputedStyle(bar.parentElement!).display : null,
+    };
+  }, IDENTITY);
+
+  expect(chrome).toEqual({
+    identityFound: true,
+    identity: "none",
+    barFound: true,
+    dock: "none",
+  });
+
+  // The reserve goes with the bar: 96px of white at the end of the last sheet
+  // is the reserve for a strip that is not printed.
+  await expect(page.locator("main")).toHaveCSS("padding-bottom", "0px");
+
+  // Every link still prints where it points, so a paper résumé is usable.
+  await expect(page.locator("main a").first()).toHaveCSS(
+    "break-inside",
+    "auto",
+  );
+  const printedHref = await page.evaluate(() => {
+    const link = document.querySelector<HTMLAnchorElement>("main a[href]")!;
+    return {
+      content: getComputedStyle(link, "::after").content,
+      href: link.getAttribute("href"),
+    };
+  });
+  expect(printedHref.content).toContain(printedHref.href);
+
+  // Nothing on the sheet is set in anything but ink -- neither the words nor
+  // the rules, fills and markers drawn around them.
+  expect(await page.evaluate(nonBlackPrintedText)).toEqual([]);
+  expect(await page.evaluate(nonInkPrintedBoxes)).toEqual([]);
+});
+
+/*
+ * Every visible word inside `<main>`, and the colour it would be printed in.
+ * Runs in the page, so it closes over nothing.
+ *
+ * Text nodes rather than elements: a heading's colour is set on the heading and
+ * a `<time>` inherits from the row, so walking elements finds the containers
+ * and misses which of them actually paint ink. `offsetParent === null` drops
+ * the chrome that hides itself in print -- the identity line and the whole dock
+ * -- along with anything else `display: none` removes, which is exactly the set
+ * that reaches no sheet.
+ */
+function nonBlackPrintedText(): string[] {
+  const walker = document.createTreeWalker(
+    document.querySelector("main")!,
+    NodeFilter.SHOW_TEXT,
+  );
+  const found: string[] = [];
+
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const text = (node.textContent ?? "").trim();
+    const parent = node.parentElement;
+    if (!text || !parent || parent.offsetParent === null) continue;
+
+    const color = getComputedStyle(parent).color;
+    if (color !== "rgb(0, 0, 0)") found.push(`${text.slice(0, 40)} → ${color}`);
+  }
+
+  return found;
+}
+
+/*
+ * The rest of the sheet: every visible box's fill, its four border colours, and
+ * whatever its pseudo-elements paint. The walk above sees ink only where there
+ * are words, which leaves a cyan rule, a filled panel or a hairline free to
+ * print itself onto white paper with nothing failing -- and the résumé's list
+ * markers are `background` on a `::before`, so the one decoration this document
+ * language actually draws is invisible to a text walk by construction.
+ *
+ * Paper is transparent or white, because the canvas underneath is the sheet;
+ * ink is black. A pseudo-element may be black *background* as well -- that is
+ * what a 6px square marker is -- while an element's own fill may not, because a
+ * black box is not a printed word.
+ */
+function nonInkPrintedBoxes(): string[] {
+  const PAPER = ["rgba(0, 0, 0, 0)", "rgb(255, 255, 255)"];
+  const INK = "rgb(0, 0, 0)";
+  const SIDES = ["Top", "Right", "Bottom", "Left"] as const;
+  const found: string[] = [];
+
+  for (const element of document.querySelectorAll("main *")) {
+    // An SVG has no `offsetParent` to test, and its glyphs are `currentColor`
+    // strokes inside chrome that does not print at all.
+    if (element.closest("svg")) continue;
+    if ((element as HTMLElement).offsetParent === null) continue;
+
+    const style = getComputedStyle(element);
+    const name = `${element.tagName.toLowerCase()}.${
+      (element.getAttribute("class") ?? "—").split(/\s+/)[0]
+    }`;
+
+    if (!PAPER.includes(style.backgroundColor)) {
+      found.push(`${name} background → ${style.backgroundColor}`);
+    }
+
+    for (const side of SIDES) {
+      const width = style[`border${side}Width` as "borderTopWidth"];
+      const color = style[`border${side}Color` as "borderTopColor"];
+      if (parseFloat(width) > 0 && color !== INK && !PAPER.includes(color)) {
+        found.push(`${name} border-${side.toLowerCase()} → ${color}`);
+      }
+    }
+
+    for (const pseudo of ["::before", "::after", "::marker"] as const) {
+      const drawn = getComputedStyle(element, pseudo);
+      if (drawn.content === "none") continue;
+
+      if (![...PAPER, INK].includes(drawn.backgroundColor)) {
+        found.push(`${name}${pseudo} background → ${drawn.backgroundColor}`);
+      }
+      if (drawn.color !== INK) {
+        found.push(`${name}${pseudo} colour → ${drawn.color}`);
+      }
+    }
+  }
+
+  return found;
+}
+
+/*
+ * The other three sheets. The résumé is the document anyone would print, but
+ * the shared surface turns all four white, and a white sheet a route did not
+ * ask for is worse than no print treatment at all: an article's section
+ * headings are `--metro-text`, which is 1.10:1 on paper.
+ *
+ * Two assertions carry it -- every visible text node computes black, and every
+ * visible box is white paper with black rules on it -- because between them
+ * they are what a reader sees, and what a new colour anywhere in these
+ * stylesheets breaks, whether the colour is set on a tag Markdown produced or
+ * on a class one of these routes added.
+ */
+for (const route of [
+  { path: LEAD_PLATFORM, name: "a case study" },
+  { path: "/blog", name: "the note index" },
+  { path: "", name: "an article" },
+]) {
+  test(`${route.name} prints black on the white sheet too`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ media: "print" });
+    await page.goto(route.path || newestHref);
+
+    const canvas = await page.evaluate(() => ({
+      html: getComputedStyle(document.documentElement).backgroundColor,
+      body: getComputedStyle(document.body).backgroundColor,
+      main: getComputedStyle(document.querySelector("main")!).backgroundColor,
+    }));
+
+    expect(canvas, route.path).toEqual({
+      html: "rgb(255, 255, 255)",
+      body: "rgb(255, 255, 255)",
+      main: "rgb(255, 255, 255)",
+    });
+    await expect(page.locator("main"), route.path).toHaveCSS(
+      "color",
+      "rgb(0, 0, 0)",
+    );
+    await expect(page.locator("main"), route.path).toHaveCSS(
+      "padding-bottom",
+      "0px",
+    );
+
+    // The application around the document does not print: the status line and
+    // the dock take themselves out from their own stylesheets.
+    const chrome = await page.evaluate((identity) => {
+      const line = [...document.querySelectorAll<HTMLElement>("div")].find(
+        (node) => node.textContent?.startsWith(identity),
+      );
+      const bar = document.querySelector('nav[aria-label="Page actions"]');
+
+      return {
+        identity: line ? getComputedStyle(line).display : null,
+        dock: bar ? getComputedStyle(bar.parentElement!).display : null,
+      };
+    }, IDENTITY);
+
+    expect(chrome, route.path).toEqual({ identity: "none", dock: "none" });
+    expect(await page.evaluate(nonBlackPrintedText), route.path).toEqual([]);
+    expect(await page.evaluate(nonInkPrintedBoxes), route.path).toEqual([]);
+  });
+}
+
+/*
+ * The résumé's sections survive a page break rather than being split across
+ * one. Asserted on the screen canvas because `break-inside` is a paged
+ * property whose computed value is the same either way, and it is the value a
+ * print stylesheet can silently drop.
+ */
+test("résumé sections ask not to be split across sheets", async ({ page }) => {
+  await page.emulateMedia({ media: "print" });
+  await page.goto("/resume");
+
+  const sections = page.locator("main section, main header, main aside");
+  await expect(sections).toHaveCount(5);
+
+  for (let index = 0; index < 5; index += 1) {
+    await expect(sections.nth(index)).toHaveCSS("break-inside", "avoid");
+  }
+});
+
+/*
+ * The four surfaces that are not the panorama. They are long-form documents --
+ * a case study, a field note, the note index, the résumé -- and they are pages
+ * of the same application: identity line at the top, one heading, and the way
+ * back drawn as an application-bar command rather than typed as a bordered web
+ * button. `back` is derived per route rather than listed once, because the
+ * command's destination is the one thing that differs between them.
+ */
+const DETAIL_FRAMES = [
+  { width: 320, height: 568 },
+  { width: 1440, height: 900 },
+] as const;
+
+function detailRoutes() {
+  return [
+    {
+      path: LEAD_PLATFORM,
+      back: "Projects",
+      href: "/?view=projects",
+      resume: true,
+    },
+    { path: newestHref, back: "Field notes", href: "/blog", resume: true },
+    // `Blog` and not `Portfolio`: the résumé's way back is `Portfolio` → `/`,
+    // and one label cannot name two destinations.
+    { path: "/blog", back: "Blog", href: "/?view=blog", resume: true },
+    // The one surface that drops the Résumé command, because it is the résumé.
+    { path: "/resume", back: "Portfolio", href: "/", resume: false },
+  ] as const;
+}
+
+for (const frame of DETAIL_FRAMES) {
+  test(`detail routes read as one application at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+
+    // The column every surface indents to, taken from the panorama rather than
+    // recomputed here: the detail routes have to agree with it, not with an
+    // arithmetic copy of it.
+    await page.goto("/");
+    const column = (await page.getByText(IDENTITY).boundingBox())?.x ?? -1;
+    expect(column, "panorama identity line").toBeGreaterThan(0);
+
+    for (const route of detailRoutes()) {
+      await page.goto(route.path);
+      const at = `${route.path} @ ${frame.width}`;
+
+      const heading = page.getByRole("heading", { level: 1 });
+      await expect(heading, at).toHaveCount(1);
+      await expect(heading, at).toBeVisible();
+
+      /*
+       * The tab, the bookmark and the history entry. The identity line is
+       * `aria-hidden` and the h1 names the document rather than the site, so
+       * `<title>` is what carries both -- and the résumé, the one of these four
+       * most likely to be opened in its own tab and sent to someone, says what
+       * kind of document it is before it says whose.
+       */
+      const title = await page.title();
+      expect(title, at).toContain("Ajmal Hassan");
+      if (route.path === "/resume") expect(title, at).toMatch(/^Résumé/);
+
+      const identity = page.getByText(IDENTITY);
+      await expect(identity, at).toHaveCount(1);
+      const line = await identity.boundingBox();
+      expect(line?.x ?? -1, at).toBeCloseTo(column, 1);
+
+      const back = page.getByRole("link", { name: route.back });
+      await expect(back, at).toHaveAttribute("href", route.href);
+      await expect(back.locator("svg"), at).toHaveCount(1);
+      expect(
+        await back.evaluate((node) =>
+          Boolean(node.closest('nav[aria-label="Page actions"]')),
+        ),
+        at,
+      ).toBe(true);
+
+      /*
+       * Résumé and contact stay primary commands wherever they are not the
+       * page itself, so a reader who arrived on a case study or a note from
+       * outside is one command from either -- which is what the panorama's own
+       * bar promises, kept on the routes the panorama links to.
+       */
+      const contact = page.locator(`${APP_BAR} a[href="/#contact"]`);
+      await expect(contact, at).toHaveCount(1);
+      await expect(contact, at).toHaveAccessibleName("Contact");
+
+      const resume = page.locator(`${APP_BAR} a[href="/resume"]`);
+      await expect(resume, at).toHaveCount(route.resume ? 1 : 0);
+      if (route.resume) {
+        await expect(resume, at).toHaveAccessibleName("Résumé");
+      }
+
+      // Conventional vertical reading: a long-form page scrolls down and never
+      // sideways, whatever the panorama does one route away.
+      const [scrollWidth, clientWidth] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        document.documentElement.clientWidth,
+      ]);
+      expect(scrollWidth, at).toBe(clientWidth);
+
+      // The way back is reachable from the keyboard, and it is the ring that
+      // shows where focus is.
+      await tabTo(page, back);
+      await expect(back, at).toBeFocused();
+      await expect(back, at).toHaveCSS("outline-color", "rgb(242, 244, 245)");
+      await expect(back, at).toHaveCSS("outline-width", "3px");
+      await expect(back, at).toHaveCSS("outline-offset", "3px");
+    }
+  });
+}
+
+/*
+ * The Metro ring reaches every link on these pages, not only the commands in
+ * the dock -- the dock's own already draw it from `.pressable`, so the shared
+ * rule is only proved by a link the dock does not own. And a link inside the
+ * reading copy says it is one: cyan, and underlined.
+ */
+test("every link on a detail route draws the Metro ring", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+
+  for (const path of ["/blog", "/resume"]) {
+    await page.goto(path);
+    /*
+     * The reading column only. `main > div a` also matched the dock -- the
+     * status line, the column and the dock are all direct `div` children of
+     * `main` -- so the guard below could never fail: every route has a back
+     * command. Scoped to the column, "needs a link outside the dock" is again
+     * a thing that can be untrue.
+     */
+    const inCopy = page.locator('main > div[class*="column"] a');
+    const count = await inCopy.count();
+    expect(count, `${path} needs a link outside the dock`).toBeGreaterThan(0);
+
+    for (let index = 0; index < count; index += 1) {
+      const link = inCopy.nth(index);
+      const at = `${path} link ${index}`;
+      await link.focus();
+      await expect(link, at).toHaveCSS("outline-color", "rgb(242, 244, 245)");
+      await expect(link, at).toHaveCSS("outline-width", "3px");
+      await expect(link, at).toHaveCSS("outline-offset", "3px");
+
+      // The ring is painted in full at the column's own left edge: 3px of ring
+      // plus 3px of offset, on a page that clips nothing.
+      const ring = await link.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return box.left - 6;
+      });
+      expect(ring, at).toBeGreaterThanOrEqual(0);
+    }
+  }
+
+  // The links the résumé sends a reader out on, and the treatment the article's
+  // Markdown links share with them from the same declarations.
+  await page.goto("/resume");
+  const linkedin = page.getByRole("link", { name: "LinkedIn" }).first();
+  await expect(linkedin).toHaveCSS("color", "rgb(0, 164, 239)");
+  await expect(linkedin).toHaveCSS("text-decoration-line", "underline");
+});
+
+/*
+ * The primary commands are not decoration on a detail route: contact from a
+ * case study lands on the panorama with the panel open, which is the whole
+ * point of carrying it there. `/#contact` and not `#contact`, because the panel
+ * is a page away.
+ */
+test("contact from a case study opens the panorama's own panel", async ({
+  page,
+}) => {
+  await page.goto(LEAD_PLATFORM);
+  await page.getByRole("link", { name: "Contact" }).click();
+
+  await expect(page).toHaveURL(/\/#contact$/);
+  await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeVisible();
+
+  // And the résumé command is the résumé, from the same bar.
+  await page.goto(LEAD_PLATFORM);
+  await page.getByRole("link", { name: "Résumé" }).click();
+  await expect(page).toHaveURL(/\/resume$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+/*
+ * The status a surface carries is written where a reader meets it. A draft note
+ * says so on its own page, and a case study says what stage its work is at --
+ * the same labels the hubs print, on the pages the hubs link to.
+ */
+test("detail routes label their own status", async ({ page }) => {
+  await page.goto(LEAD_PLATFORM);
+  await expect(page.getByText("Status: shipped")).toBeVisible();
+
+  await page.goto(newestHref);
+  await expect(page.getByText("Draft example")).toBeVisible();
 });
 
 test.describe("without JavaScript", () => {

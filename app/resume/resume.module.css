@@ -1,150 +1,152 @@
-.resume {
-  width: min(100% - 2rem, 50rem);
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: clamp(2rem, 7vw, 5rem) 0;
-  color: var(--metro-text);
-}
+/*
+ * The résumé, as flat type on the page's own ground.
+ *
+ * It used to be three boxes -- header, section, review note -- each with a
+ * `--metro-surface` fill and a 1px border, which is the one thing this design
+ * language does not do: Metro has no cards. What separated the blocks was a
+ * rounded-cornerless panel around each of them; what separates them now is the
+ * hairline the shared detail surface draws between neighbours, and the review
+ * note is a cyan-ruled aside rather than a cyan-bordered box.
+ *
+ * Everything the résumé shares with a case study or a field note -- the column,
+ * the marker, the title, the summary, the section rhythm, the link treatment --
+ * comes from `components/portfolio/detailSurface.module.css`. What is here is
+ * the résumé's own furniture and what a printer needs.
+ */
 
 .header,
-.section,
+.block,
 .reviewNote {
-  padding: clamp(1.25rem, 4vw, 2rem);
-  border: 1px solid var(--metro-line);
-  background: var(--metro-surface);
+  /* A section that starts on one sheet and ends on the next is a section a
+     reader has to reassemble. */
+  break-inside: avoid;
 }
 
-.header,
-.section {
-  margin-bottom: 1rem;
-}
-
-.eyebrow {
-  margin: 0 0 0.5rem;
-  color: var(--metro-cyan);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.header h1,
-.section h2,
-.workList h3 {
-  margin: 0;
-  font-weight: 400;
-  letter-spacing: -0.035em;
-}
-
-.header h1 {
-  font-size: clamp(2.75rem, 10vw, 5rem);
-  line-height: 0.95;
-}
-
+/*
+ * The headline sits where a case study puts its metric: one large cyan line
+ * directly under the name. It is the résumé's own claim, and the only thing on
+ * the page set larger than a section heading.
+ */
 .headline {
   margin: 1rem 0 0;
   color: var(--metro-cyan);
   font-size: clamp(1.2rem, 3vw, 1.65rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
 }
 
-.bio,
-.section li,
-.workList p,
-.reviewNote {
+.highlights {
+  margin: 1rem 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.highlights li {
+  position: relative;
+  max-width: 42rem;
+  padding-left: 1.1rem;
   color: var(--metro-muted);
   line-height: 1.7;
 }
 
-.section h2 {
-  margin-bottom: 1rem;
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+/*
+ * Tailwind's preflight strips list markers, which left these three claims as a
+ * hanging indent with nothing in it -- neither a list nor a flat paragraph. The
+ * marker this language would draw is a square: 6px, cyan, the same size at
+ * every width, and set on the first line's own x-height.
+ */
+.highlights li::before {
+  content: "";
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--metro-cyan);
 }
 
-.section ul {
-  margin: 0;
-  padding-left: 1.2rem;
-}
-
-.section li + li {
+.highlights li + li {
   margin-top: 0.65rem;
 }
 
+/* Windows Phone list rhythm, at the size a résumé entry needs: a hairline
+   between entries and nothing around them. */
 .workList {
   display: grid;
-  gap: 1rem;
+  gap: clamp(0.85rem, 2vw, 1.25rem);
+  margin-top: 1rem;
 }
 
 .workList article + article {
-  padding-top: 1rem;
+  padding-top: clamp(0.85rem, 2vw, 1.25rem);
   border-top: 1px solid var(--metro-line);
 }
 
 .workList h3 {
+  margin: 0;
   font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: -0.035em;
 }
 
 .workList p {
+  max-width: 42rem;
   margin: 0.4rem 0 0;
+  color: var(--metro-muted);
+  line-height: 1.7;
 }
 
-.reviewNote {
-  margin-bottom: 1rem;
-  border-color: var(--metro-cyan);
+/*
+ * The one aside on the page, and the doubled class is deliberate: it sets a
+ * `padding-left` the shared `.section` also declares, and the two classes have
+ * equal specificity in different stylesheets, where the winner would otherwise
+ * be decided by whichever import the bundler happened to emit last.
+ */
+.reviewNote.reviewNote {
+  padding-left: clamp(1rem, 3vw, 1.5rem);
+  border-left: 0.25rem solid var(--metro-cyan);
 }
 
-.reviewNote a,
-.links a {
-  color: var(--metro-text);
-  font-weight: 700;
+/*
+ * The measure lives on the sentence, not on the aside: the hairline the shared
+ * surface draws between blocks is drawn on the aside's own box, and a capped
+ * aside would print a rule 96px shorter than the two sections around it.
+ */
+.reviewBody {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--metro-muted);
+  line-height: 1.7;
 }
 
 .links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem 1.5rem;
-  padding-left: 0 !important;
+  margin: 1rem 0 0;
+  padding-left: 0;
   list-style: none;
 }
 
-.links li + li {
-  margin-top: 0 !important;
-}
-
 @media print {
-  .resume {
-    width: 100%;
-    min-height: auto;
-    padding: 0;
-    background: #fff;
-    color: #000;
-  }
-
-  .header,
-  .section,
-  .reviewNote {
-    break-inside: avoid;
-    margin-bottom: 0.35in;
-    padding: 0;
-    border: 0;
-    background: #fff;
-    color: #000;
-  }
-
-  .eyebrow,
+  /*
+   * Ink on paper. The white canvas and the black body copy are set by the
+   * shared detail surface, which every printed document here wants; these are
+   * the résumé's own colours, which are the only ones left saying grey.
+   */
   .headline,
-  .bio,
-  .section li,
+  .highlights li,
   .workList p,
-  .reviewNote,
-  .reviewNote a,
-  .links a {
+  .reviewBody {
     color: #000;
   }
 
-  .resume a[href]::after {
-    content: " (" attr(href) ")";
-    font-size: 0.8em;
-    font-weight: 400;
-    overflow-wrap: anywhere;
+  .workList article + article,
+  .reviewNote.reviewNote {
+    border-color: #000;
+  }
+
+  .highlights li::before {
+    background: #000;
   }
 }

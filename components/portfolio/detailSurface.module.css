@@ -1,0 +1,233 @@
+/*
+ * The long-form surface, and the four documents that share it: a project case
+ * study, a field note, the index of field notes, and the résumé.
+ *
+ * None of them is a panorama. They are read the conventional way -- down the
+ * page, one column, no horizontal region and no tiles -- and what makes them
+ * pages of the same application instead of four web pages is the chrome around
+ * that column and the typographic hierarchy inside it. Both are declared once,
+ * here, so a change to the reading voice reaches every document at the same
+ * time.
+ *
+ * The header block is always the same five slots in the same order, and a
+ * surface fills the ones it has:
+ *
+ *   identity line -> marker -> h1 -> summary -> metric
+ *
+ * followed by the one cyan rule that is the accent for the whole page. Below it
+ * every rule is a hairline, so the cyan says "this is where the document
+ * starts" and nothing else on the page competes with it.
+ */
+.page {
+  composes: dockedPage from "../metro/AppBarDock.module.css";
+}
+
+/*
+ * The reading column. 48rem is a measure, not a layout: it holds ~90 characters
+ * of the body step, and the summary and body caps below narrow it further where
+ * the type is larger. It starts at the page's own inset rather than centring,
+ * so the identity line above it and the command ring below it are on the same
+ * left edge as the panorama's content column at every width.
+ */
+.column {
+  width: min(100%, 48rem);
+  padding: clamp(1.5rem, 5vw, 3rem) 0 clamp(2rem, 6vw, 4rem);
+}
+
+/* The one cyan rule on the page. */
+.header {
+  padding-bottom: clamp(1.75rem, 5vw, 3rem);
+  border-bottom: 0.125rem solid var(--metro-cyan);
+}
+
+/*
+ * What this document is, before what it is called: a project's status, a note's
+ * draft label, the fact that a page is a résumé. Small spaced caps at the
+ * identity line's own step, so the two read as one register.
+ */
+.marker {
+  margin: 0;
+  color: var(--metro-cyan);
+  font-size: var(--metro-text-label);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 14ch;
+  margin: 0.75rem 0 0;
+  font-size: clamp(2.5rem, 9vw, 5.5rem);
+  font-weight: 300;
+  line-height: 0.94;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+.summary {
+  max-width: 38rem;
+  margin: 1.5rem 0 0;
+  color: var(--metro-muted);
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  line-height: 1.55;
+}
+
+/* The facts a document carries beside its summary -- a date, a reading time. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 1.25rem 0 0;
+  color: var(--metro-muted);
+  font-size: var(--metro-text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section {
+  padding: clamp(1.5rem, 4vw, 2.5rem) 0;
+}
+
+/*
+ * The hairline is a separator, so it is drawn between blocks and never above
+ * the first or below the last: a rule under the last section would sit in the
+ * air the app bar's reserve leaves, and a rule above the first would double the
+ * cyan one. Drawn by the container rather than by `.section + .section` so a
+ * run that mixes kinds -- the résumé sets an aside between two of its sections
+ * -- keeps one rhythm.
+ */
+.divided > * + * {
+  border-top: 1px solid var(--metro-line);
+}
+
+.heading {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.body {
+  max-width: 42rem;
+  margin: 0.85rem 0 0;
+  color: var(--metro-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/*
+ * A link inside the reading column: cyan, underlined, and clear of its own
+ * baseline. Colour alone would not name it -- the body copy around it is muted
+ * grey and the headings are white -- so the underline is what says "link" and
+ * the cyan is what says "this application drew it".
+ *
+ * Two selectors, one treatment. `.link` is for a link this application renders
+ * and can put a class on; `.markdownLinks` is the same declarations for a
+ * container whose links arrive from `remark-html` with no class of ours to
+ * compose one onto. The article's prose composes the second, so the note that
+ * one day links out is already styled and there is only ever one place that
+ * decides what a link in the copy looks like.
+ */
+.link,
+.markdownLinks a {
+  color: var(--metro-cyan);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+/*
+ * The Metro focus ring, on every focusable thing in the reading column: the
+ * links in the copy, the links in a list, a link that arrives from Markdown
+ * carrying no class of ours, and a `pre` a fenced block turns into a
+ * scrollable region -- `.prose pre { overflow-x: auto }` needs a `tabindex`
+ * to be keyboard-reachable at all, and a focusable box with no visible focus
+ * state is not meaningfully reachable either. One rule rather than one per
+ * list, for exactly that last case.
+ *
+ * Scoped to `.column` and not to `.page`, which is the difference between
+ * sharing the press contract and forking it. The dock's commands draw this same
+ * ring from `.pressable`, but `.page :is(a, button):focus-visible` is (0,2,1)
+ * against `.pressable:focus-visible`'s (0,2,0), so the wider selector silently
+ * won on every detail route: the values matched, and a later change to the
+ * Metro ring would have reached the panorama and not these four pages. The
+ * column holds no commands, so this rule and `.pressable` no longer meet.
+ *
+ * Nothing on these pages clips: `.page` has no `overflow` of its own, so the
+ * 3px ring and its 3px offset are painted in full even on the leftmost column
+ * edge at 320.
+ */
+.column :is(a, button, pre):focus-visible {
+  outline: 3px solid var(--metro-text);
+  outline-offset: 3px;
+}
+
+/*
+ * Paper.
+ *
+ * These four documents are the ones anyone would print -- a résumé most of all
+ * -- so the reading surface prints itself rather than leaving each route to
+ * describe a sheet of paper again. The screen chrome takes itself out
+ * (`AppBarDock` and `StatusBar` each hide in print), which leaves the column,
+ * and the column becomes the page: full width, no inset of its own, black on
+ * white, and every link carrying the address a reader cannot click.
+ *
+ * `.page.page` is doubled because the padding it overrides is declared on
+ * `dockedPage` in another stylesheet at equal specificity, where the winner
+ * would otherwise depend on the order the bundler emitted the two files in.
+ */
+@media print {
+  .page.page {
+    padding: 0;
+    background: #fff;
+    color: #000;
+  }
+
+  .column {
+    width: 100%;
+    padding: 0;
+  }
+
+  .title,
+  .marker,
+  .summary,
+  .meta,
+  .heading,
+  .body,
+  .link,
+  .markdownLinks a {
+    color: #000;
+  }
+
+  .header {
+    border-bottom-color: #000;
+  }
+
+  .divided > * + * {
+    border-top-color: #000;
+  }
+
+  .header,
+  .section {
+    break-inside: avoid;
+  }
+
+  .page a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+
+  /*
+   * ...except where the address is a path. `https://…` is something a reader
+   * can type into a browser or copy off a printed résumé; ` (/resume)` and
+   * ` (/#contact)` are noise in the middle of a sentence, addressed to a site
+   * the sheet does not name. Same specificity as the rule above, so it has to
+   * come after it.
+   */
+  .page a[href^="/"]::after {
+    content: none;
+  }
+}

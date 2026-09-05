@@ -84,7 +84,21 @@ export function estimateReadingMinutes(markdown: string): number {
 
 export async function renderPostMarkdown(markdown: string): Promise<string> {
   const rendered = await remark().use(remarkHtml).process(markdown);
-  return rendered.toString();
+  const html = rendered.toString();
+
+  /*
+   * `.prose pre { overflow-x: auto }` makes a scrollable region, and a
+   * scrollable region with no focusable inside it is unreachable by keyboard
+   * (axe `scrollable-region-focusable`). CSS cannot add `tabindex`, so it is
+   * added here, on the string this function already returns -- and it has to
+   * happen after `remark-html` has run, not as a `rehype` step before it:
+   * `remark-html` sanitizes through `hast-util-sanitize` by default, whose
+   * schema does not allow `tabindex`, so an attribute added earlier in the
+   * pipeline would be stripped before this function ever saw it. The
+   * negative lookahead makes the replacement idempotent against a `<pre>`
+   * that already carries one.
+   */
+  return html.replace(/<pre(?![^>]*\btabindex=)/g, '<pre tabindex="0"');
 }
 
 async function postFilenames(): Promise<string[]> {

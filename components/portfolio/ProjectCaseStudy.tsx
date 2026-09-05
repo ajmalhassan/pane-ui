@@ -1,5 +1,6 @@
-import Link from "next/link";
 import type { Project } from "@/lib/content/projects";
+import { DetailSurface } from "./DetailSurface";
+import detail from "./detailSurface.module.css";
 import styles from "./ProjectCaseStudy.module.css";
 
 type Props = {
@@ -17,27 +18,28 @@ function formatStatus(status: Project["status"]) {
 
 export function ProjectCaseStudy({ project }: Props) {
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <p className={styles.brand}>Lumia / portfolio</p>
-        <p className={styles.status}>Status: {formatStatus(project.status)}</p>
-        <h1>{project.title}</h1>
-        <p className={styles.summary}>{project.summary}</p>
-        {project.metric ? <p className={styles.metric}>{project.metric}</p> : null}
+    <DetailSurface back={{ label: "Projects", href: "/?view=projects" }}>
+      <header className={detail.header}>
+        <p className={detail.marker}>Status: {formatStatus(project.status)}</p>
+        <h1 className={detail.title}>{project.title}</h1>
+        <p className={detail.summary}>{project.summary}</p>
+        {/* The one approved number this project is allowed to claim, at the
+            size the claim deserves. Most case studies have none. */}
+        {project.metric ? (
+          <p className={styles.metric}>{project.metric}</p>
+        ) : null}
       </header>
 
-      <article className={styles.story}>
+      <article className={detail.divided}>
         {project.sections.map((section) => (
-          <section className={styles.section} key={section.heading}>
-            <h2>{sectionHeadings[section.heading] ?? section.heading}</h2>
-            <p>{section.body}</p>
+          <section className={detail.section} key={section.heading}>
+            <h2 className={detail.heading}>
+              {sectionHeadings[section.heading] ?? section.heading}
+            </h2>
+            <p className={detail.body}>{section.body}</p>
           </section>
         ))}
       </article>
-
-      <Link className={styles.returnLink} href="/?view=projects">
-        Back to projects
-      </Link>
-    </main>
+    </DetailSurface>
   );
 }

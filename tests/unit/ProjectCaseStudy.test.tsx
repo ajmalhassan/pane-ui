@@ -12,6 +12,8 @@ const STORY = [
   "Lessons and next questions",
 ];
 
+const BACK = { label: "Projects", href: "/?view=projects" } as const;
+
 it("renders role, constraints, decisions, outcomes, and lessons", () => {
   render(<ProjectCaseStudy project={getProject("metro-revival")!} />);
 
@@ -40,3 +42,88 @@ it.each(projects.map((project) => project.slug))(
     }
   },
 );
+
+/*
+ * A case study is a page of the same application the panorama is, not a
+ * document that happens to share its colours: the identity line opens it, one
+ * heading names it, the status it carries is written out, and the way back is
+ * the application bar's own command.
+ */
+it("opens on the application identity line and one page heading", () => {
+  const project = getProject("lead-platform")!;
+  render(<ProjectCaseStudy project={project} />);
+
+  expect(screen.getByText("AJMAL / PORTFOLIO")).toBeInTheDocument();
+  expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  expect(screen.getByText("Status: shipped")).toBeVisible();
+});
+
+it.each(projects.map((project) => project.slug))(
+  "writes the status of %s out in words",
+  (slug) => {
+    const project = getProject(slug)!;
+    render(<ProjectCaseStudy project={project} />);
+
+    expect(
+      screen.getByText(`Status: ${project.status.replace(/-/g, " ")}`),
+    ).toBeVisible();
+  },
+);
+
+it("leaves the way back to the application bar's own command", () => {
+  const { container } = render(
+    <ProjectCaseStudy project={getProject("lead-platform")!} />,
+  );
+
+  const back = screen.getByRole("link", { name: BACK.label });
+
+  expect(back).toHaveAttribute("href", BACK.href);
+  expect(back).toHaveAccessibleName(BACK.label);
+  // A drawn command, not a text arrow: the MetroIcon `back` glyph.
+  expect(back.querySelector("svg")).toBeInTheDocument();
+  expect(back.closest('nav[aria-label="Page actions"]')).not.toBeNull();
+
+  // The bordered web button this replaces, in both of the ways it could
+  // survive: the class that drew its box, and the copy that named it.
+  expect(container.querySelector('[class*="returnLink"]')).toBeNull();
+  expect(screen.queryByText(/^back to/i)).toBeNull();
+});
+
+/*
+ * Résumé and contact are the application's primary commands and stay on the
+ * bar here: a hiring manager who arrives on a case study reaches either in one
+ * command rather than by going back to the panorama first.
+ */
+it("keeps résumé and contact primary beside the way back", () => {
+  render(<ProjectCaseStudy project={getProject("lead-platform")!} />);
+
+  const resume = screen.getByRole("link", { name: "Résumé" });
+  const contact = screen.getByRole("link", { name: "Contact" });
+
+  expect(resume).toHaveAttribute("href", "/resume");
+  expect(contact).toHaveAttribute("href", "/#contact");
+
+  for (const command of [resume, contact]) {
+    expect(command.querySelector("svg")).toBeInTheDocument();
+    expect(command.closest('nav[aria-label="Page actions"]')).not.toBeNull();
+  }
+
+  // Back first, then the two primaries, in the panorama's own order.
+  const commands = screen.getAllByRole("link");
+  expect(commands.map((command) => command.textContent)).toEqual([
+    BACK.label,
+    "Résumé",
+    "Contact",
+  ]);
+});
+
+/*
+ * The eyebrow that read "Lumia / portfolio" said what the status line already
+ * says, one line above it, on every surface.
+ */
+it("states the application identity once", () => {
+  render(<ProjectCaseStudy project={getProject("metro-revival")!} />);
+
+  expect(screen.queryByText(/lumia \/ portfolio/i)).toBeNull();
+  expect(screen.getAllByText("AJMAL / PORTFOLIO")).toHaveLength(1);
+});

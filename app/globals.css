@@ -114,9 +114,3 @@ a {
     color: #000;
   }
 }
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}

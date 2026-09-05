@@ -35,6 +35,61 @@ it("renders Markdown to HTML and returns undefined for unknown posts", async () 
 });
 
 /*
+ * The tags `app/blog/article.module.css` dresses, from the renderer the article
+ * route actually calls. Both repository notes are `##` and paragraphs today, so
+ * a list, a subheading, a quotation or a fenced block in the next one would be
+ * the first time those rules were asked for -- and with Tailwind's preflight
+ * still shipped, an unstyled list is a stripped list rather than a plain one.
+ * This is what makes the stylesheet's tag set a claim about a real output
+ * instead of a guess about Markdown in general.
+ */
+it("produces the tags the article stylesheet dresses", async () => {
+  const html = await renderPostMarkdown(
+    [
+      "### A subheading",
+      "- first claim\n- second claim",
+      "1. first step\n2. second step",
+      "> Someone else said this.",
+      "```\nconst answer = 42;\n```",
+      "A `code` span, **strong** copy and *emphasis*.",
+    ].join("\n\n"),
+  );
+
+  for (const tag of [
+    "<h3>",
+    "<ul>",
+    "<ol>",
+    "<li>",
+    "<blockquote>",
+    // A fenced block is a `<pre>` that `.prose pre { overflow-x: auto }`
+    // turns into a scrollable region; `tabindex="0"` is what keeps it
+    // reachable by keyboard, and it has to land on the exact element the
+    // stylesheet scrolls, not merely appear somewhere in the output.
+    '<pre tabindex="0">',
+    "<code>",
+    "<strong>",
+    "<em>",
+  ]) {
+    expect(html, tag).toContain(tag);
+  }
+});
+
+/*
+ * `remark-html` emits `<ol start="3">` for a list that begins there, and
+ * that attribute has to survive `renderPostMarkdown` unchanged: it is the
+ * shipped renderer's own output, and the CSS marker
+ * (`.prose ol > li::marker`) reads a native `list-style: decimal` counter,
+ * which only honours the list's true start when the `start` attribute is
+ * still on the element. A renderer that dropped it would still build a
+ * numbered list, just one that always counts from 1.
+ */
+it("keeps an ordered list's start attribute", async () => {
+  const html = await renderPostMarkdown("3. third step\n4. fourth step");
+
+  expect(html).toContain('<ol start="3">');
+});
+
+/*
  * The boundary itself, not a number near it. 220 words is one minute because
  * the estimate is `ceil(words / 220)`, and the first word past it is what buys
  * the second minute -- an off-by-one in either direction is caught here and

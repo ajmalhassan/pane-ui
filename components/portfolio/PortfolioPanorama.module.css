@@ -458,13 +458,20 @@
 }
 
 /* Date, status and reading time: the facts, before the headline that needs
-   them. Cyan and caps so `DRAFT EXAMPLE` cannot be skimmed past. */
+   them. Cyan and caps so `DRAFT EXAMPLE` cannot be skimmed past.
+
+   The size is the label token and not a literal, because `/blog`'s own rows are
+   these rows one route away and already read it: 0.72rem here against 0.7rem
+   there put the hub and the index it links to 0.32px apart with nothing to say
+   so. The rest of the duplication -- `.noteTitle` and `.noteSummary` are
+   declaration-for-declaration identical in both files -- is a type-scale
+   problem and belongs to Task 10. */
 .noteMeta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem 1rem;
   color: var(--metro-cyan);
-  font-size: 0.72rem;
+  font-size: var(--metro-text-label);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -612,15 +619,29 @@
   scroll-margin-block: 5rem;
 }
 
+/*
+ * The third fixed thing on this page, and the last one still writing the
+ * content inset out by hand. `--dock-inset-left` / `--dock-inset-right` are
+ * declared on `dockedPage`, which `.shell` composes and this panel sits inside,
+ * so the panel now indents from the same pair of properties the bar and the
+ * page do -- including the `max(..., env(safe-area-inset-*))` half the hand
+ * copy was missing, which is why an open panel ran under the notch on a
+ * landscape phone while the bar beneath it did not.
+ *
+ * The panel's own left *edge* still differs from the column's, and by design:
+ * `max-width: 64rem` with `margin: 0 auto` centres it, so it sits 208px from
+ * the viewport at 1440 against a 57.59px column. That is the panel choosing
+ * where to sit inside the inset, not a second opinion about what the inset is.
+ */
 .contact[data-open="true"] {
   position: fixed;
   z-index: 4;
-  right: clamp(1rem, 4vw, 4.5rem);
+  right: var(--dock-inset-right);
   bottom: calc(
     var(--metro-appbar-height) + var(--metro-gap-title) +
       env(safe-area-inset-bottom, 0px)
   );
-  left: clamp(1rem, 4vw, 4.5rem);
+  left: var(--dock-inset-left);
   max-height: calc(
     100vh - var(--metro-appbar-height) - var(--metro-gap-title) -
       env(safe-area-inset-bottom, 0px) - var(--metro-content-inset)
