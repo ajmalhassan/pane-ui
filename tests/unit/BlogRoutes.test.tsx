@@ -7,20 +7,37 @@ import ArticlePage, {
 } from "@/app/blog/[slug]/page";
 import articleStyles from "@/app/blog/article.module.css";
 import detailStyles from "@/components/portfolio/detailSurface.module.css";
-import { getPostSummaries } from "@/lib/content/posts";
+import { getPost, getPostSummaries } from "@/lib/content/posts";
 
 afterEach(cleanup);
 
 const DRAFT = "ai-assessment-needs-a-narrower-job";
+const PUBLISHED = "5-simple-javascript-performance-wins";
 
+/*
+ * Counts come from the content layer, not from this file. The index renders
+ * one `<article>` per note and one status label per note, so publishing a
+ * note is a change to `content/posts/` alone -- and the labels are still
+ * counted per status, which is what keeps "every note says which kind it is"
+ * an assertion rather than a total.
+ */
 it("renders the local field notes as an accessible article list", async () => {
+  const posts = await getPostSummaries();
+  const drafts = posts.filter(({ status }) => status === "draft-example");
+  const published = posts.filter(({ status }) => status === "published");
+
   render(await BlogPage());
 
   expect(
     screen.getByRole("heading", { level: 1, name: "Field notes" }),
   ).toBeInTheDocument();
-  expect(screen.getAllByRole("article")).toHaveLength(2);
-  expect(screen.getAllByText("Draft example")).toHaveLength(2);
+  expect(screen.getAllByRole("article")).toHaveLength(posts.length);
+  expect(drafts.length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Draft example")).toHaveLength(drafts.length);
+  // The `published` branch of `statusLabel` reaches a reader here: the site
+  // shipped for months with no post that could render it.
+  expect(published.length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Published")).toHaveLength(published.length);
   expect(
     screen.getByRole("link", {
       name: /Why AI assessment needs a narrower job/,
@@ -71,6 +88,29 @@ it("renders an article with an unmistakable draft-example label", async () => {
       name: "The useful question is narrower",
     }),
   ).toBeInTheDocument();
+});
+
+/*
+ * The other half of the same label, on the route that carries it. The article
+ * that restored the `published` status is a 2024 dev.to piece, so it is also
+ * the one note whose body uses tags the drafts never did -- a thematic break
+ * and fenced code -- and `<hr>` and `<pre tabindex="0">` are asserted here
+ * because a rule the stylesheet does not dress is a rule preflight strips.
+ */
+it("renders a published article with its status and Markdown furniture", async () => {
+  const post = await getPost(PUBLISHED);
+  render(await ArticlePage({ params: Promise.resolve({ slug: PUBLISHED }) }));
+
+  expect(
+    screen.getByRole("heading", {
+      level: 1,
+      name: "5 Simple JavaScript Performance Wins",
+    }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Published")).toBeInTheDocument();
+  expect(screen.queryByText("Draft example")).toBeNull();
+  expect(post?.html).toContain("<hr>");
+  expect(post?.html).toContain('<pre tabindex="0">');
 });
 
 /*

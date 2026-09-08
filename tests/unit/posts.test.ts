@@ -7,24 +7,47 @@ import {
   validatePostMeta,
 } from "@/lib/content/posts";
 
-it("returns draft-example posts newest first with required metadata", async () => {
+/*
+ * The directory carries both statuses now, so neither is pinned here: the
+ * newest note is whichever one the dates say, and asserting that it is a draft
+ * would be asserting today's content rather than the reader's ordering. What is
+ * pinned is that every note answers the schema and that the whole list descends
+ * by date -- the newest-first contract the Blog hub's one tile depends on.
+ */
+it("returns every note newest first with required metadata", async () => {
   const posts = await getPostSummaries();
 
   expect(posts.length).toBeGreaterThanOrEqual(2);
-  expect(posts[0]).toEqual(
-    expect.objectContaining({
-      slug: expect.any(String),
-      title: expect.any(String),
-      summary: expect.any(String),
-      date: expect.any(String),
-      status: "draft-example",
-      readingMinutes: expect.any(Number),
-    }),
-  );
-  expect(posts.every(({ readingMinutes }) => readingMinutes >= 1)).toBe(true);
-  expect(new Date(posts[0].date).getTime()).toBeGreaterThanOrEqual(
-    new Date(posts[1].date).getTime(),
-  );
+  for (const post of posts) {
+    expect(post, post.slug).toEqual(
+      expect.objectContaining({
+        slug: expect.any(String),
+        title: expect.any(String),
+        summary: expect.any(String),
+        date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        status: expect.stringMatching(/^(draft-example|published)$/),
+        readingMinutes: expect.any(Number),
+      }),
+    );
+    expect(post.readingMinutes, post.slug).toBeGreaterThanOrEqual(1);
+  }
+
+  const dates = posts.map(({ date }) => date);
+  expect(dates).toEqual([...dates].sort().reverse());
+});
+
+/*
+ * Both branches of `statusLabel` have a note to render. The site shipped with
+ * two drafts and no published post at all, which left the `published` branch
+ * dead on the hub, the index and the article alike.
+ */
+it("carries a note of each status", async () => {
+  const posts = await getPostSummaries();
+
+  expect([...new Set(posts.map((post) => post.status))].sort()).toEqual([
+    "draft-example",
+    "published",
+  ]);
 });
 
 it("renders Markdown to HTML and returns undefined for unknown posts", async () => {
@@ -36,9 +59,9 @@ it("renders Markdown to HTML and returns undefined for unknown posts", async () 
 
 /*
  * The tags `app/blog/article.module.css` dresses, from the renderer the article
- * route actually calls. Both repository notes are `##` and paragraphs today, so
- * a list, a subheading, a quotation or a fenced block in the next one would be
- * the first time those rules were asked for -- and with Tailwind's preflight
+ * route actually calls. Two of the three repository notes are `##` and
+ * paragraphs today, so a list, a subheading or a quotation in the next one
+ * would be the first time those rules were asked for -- and with Tailwind's preflight
  * still shipped, an unstyled list is a stripped list rather than a plain one.
  * This is what makes the stylesheet's tag set a claim about a real output
  * instead of a guess about Markdown in general.
@@ -47,6 +70,7 @@ it("produces the tags the article stylesheet dresses", async () => {
   const html = await renderPostMarkdown(
     [
       "### A subheading",
+      "---",
       "- first claim\n- second claim",
       "1. first step\n2. second step",
       "> Someone else said this.",
@@ -57,6 +81,7 @@ it("produces the tags the article stylesheet dresses", async () => {
 
   for (const tag of [
     "<h3>",
+    "<hr>",
     "<ul>",
     "<ol>",
     "<li>",

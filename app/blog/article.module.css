@@ -93,11 +93,11 @@
  * Markdown with raw HTML disabled, so the set of tags that can appear here is
  * the set Markdown can produce.
  *
- * Handled, and this is the whole list: `p`, `h2`, `h3`, `ul`, `ol`, `li`,
+ * Handled, and this is the whole list: `p`, `h2`, `h3`, `hr`, `ul`, `ol`, `li`,
  * `blockquote`, `pre`, `code`, `strong`, `em`, and `a` from the shared
  * `markdownLinks` composed above. Not handled, deliberately: `h1`, because the
  * header above the article already carries the one heading on the page; `h4` to
- * `h6`, `hr`, `img` and `table`, which no note has ever contained -- a note that
+ * `h6`, `img` and `table`, which no note has ever contained -- a note that
  * needs one of them needs a rule here first.
  *
  * That distinction is not cosmetic. `@tailwind base` is still shipped and
@@ -165,6 +165,36 @@
   font-size: clamp(1.15rem, 2vw, 1.4rem);
   font-weight: 400;
   letter-spacing: -0.025em;
+}
+
+/*
+ * A thematic break -- and the one place where two hairlines would be drawn for
+ * one separation. `---` is a section break the author wrote by hand, and in the
+ * note that has one it sits directly above a `##`, which already draws the
+ * section rule above. Left alone that is two 1px lines about 90px apart with
+ * nothing between them, which reads as a mistake rather than a break. So the
+ * break is drawn as the same hairline and the heading that follows one hands
+ * its own over.
+ *
+ * Written against preflight, which is still shipped: its `hr` reset is
+ * `height: 0; border-top-width: 1px` with the margin zeroed, so an undressed
+ * `<hr>` here is a current-colour line jammed against the paragraph above it,
+ * not the browser's inset groove.
+ */
+.prose hr {
+  height: 0;
+  margin: clamp(2rem, 5vw, 3rem) 0 0;
+  border: 0;
+  border-top: 1px solid var(--metro-line);
+}
+
+/* The `:not()` is specificity, not selection: an `h2` after an `hr` is never
+   the first child, and without it this rule loses the tie to the section rule
+   above, which carries one class and one pseudo-class of its own. */
+.prose hr + h2:not(:first-child) {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  padding-top: 0;
+  border-top: 0;
 }
 
 /*
@@ -310,6 +340,7 @@
   }
 
   .noteList li + li,
+  .prose hr,
   .prose h2:not(:first-child) {
     border-top-color: #000;
   }

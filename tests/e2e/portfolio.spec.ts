@@ -2872,8 +2872,8 @@ test("every focusable surface on every route draws the Metro ring", async ({
      * same one -- the app bar's overflow command, which is `display: none`
      * below 48rem and stays in the markup so the component never branches on
      * viewport width. Measured matched/asserted at 320: me 11/10, projects
-     * 14/13, blog 12/11, photography 9/8, contact 12/11, case study 4/3,
-     * note 4/3, note index 6/5, résumé 9/8.
+     * 14/13, blog 13/12, photography 9/8, contact 12/11, case study 4/3,
+     * note 4/3, note index 7/6, résumé 9/8.
      *
      * So `matched - 1` is the real floor, and it is exact on six of the nine
      * routes. The absolute floor stays too, because `asserted >= matched - 1`
@@ -3684,9 +3684,9 @@ const SWEEP_SUBJECTS: Record<
     1440: { ground: 13, tile: 13 },
   },
   blog: {
-    320: { ground: 20, tile: 3 },
-    768: { ground: 20, tile: 3 },
-    1440: { ground: 20, tile: 3 },
+    320: { ground: 25, tile: 3 },
+    768: { ground: 25, tile: 3 },
+    1440: { ground: 25, tile: 3 },
   },
   photography: {
     320: { ground: 14, tile: 6 },

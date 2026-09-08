@@ -1,6 +1,8 @@
 ---
 title: "5 Simple JavaScript Performance Wins"
+summary: "Five straightforward JavaScript performance tips, each with a short explanation and a code snippet."
 date: "2024-03-05"
+status: "published"
 ---
 
 ## Introduction
