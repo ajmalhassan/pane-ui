@@ -25,6 +25,46 @@ const APP_BAR = 'nav[aria-label="Page actions"]';
 const IDENTITY = "AJMAL / PORTFOLIO";
 
 /**
+ * Resolves once the pivot a reader is on has finished arriving.
+ *
+ * The arrival is a tile entrance staggered to a 240ms cap over a 420ms
+ * animation, plus the plane's own transition: 660ms nominal. Four tests used to
+ * spend a fixed `waitForTimeout` on it -- 700ms in two of them, a 1.06x margin
+ * -- which is a wait that cannot fail on a fast machine and cannot pass on a
+ * loaded one. Nothing about the assertions changed; what changed is that the
+ * condition is polled against the browser's own animation registry, on a 3000ms
+ * budget (4.5x nominal) that is only spent when the machine is slow.
+ *
+ * Two animations are deliberately not waited for, because neither ever ends:
+ * `waveDrift` is the assessment tile's infinite waveform, and `tileClaimIn` is
+ * the fade a live claim runs every six seconds. Waiting for an empty registry
+ * would wait forever on Me. A `CSSTransition` has no `animationName`, so the
+ * plane's own transition counts as movement, which is what the ground test
+ * needs.
+ */
+async function pivotArrived(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const main = document.querySelector("main");
+          if (!main) return -1;
+          return main
+            .getAnimations({ subtree: true })
+            .filter(
+              (animation) =>
+                animation.playState === "running" &&
+                !/waveDrift|tileClaimIn/.test(
+                  (animation as CSSAnimation).animationName ?? "",
+                ),
+            ).length;
+        }),
+      { message: "the pivot never finished arriving", timeout: 3_000 },
+    )
+    .toBe(0);
+}
+
+/**
  * Every way a tile can silently lose the copy it was given, measured on a whole
  * grid at one frame. Runs inside the page (`locator.evaluate(tileCopyFaults)`),
  * so it closes over nothing and reads no module scope.
@@ -435,18 +475,6 @@ test("reduced motion removes panorama transforms", async ({ page }) => {
   const plane = page.locator('[role="tabpanel"]').first().locator("..");
   await expect(plane).toHaveCSS("transform", "none");
   await expect(plane).toHaveCSS("transition-duration", "0s");
-});
-
-test("captures a named review screenshot without a committed baseline", async ({
-  page,
-}, testInfo) => {
-  await page.goto("/?view=projects");
-  await page.screenshot({
-    fullPage: true,
-    path: testInfo.outputPath(
-      `portfolio-projects-${testInfo.project.name}.png`,
-    ),
-  });
 });
 
 test("a direct query load leads with that pivot's own heading", async ({
@@ -2127,8 +2155,8 @@ test("the fixed app bar reserves its height instead of covering the page end", a
  * Two things on this site have to clear the fixed bar, and they used to
  * disagree: a docked page padded its end by the bar's height plus one content
  * inset (24px), while the contact panel offset its bottom edge by the bar's
- * height plus `--metro-gap-title` (8px) -- a typographic token borrowed for a
- * layout reserve. An open panel therefore sat 16px closer to the bar than every
+ * height plus an 8px typographic token borrowed for a layout reserve
+ * (`--metro-gap-title`, since deleted). An open panel therefore sat 16px closer to the bar than every
  * page end on the site, which is the kind of difference nobody can name and
  * everybody can see.
  *
@@ -3020,9 +3048,9 @@ test.describe("without JavaScript", () => {
     ).toHaveAttribute("aria-selected", "true");
 
     await page.goto("/?view=blog");
-    // The panel's tiles arrive on a staggered entrance capped at 240ms and
-    // running for 420; a click during it is a click at a moving target.
-    await page.waitForTimeout(900);
+    // A click during the entrance is a click at a moving target, so the
+    // entrance is waited OUT rather than waited FOR a fixed number of ms.
+    await pivotArrived(page);
     const row = page
       .getByRole("tabpanel", { name: HEADINGS.blog })
       .getByRole("link")
@@ -3050,9 +3078,6 @@ test.describe("without JavaScript", () => {
  * in it, and native scrolling nobody has trapped.
  */
 
-/** 40ms per tile, capped at 240ms -- the tokens in `app/globals.css`. */
-const TILE_STAGGER_MS = 40;
-const TILE_STAGGER_CAP_MS = 240;
 /** `--metro-tile-lift`: the whole spatial part of the entrance. */
 const TILE_LIFT_PX = 8;
 /** The alpha no background stop is allowed to exceed. */
@@ -3086,7 +3111,10 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
   const meDelays = await me.evaluate(entranceDelays);
 
   // Me lays out nine tiles, so the cap is what stops the last one arriving a
-  // third of a second after the first.
+  // third of a second after the first. The numbers are 40ms per tile capped at
+  // 240ms -- the tokens in `app/globals.css` -- written out rather than
+  // recomputed here, because a rule re-derived from constants this file also
+  // owns is a rule checked against itself.
   expect(meDelays.map((tile) => tile.index)).toEqual([
     "0",
     "1",
@@ -3109,14 +3137,6 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
     "0.24s",
     "0.24s",
   ]);
-  for (const [index, tile] of meDelays.entries()) {
-    const expected = Math.min(index * TILE_STAGGER_MS, TILE_STAGGER_CAP_MS);
-    expect(Number.parseFloat(tile.delay) * 1000, `tile ${index}`).toBeCloseTo(
-      expected,
-      3,
-    );
-  }
-
   // The one tile with a second animation composes them: the wave is not
   // replaced by the entrance, and the entrance is not swallowed by the wave.
   expect(meDelays[ASSESSMENT].name).toMatch(/waveDrift/);
@@ -3531,7 +3551,9 @@ for (const frame of [
 
     for (const [index, view] of VIEWS.entries()) {
       await page.goto(`/?view=${view}`);
-      await page.waitForTimeout(700);
+      // The ground's own `background-position` transitions with the plane, and
+      // `groundSpread` below reads real pixels, so both want a settled pivot.
+      await pivotArrived(page);
       const at = `${view}@${frame.width}`;
 
       // The shell publishes the pivot, and the layer is selected by it.
@@ -3684,9 +3706,9 @@ const SWEEP_SUBJECTS: Record<
     1440: { ground: 13, tile: 13 },
   },
   blog: {
-    320: { ground: 25, tile: 3 },
-    768: { ground: 25, tile: 3 },
-    1440: { ground: 25, tile: 3 },
+    320: { ground: 25, tile: 4 },
+    768: { ground: 25, tile: 4 },
+    1440: { ground: 25, tile: 4 },
   },
   photography: {
     320: { ground: 14, tile: 6 },
@@ -3905,7 +3927,7 @@ test.describe("every line clears 4.5:1, ground and tile alike", () => {
         test.slow();
         await page.setViewportSize(frame);
         await page.goto(`/?view=${view}`);
-        await page.waitForTimeout(900);
+        await pivotArrived(page);
         await freezeLiveTiles(page);
 
         /*
@@ -3927,8 +3949,14 @@ test.describe("every line clears 4.5:1, ground and tile alike", () => {
         const subjects = await page.evaluate(contrastSubjects);
         const at = `${view}@${frame.width}`;
         const expected = SWEEP_SUBJECTS[view][frame.width];
-        expect(subjects.ground, `${at} ground subjects`).toBe(expected.ground);
-        expect(subjects.tile, `${at} tile subjects`).toBe(expected.tile);
+        expect(
+          subjects.ground,
+          `${at} ground subjects -- update SWEEP_SUBJECTS if this content change was intended`,
+        ).toBe(expected.ground);
+        expect(
+          subjects.tile,
+          `${at} tile subjects -- update SWEEP_SUBJECTS if this content change was intended`,
+        ).toBe(expected.tile);
         // Me's two live claims are in the sweep by name, whichever pair of them
         // the cycle happens to be holding.
         if (view === "me") {
@@ -4070,7 +4098,28 @@ test("the page still scrolls natively and traps no gesture", async ({
   });
 
   await page.goto("/?view=me");
-  await page.waitForTimeout(600);
+
+  /*
+   * A POSITIVE CONTROL, before the negative assertion below.
+   *
+   * `__trapped` is empty on a page whose bundle never ran, so a fixed wait here
+   * proved nothing on a slow machine: hydration landing late would leave a
+   * green test that had looked at a static document. The suite names this exact
+   * trap for the live tile's pause and applies the lesson there; this is the
+   * one place it did not.
+   *
+   * Advancing a live tile is client-only behaviour -- the `onClick` that moves
+   * `data-live-index` exists nowhere in the server-rendered HTML -- so once the
+   * index has moved, React has hydrated and every listener this page installs
+   * has been installed.
+   */
+  const live = page.locator('[data-tile-role="live"]').first();
+  const parked = (await live.getAttribute("data-live-index")) ?? "";
+  await live.click();
+  await expect(
+    live,
+    "the page never hydrated, so the listener check below proves nothing",
+  ).not.toHaveAttribute("data-live-index", parked);
 
   expect(
     await page.evaluate(
@@ -4098,6 +4147,12 @@ test("the page still scrolls natively and traps no gesture", async ({
     expect(style.overscroll, where).toBe("auto");
   }
 
+  // The control above clicked a tile, and Playwright scrolls a target into view
+  // before it clicks: this page is 393px wide and that landed at the bottom of
+  // its scroll range, where a wheel has nowhere left to go.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+
   const before = await page.evaluate(() => window.scrollY);
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(300);
@@ -4118,13 +4173,10 @@ test("a press leans the tile it is on, and the release scale composes with the l
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?view=projects");
-  await page.waitForTimeout(700);
 
   const tile = page
     .locator('[data-active="true"] [data-tile-role="navigation"]')
     .first();
-  const box = await tile.boundingBox();
-  if (!box) throw new Error("the lead project tile has no box to press");
 
   const state = () =>
     tile.evaluate((node) => ({
@@ -4134,12 +4186,26 @@ test("a press leans the tile it is on, and the release scale composes with the l
       transform: getComputedStyle(node).transform,
     }));
 
-  const IDENTITY =
+  const AT_REST =
     /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, [-\d.e]+, 0, 0, 0, 1\)$/;
-  expect(
-    (await state()).transform,
-    "a tile at rest carries only its perspective",
-  ).toMatch(IDENTITY);
+  /*
+   * "At rest" is the entrance having finished, so it is polled to that
+   * conclusion rather than waited out for a fixed 700ms against a 660ms
+   * arrival. The assertion is the same one, and it is now also the gate the
+   * measurement below depends on: the entrance lifts the tile 8px, so a box
+   * read while it is still arriving puts every pointer coordinate in this test
+   * up to 8px off the quadrant whose one-degree lean it then asserts to five
+   * decimal places.
+   */
+  await expect
+    .poll(async () => (await state()).transform, {
+      message: "a tile at rest carries only its perspective",
+      timeout: 3_000,
+    })
+    .toMatch(AT_REST);
+
+  const box = await tile.boundingBox();
+  if (!box) throw new Error("the lead project tile has no box to press");
 
   /*
    * Touch parity. A dispatched pointer event rather than `touchscreen.tap`,
@@ -4173,7 +4239,7 @@ test("a press leans the tile it is on, and the release scale composes with the l
   expect(
     touched.transform,
     "a touch press must actually lean the tile",
-  ).not.toMatch(IDENTITY);
+  ).not.toMatch(AT_REST);
 
   await tile.evaluate((node) =>
     node.dispatchEvent(

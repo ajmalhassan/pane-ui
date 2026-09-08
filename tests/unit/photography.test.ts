@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { photography as photographyData } from "@/content/photography";
 import {
   photography,
   PHOTO_TILE_SIZE,
@@ -42,9 +43,17 @@ function pending(
   };
 }
 
+/*
+ * Against the RAW content, not against the module's own validated export.
+ * `validatePhotography(photography)` was a tautology: `photography` is already
+ * that call's result, so the import at the top of this file would have thrown
+ * first and the assertion could not fail. Feeding it `photographyData` is the
+ * one form that actually exercises the validator on the shipped collection.
+ */
 it("accepts the shipped collection and returns it unchanged", () => {
-  expect(validatePhotography(photography)).toEqual([...photography]);
-  expect(photography.length).toBeGreaterThan(0);
+  expect(validatePhotography(photographyData)).toEqual([...photographyData]);
+  expect(photography).toEqual([...photographyData]);
+  expect(photographyData.length).toBeGreaterThan(0);
 });
 
 it("rejects duplicate ids", () => {

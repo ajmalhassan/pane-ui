@@ -11,10 +11,13 @@
   color: var(--metro-muted);
   /* One ratio for every width, chosen so the longest heading -- "technical
      leader / builder" -- still fits the content column on a 320px phone with
-     the next heading peeking past the right edge. It renders at about 75% of
-     that column here, and Segoe UI or Roboto set the same string some 13%
-     wider than the measured fallback, so the spare third absorbs whichever
-     face the reader actually has. */
+     the next heading peeking past the right edge. It renders at 81.2% of that
+     column here (measured), and Segoe UI or Roboto set the same string some
+     13% wider than the fallback the measurement was taken against, so the
+     spare fifth is what absorbs whichever face the reader actually has:
+     81.2 x 1.13 = 91.8%, still inside the column. That is the whole margin
+     protecting a type stack nobody on this branch could test, and it has not
+     been opened on Windows. */
   font-size: clamp(1.625rem, 7.5vw, 9rem);
   font-weight: 300;
   line-height: 0.9;

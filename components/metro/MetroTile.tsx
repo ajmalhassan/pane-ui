@@ -15,8 +15,14 @@ type BaseTileProps = {
   /**
    * The small caption along the tile's bottom edge -- a Windows Phone tile
    * name. On a navigation tile it names the destination.
+   *
+   * A node rather than a string, and for exactly one reason: the Blog hero's
+   * caption carries the note's date, and a date a machine can read is a
+   * `<time dateTime>` -- which is what the list rows under it and `/blog` both
+   * render. It is still ONE clipped line; the slot is for marking that line up,
+   * not for putting block content on the tile.
    */
-  label: string;
+  label: ReactNode;
   /**
    * Imagery, and anything else that belongs *behind* the copy rather than
    * beside it: it is rendered on the tile ROOT, before `.content`, so it fills
@@ -205,7 +211,7 @@ function Media({ media }: { media?: ReactNode }): ReactNode {
  * is not rendered (CSS Flexbox 4), and both `.tile` and `.content` are flex
  * containers -- so the caption's own box is unchanged.
  */
-function Caption({ id, label }: { id?: string; label: string }): ReactNode {
+function Caption({ id, label }: { id?: string; label: ReactNode }): ReactNode {
   return (
     <>
       {" "}

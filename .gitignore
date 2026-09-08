@@ -8,6 +8,10 @@
 
 # testing
 /coverage
+# Playwright's own output: failure traces (playwright.config.ts `outputDir`) and
+# the HTML report a failed run offers to open.
+/test-results/
+/playwright-report/
 
 # local design exploration
 /.superpowers/
@@ -30,6 +34,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
 
 # vercel

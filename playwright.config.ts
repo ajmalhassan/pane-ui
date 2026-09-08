@@ -14,8 +14,25 @@ import { defineConfig, devices } from "@playwright/test";
 const external = process.env.ARTIFACT_BASE_URL;
 
 export default defineConfig({
-  outputDir: ".superpowers/playwright/results",
+  /*
+   * Failure traces are the only debugging output this suite produces, so they
+   * land on the default path a contributor already knows to look in and
+   * `.gitignore` names. They used to be written under `.superpowers/`, an
+   * ignored tree nothing else in the repo reads from -- `artifacts.spec.ts`
+   * still writes its review screenshots there, deliberately, because those are
+   * review artifacts rather than debugging output.
+   */
+  outputDir: "test-results/",
   testDir: "./tests/e2e",
+  /*
+   * CI only. Locally a retry hides a flake from the person who just wrote it;
+   * on a shared runner the same flake lands as a hard red build with nothing to
+   * separate it from a regression. About ten tests here depend on wall-clock
+   * time, and `forbidOnly` is the matching guard: a `.only` that reaches CI
+   * silently reduces the suite to one test.
+   */
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
   // The artifact capture is opt-in: without a server to point it at, a bare
   // `npx playwright test` would run it against the managed DEV server, whose
   // toolbar sits exactly where the app bar's left inset is.

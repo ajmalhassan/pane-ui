@@ -27,8 +27,18 @@ type Props = {
  * date instead: they have room for all three facts on their own line, and a
  * date-first meta line is what a reading list is read down.
  */
-function noteCaption(post: PostSummary): string {
-  return `${statusLabel(post.status)} · ${post.date} · ${post.readingMinutes} min read`;
+function NoteCaption({ post }: { post: PostSummary }) {
+  return (
+    <>
+      {`${statusLabel(post.status)} · `}
+      {/* The one date on the site that was not machine-readable. The rows below
+          and `/blog` have always marked theirs up; the hero's rode a template
+          string, so the newest note -- the one a reader meets first -- was the
+          one no parser could read. Same characters, same single clipped line. */}
+      <time dateTime={post.date}>{post.date}</time>
+      {` · ${post.readingMinutes} min read`}
+    </>
+  );
 }
 
 /**
@@ -65,7 +75,7 @@ export function BlogPanel({ posts }: Props) {
             accent="blue"
             className={styles.featureTile}
             href={`/blog/${latest.slug}`}
-            label={noteCaption(latest)}
+            label={<NoteCaption post={latest} />}
             role="navigation"
             size="hero"
           >

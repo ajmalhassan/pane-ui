@@ -83,6 +83,17 @@ it("leads with the newest note as the one navigation tile", () => {
   // the next test, because an unpinned order is how the two swap silently.
   const caption = tile.lastElementChild as HTMLElement;
   expect(caption.textContent).toBe("Draft example · 2026-08-31 · 2 min read");
+
+  /*
+   * And the date inside it is machine-readable, like the rows below and
+   * `/blog`. The hero's caption was the one date on the site that was not: it
+   * rode a template string while every other surface marked its own up, which
+   * left the NEWEST note -- the one a reader meets first -- as the one no
+   * parser could read.
+   */
+  const heroDate = within(caption).getByText(NEWEST.date);
+  expect(heroDate.tagName).toBe("TIME");
+  expect(heroDate).toHaveAttribute("datetime", NEWEST.date);
 });
 
 it("gives the remaining notes one full-row link each", () => {

@@ -19,7 +19,10 @@
 .plane {
   display: flex;
   width: 100%;
-  transform: translate3d(calc(var(--panorama-index) * -100%), 0, 0);
+  /* The fallback is parity with `PortfolioPanorama.module.css`'s own
+     `var(--panorama-index, 0)`: an unset custom property makes the whole
+     `calc()` invalid at computed-value time, which drops the transform. */
+  transform: translate3d(calc(var(--panorama-index, 0) * -100%), 0, 0);
   transition: transform var(--metro-duration-base) var(--metro-ease-standard);
   will-change: transform;
 }

@@ -304,9 +304,9 @@ it("holds the phase between two tiles when a reader pauses one of them", () => {
   // Both tiles turned over, so the gaps below are measuring something.
   expect(new Set(changes.map((change) => change.tile)).size, trace).toBe(2);
   expect(changes.length, trace).toBeGreaterThanOrEqual(8);
-  // Never in the same second, and not merely clear of each other: the two are
-  // still exactly the phase apart, a lap and a half after the hover.
-  expect(Math.min(...gaps), trace).toBeGreaterThanOrEqual(1000);
+  // Not merely clear of each other -- the two are still EXACTLY the phase
+  // apart, a lap and a half after the hover. A floor of 1000ms used to stand
+  // beside this line and could not fail while it holds.
   for (const gap of gaps) expect(gap, trace).toBe(3000);
 });
 

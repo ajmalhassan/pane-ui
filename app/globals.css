@@ -31,10 +31,12 @@
   /* Colour: one cyan signature, one deep Windows blue, restrained greys. */
   --metro-cyan: #00a4ef;
   --metro-blue: #174f9d;
-  /* Pure white/black: app-bar rings and labels, inversion surfaces, and print.
-     Body text and base surfaces stay --metro-text / --metro-ink. */
+  /* Pure white: app-bar rings and labels, and inversion surfaces. Body text and
+     base surfaces stay --metro-text / --metro-ink. There is no matching black
+     token: every one of the 22 print blocks writes `#000` as a literal, so a
+     `--metro-black` sat here for the whole branch with no consumer, documented
+     as the print ink it was not. */
   --metro-white: #ffffff;
-  --metro-black: #000000;
   --metro-ink: #07090a;
   --metro-surface: #111416;
   --metro-text: #f2f4f5;
@@ -75,9 +77,7 @@
   /* Typography: prefer Segoe without distributing proprietary font files. */
   --metro-font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI",
     system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --metro-gap-title: 0.5rem; /* 8px under a panorama title */
   --metro-gap-pivot: 0.75rem; /* 12px between pivot headings */
-  --metro-gap-section: 2rem; /* 32px between content sections */
   /* 8px between a tile's own title and label. Named for the copy it separates
      and not for the tile it sits in: `--metro-gap-tile` and `--metro-tile-gap`
      were one letter-order apart and meant different things -- the gutter

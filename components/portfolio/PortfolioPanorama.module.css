@@ -138,7 +138,9 @@
 .eyebrow {
   margin: 0 0 0.75rem;
   color: var(--metro-cyan);
-  font-size: 0.72rem;
+  /* The label token, not a hand-set 0.72rem beside it -- the same 0.02rem
+     drift this file's own comment on `.noteMeta` records fixing. */
+  font-size: var(--metro-text-label);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -385,8 +387,10 @@
  * to wrap to. `--tile-copy` has already taken out the supporting line's share
  * wherever that line is painted, and its own 2px rounding cushion, which is
  * added back here -- so this is the height left under the claim at any width:
- * 2.8px at 320, 21px at 393, 2px at 768, 24px at 1440, 41px at 1920. Floored at
- * zero: a band can be too small for a wave, never negative.
+ * 2.8px at 320, 21px at 393, 0.27px at 768, 24px at 1440, 41px at 1920 -- the
+ * 768 figure is the one MetroTile.module.css records, where the 12px headline
+ * floor spends the margin down from 2.00px. Floored at zero: a band can be too
+ * small for a wave, never negative.
  *
  * The animations are the reason every part of the entrance stagger is written
  * the way it is. This is the one tile on the site that runs two.
@@ -669,7 +673,7 @@
 .textLink {
   composes: ring from "../metro/focusRing.module.css";
 
-  min-height: 44px;
+  min-height: var(--metro-target-min);
   display: inline-flex;
   align-items: center;
   margin-top: 1rem;
@@ -777,7 +781,8 @@
  * notch on a landscape phone while the bar beneath it did not.
  *
  * The bottom offset used to be its own arithmetic: bar height plus
- * `--metro-gap-title`, an 8px gap borrowed from a typographic token, against
+ * an 8px gap borrowed from a typographic token (`--metro-gap-title`, deleted
+ * with the rest of the dead tokens once nothing read it), against
  * the 24px content inset every docked page ends with. Two answers to "how far
  * above the bar", 16px apart. It is now the same reserve, so the panel's bottom
  * edge lands exactly where a page's last line does.
@@ -817,8 +822,8 @@
 
 .contactLinks a,
 .closeContact {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--metro-target-min);
+  min-height: var(--metro-target-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
