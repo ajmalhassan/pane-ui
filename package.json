@@ -17,9 +17,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fortawesome/free-brands-svg-icons": "^6.5.1",
-    "@fortawesome/react-fontawesome": "^0.2.0",
-    "@heroicons/react": "^2.1.1",
     "gray-matter": "^4.0.3",
     "next": "15.5.24",
     "react": "^19.2.8",
