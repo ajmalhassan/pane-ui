@@ -214,14 +214,7 @@
  * Threshold: see the 84rem block below.
  */
 .tileNote {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  composes: visuallyHidden from "../metro/visuallyHidden.module.css";
 }
 
 /*
@@ -451,11 +444,17 @@
  * without a scrollbar, and so does a 1366 laptop (1351 laid out).
  */
 @media (min-width: 84rem) {
-  .tileNote {
+  /* Doubled so the reveal outranks the shared `visuallyHidden` utility the base
+     rule composes (both are one class, and a tie would be decided by whichever
+     stylesheet the bundler emits first). `min-height` is restored explicitly:
+     the utility pins it to 0, and a flex item that can shrink below its own
+     content is not the same box as one that cannot. */
+  .tileNote.tileNote {
     position: static;
     display: -webkit-box;
     width: auto;
     height: auto;
+    min-height: auto;
     margin: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
@@ -602,6 +601,8 @@
  * there is no second target beside a headline that is not one.
  */
 .noteRow {
+  composes: ring from "../metro/focusRing.module.css";
+
   min-height: 5.5rem;
   display: flex;
   flex-direction: column;
@@ -610,13 +611,6 @@
   border-bottom: 1px solid var(--metro-line);
   color: inherit;
   text-decoration: none;
-}
-
-/* The same ring every other focusable surface here draws, from the same token,
-   sized to the bleed the panorama's clip box already reserves. */
-.noteRow:focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: 3px;
 }
 
 /* Date, status and reading time: the facts, before the headline that needs
@@ -673,6 +667,8 @@
 }
 
 .textLink {
+  composes: ring from "../metro/focusRing.module.css";
+
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -683,16 +679,6 @@
 .textLink:hover,
 .textLink:focus-visible {
   color: var(--metro-cyan);
-}
-
-/* The same ring `.noteRow:focus-visible` draws above and `.pressable` draws
-   for every tile: this was the one focusable surface on the hub still falling
-   back to the UA's own 1px outline. Sized to the 6px bleed the panorama's clip
-   box reserves (`--metro-focus-bleed`), so the ring is not clipped at the edge
-   of a pivot. */
-.textLink:focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: 3px;
 }
 
 /*
@@ -783,12 +769,18 @@
 
 /*
  * The third fixed thing on this page, and the last one still writing the
- * content inset out by hand. `--dock-inset-left` / `--dock-inset-right` are
- * declared on `dockedPage`, which `.shell` composes and this panel sits inside,
- * so the panel now indents from the same pair of properties the bar and the
- * page do -- including the `max(..., env(safe-area-inset-*))` half the hand
- * copy was missing, which is why an open panel ran under the notch on a
- * landscape phone while the bar beneath it did not.
+ * content inset out by hand. `--dock-inset-left` / `--dock-inset-right` and
+ * `--dock-reserve-bottom` are declared on `dockedPage`, which `.shell` composes
+ * and this panel sits inside, so the panel now indents from the same properties
+ * the bar and the page do -- including the `max(..., env(safe-area-inset-*))`
+ * half the hand copy was missing, which is why an open panel ran under the
+ * notch on a landscape phone while the bar beneath it did not.
+ *
+ * The bottom offset used to be its own arithmetic: bar height plus
+ * `--metro-gap-title`, an 8px gap borrowed from a typographic token, against
+ * the 24px content inset every docked page ends with. Two answers to "how far
+ * above the bar", 16px apart. It is now the same reserve, so the panel's bottom
+ * edge lands exactly where a page's last line does.
  *
  * The panel's own left *edge* still differs from the column's, and by design:
  * `max-width: 64rem` with `margin: 0 auto` centres it, so it sits 208px from
@@ -799,14 +791,10 @@
   position: fixed;
   z-index: 4;
   right: var(--dock-inset-right);
-  bottom: calc(
-    var(--metro-appbar-height) + var(--metro-gap-title) +
-      env(safe-area-inset-bottom, 0px)
-  );
+  bottom: var(--dock-reserve-bottom);
   left: var(--dock-inset-left);
   max-height: calc(
-    100vh - var(--metro-appbar-height) - var(--metro-gap-title) -
-      env(safe-area-inset-bottom, 0px) - var(--metro-content-inset)
+    100vh - var(--dock-reserve-bottom) - var(--metro-content-inset)
   );
   margin: 0 auto;
   overflow: auto;
@@ -814,7 +802,14 @@
   box-shadow: inset 0.4rem 0 var(--metro-cyan);
 }
 
+/*
+ * The two profile links are plain anchors with no class of their own, so the
+ * ring is composed onto their container and reaches them from there -- the same
+ * way a detail route's reading column rings the links inside rendered markdown.
+ */
 .contactLinks {
+  composes: scope from "../metro/focusRing.module.css";
+
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -836,15 +831,24 @@
   cursor: pointer;
 }
 
+/*
+ * Cyan on the border under the pointer AND under focus, and it used to be the
+ * whole of the focus treatment: this rule also wrote `outline: none`, so the
+ * three controls of the open contact panel were the only focusable surfaces in
+ * the application whose keyboard state was a 1px border changing colour. Every
+ * tile, tab, note row and prose link draws a 3px ring. The `outline: none` is
+ * gone; the cyan edge stays, as the hover affordance it also is.
+ */
 .contactLinks a:hover,
 .contactLinks a:focus-visible,
 .closeContact:hover,
 .closeContact:focus-visible {
   border-color: var(--metro-cyan);
-  outline: none;
 }
 
 .closeContact {
+  composes: ring from "../metro/focusRing.module.css";
+
   align-self: flex-start;
   white-space: nowrap;
 }
@@ -865,5 +869,104 @@
      imperceptible anyway; saying `none` is saying it on purpose. */
   .shell::before {
     transition: none;
+  }
+}
+
+/*
+ * Paper, for the one route that had none.
+ *
+ * The four detail surfaces have printed since Task 8; the panorama came out
+ * blank. A browser drops background colours by default, so the shell's ink
+ * never reached the sheet while `--metro-text` -- #f2f4f5, 1.06:1 on white --
+ * did: a Start screen printed as an empty page with a faint smudge where the
+ * heading was. The identity line and the application bar already take
+ * themselves out from their own stylesheets (`StatusBar.module.css`,
+ * `AppBarDock.module.css`), which leaves the ground and the type.
+ *
+ * `content: none` on the atmosphere rather than `background-image: none`: the
+ * layer exists only to carry a pattern, so on paper it should not exist. The
+ * clip goes too -- nothing peeks past a sheet edge, and a pivot cut off at the
+ * paper's margin is a pivot a reader cannot get back.
+ *
+ * This block is LAST IN THE FILE on purpose, and it has to be: a media query
+ * adds no specificity, so every rule here is a same-specificity tie with the
+ * screen rule it overrides and wins only by coming after it. Written above the
+ * per-pivot grounds, `content: none` lost to `.shell::before`'s `content: ""`
+ * and the pattern printed; written where the block used to sit -- above
+ * `.eyebrow`, `.contact` and the reading list -- the type rules below would
+ * have lost the same way, silently.
+ *
+ * `color: #000` on `.shell` reaches only the type that INHERITS, and almost
+ * none of this pivot's type does: the heading, the pivot peeks, the eyebrow,
+ * the reading rows, the contact copy and its two profile links each declare a
+ * colour of their own, so the first version of this block printed a white sheet
+ * with a `#f2f4f5` headline on it -- 1.10:1, a page whose title was a ghost.
+ * Every class that paints its own ink is therefore named below, the way
+ * `detailSurface.module.css` names the four document surfaces'.
+ *
+ * The tiles are white blocks with black outlines and black type
+ * (`MetroTile.module.css`); the motifs do not print at all. A graph trace, a
+ * waveform and a blurred photographic backdrop are all atmosphere -- they say
+ * "this is a live surface", which is exactly the thing a sheet of paper is not
+ * -- and each of them is cyan or near-white, so on white paper they are ink
+ * spent on something a reader cannot even see. The portrait goes with them, but
+ * for a different reason and from a different file: a photograph IS content, so
+ * `MetroTile.module.css` hides it on the ground that a tile's caption is
+ * printed over it and the veil that keeps that caption readable is a
+ * background. The photograph is not lost -- it is a page of evidence, not a
+ * page of pictures.
+ */
+@media print {
+  .shell {
+    overflow: visible;
+    background: #fff;
+    color: #000;
+  }
+
+  .shell::before {
+    content: none;
+  }
+
+  /* Everything on the ground that declares its own colour. */
+  .eyebrow,
+  .lede,
+  .hubLede,
+  .noteMeta,
+  .noteTitle,
+  .noteSummary,
+  .emptyState,
+  .textLink,
+  .tileCopy,
+  .tileNote,
+  .motif,
+  .contact h2,
+  .contact p,
+  .contactLinks a,
+  .closeContact {
+    color: #000;
+  }
+
+  /* The hairlines the reading list and the contact card are drawn from. */
+  .noteList,
+  .noteRow,
+  .contact,
+  .contactLinks a,
+  .closeContact {
+    border-color: #000;
+  }
+
+  .contact {
+    background: #fff;
+  }
+
+  /*
+   * Atmosphere, not information. `display: none` rather than a colour, because
+   * there is no black version of a 22%-opacity trace worth printing.
+   */
+  .graphMotif,
+  .wave,
+  .hubBackdrop,
+  .portraitWash {
+    display: none;
   }
 }

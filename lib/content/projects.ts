@@ -1,4 +1,5 @@
 import { projects as projectData } from "@/content/projects";
+import { everyString } from "./strings";
 import { TILE_BUDGET_SIZES, TILE_COPY_BUDGET } from "./tileBudget";
 
 export type ProjectStatus = "concept" | "in-progress" | "shipped";
@@ -71,17 +72,6 @@ const APPROVED_METRIC_SLUG = "lead-platform";
  */
 const DRAFT_TITLE_PREFIX = "Draft example —";
 const DRAFT_CAPTION_SUFFIX = "· draft";
-
-/** Every string anywhere in a value, however deeply nested. */
-function everyString(value: unknown): string[] {
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap(everyString);
-  if (value && typeof value === "object") {
-    return Object.values(value).flatMap(everyString);
-  }
-
-  return [];
-}
 
 /**
  * Does this value carry the one approved public metric, anywhere inside it --

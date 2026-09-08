@@ -1,6 +1,8 @@
 /*
  * The press contract, in one file: a 44px target, a pointer tilt, a release
- * scale, a focus ring, and the reduced-motion opt-out for all of it.
+ * scale, the application's focus ring, and the reduced-motion opt-out for all
+ * of it. The ring itself is composed in from `focusRing.module.css`, which is
+ * the one place it is declared.
  *
  * The tilt and the press scale are ONE transform, composed from two custom
  * properties the handlers in Pressable.tsx and the `:active` rule below write
@@ -11,6 +13,8 @@
  * the depression, which is what a Windows Phone tile actually does.
  */
 .pressable {
+  composes: ring from "./focusRing.module.css";
+
   min-width: var(--metro-target-min);
   min-height: var(--metro-target-min);
   transform: perspective(var(--metro-press-perspective))
@@ -30,11 +34,6 @@
  */
 .pressable:active {
   --press-scale: var(--metro-press-scale);
-}
-
-.pressable:focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: 3px;
 }
 
 /*

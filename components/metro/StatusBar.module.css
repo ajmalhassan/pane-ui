@@ -30,7 +30,10 @@
 }
 
 /* Screen chrome, not part of the document: a printed page carries neither the
-   phone's status line nor its clock. */
+   phone's status line nor its clock.
+
+   Print rules stay last in this file: a media query adds no specificity, so
+   these win their ties only by coming after the rules they override. */
 @media print {
   .statusBar {
     display: none;

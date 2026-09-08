@@ -1,0 +1,41 @@
+/*
+ * Copy that stays in the accessibility tree and leaves the paint.
+ *
+ * Two sites needed it and each grew its own: the app bar's command labels,
+ * which name the commands and so cannot be `display: none` when a wide bar is
+ * minimised down to rings, and `.tileNote`, the supporting line a tile paints
+ * only where it is tall enough to hold one. They agreed on the technique and
+ * differed in the details -- one carried `min-height: 0` and a `border: 0`, the
+ * other did not -- which is how a shared idea becomes two implementations that
+ * can each be wrong on their own.
+ *
+ * The technique, and why each declaration is here:
+ *
+ *  - `position: absolute` with a 1x1 box and `margin: -1px` takes the element
+ *    out of flow without giving it a size a layout can react to;
+ *  - `clip-path: inset(50%)` is what removes the paint. `display: none` and
+ *    `visibility: hidden` would remove the element from the accessibility tree
+ *    with it, and `width: 0` alone lets some engines drop the text run;
+ *  - `overflow: hidden` and `white-space: nowrap` keep a long string from
+ *    laying itself out over the page before the clip applies;
+ *  - `min-height: 0`, `padding: 0` and `border: 0` are the three properties a
+ *    consumer is likely to have set on the painted state, and any of them
+ *    surviving would restore a box.
+ *
+ * The E2E tile sweep's skip rule is written against the RECTANGLE this leaves
+ * (`rect.width <= 1 && rect.height <= 1`) rather than against the class or the
+ * `clip-path`, so a future change of technique here does not silently start
+ * reporting deliberately hidden copy as a tile overflow fault.
+ */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}

@@ -266,7 +266,7 @@
 @media (min-width: 48rem) {
   .tile {
     --tile-pad: calc(var(--metro-grid) * 4);
-    --tile-gap-copy: var(--metro-gap-tile);
+    --tile-gap-copy: var(--metro-gap-copy);
     --tile-title-max: 1.25rem;
     --tile-body-max: 0.85rem;
     --tile-value-max: 2rem;
@@ -594,5 +594,63 @@
 
   .liveItemAnimated {
     animation: none;
+  }
+}
+
+/*
+ * A tile is content, so it prints -- as information, not as a picture of a
+ * screen.
+ *
+ * The first attempt asked for the ink back (`print-color-adjust: exact`) on the
+ * reasoning that a tile IS its rectangle of colour. Measured, that spent about
+ * half an A4 sheet on saturated fill -- deep blue, cyan and two near-blacks,
+ * three tiles printing as solid black rectangles -- and it bought nothing a
+ * reader needs: the tile's copy carries the evidence, and the fill is how the
+ * screen tells one accent from another. Paper has a cheaper vocabulary for the
+ * same job, and it is the one Metro was drawn from: a rule.
+ *
+ * So a printed tile is a white block with a 1px black outline and black type.
+ * The rectangle still reads as a rectangle -- the grid, the sizes and the
+ * caption band are unchanged -- and the sheet costs a hairline per tile instead
+ * of a cartridge.
+ *
+ * `color` on the root rather than on each class alone would be enough for the
+ * copy that inherits, but `.title`, `.body`, `.value` and `.label` all declare
+ * `color: inherit` today and any of them could stop; naming them is what keeps
+ * this true of the four surfaces that actually paint words.
+ *
+ * Print rules stay last in this file: a media query adds no specificity, so
+ * these win their ties only by coming after the rules they override.
+ */
+@media print {
+  .tile {
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+  }
+
+  /*
+   * On paper a tile is an outlined block with its caption, so the photograph
+   * goes. It is content on screen and nothing else here disputes that -- but
+   * the Start-screen sheet is a page of evidence, not a page of pictures, and
+   * the résumé is the printable document a reader wants the photograph in.
+   *
+   * The immediate harm is legibility, not ink: `.media ~ .label` (:399) sits
+   * the now-black caption directly over the image at `z-index: 1`, and the
+   * veil that keeps it readable on screen (`.photo .media::after`, :370) is a
+   * `background`, which no printer draws. Measured under `emulateMedia`
+   * print at 1440, the caption `ajmal hassan` printed over a darkest
+   * background pixel of rgb(8, 9, 10) -- 1.05:1 against its own black type.
+   * With the image gone the same pixel is white.
+   */
+  .media {
+    display: none;
+  }
+
+  .title,
+  .body,
+  .value,
+  .label {
+    color: #000;
   }
 }

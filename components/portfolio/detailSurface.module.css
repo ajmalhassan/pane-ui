@@ -30,6 +30,29 @@
  * left edge as the panorama's content column at every width.
  */
 .column {
+  /*
+   * The Metro focus ring, on every focusable thing in the reading column: the
+   * links in the copy, the links in a list, a link that arrives from Markdown
+   * carrying no class of ours, and a `pre` a fenced block turns into a
+   * scrollable region -- `.prose pre { overflow-x: auto }` needs a `tabindex`
+   * to be keyboard-reachable at all, and a focusable box with no visible focus
+   * state is not meaningfully reachable either. The scope exists for that last
+   * case: markdown hands us elements with no class to compose onto.
+   *
+   * On the column and not on `.page`, which is the difference between sharing
+   * the press contract and forking it. The dock's commands draw the same ring
+   * from `.pressable`, and `.page :is(a, button):focus-visible` used to be
+   * (0,2,1) against `.pressable:focus-visible`'s (0,2,0) -- the wider selector
+   * silently won on every detail route. The column holds no commands, so the
+   * two no longer meet at all, and the shared scope is `:where()`-wrapped so
+   * it could not win even if they did.
+   *
+   * Nothing on these pages clips: `.page` has no `overflow` of its own, so the
+   * ring and its offset are painted in full even on the leftmost column edge
+   * at 320.
+   */
+  composes: scope from "../metro/focusRing.module.css";
+
   width: min(100%, 48rem);
   padding: clamp(1.5rem, 5vw, 3rem) 0 clamp(2rem, 6vw, 4rem);
 }
@@ -138,32 +161,6 @@
 }
 
 /*
- * The Metro focus ring, on every focusable thing in the reading column: the
- * links in the copy, the links in a list, a link that arrives from Markdown
- * carrying no class of ours, and a `pre` a fenced block turns into a
- * scrollable region -- `.prose pre { overflow-x: auto }` needs a `tabindex`
- * to be keyboard-reachable at all, and a focusable box with no visible focus
- * state is not meaningfully reachable either. One rule rather than one per
- * list, for exactly that last case.
- *
- * Scoped to `.column` and not to `.page`, which is the difference between
- * sharing the press contract and forking it. The dock's commands draw this same
- * ring from `.pressable`, but `.page :is(a, button):focus-visible` is (0,2,1)
- * against `.pressable:focus-visible`'s (0,2,0), so the wider selector silently
- * won on every detail route: the values matched, and a later change to the
- * Metro ring would have reached the panorama and not these four pages. The
- * column holds no commands, so this rule and `.pressable` no longer meet.
- *
- * Nothing on these pages clips: `.page` has no `overflow` of its own, so the
- * 3px ring and its 3px offset are painted in full even on the leftmost column
- * edge at 320.
- */
-.column :is(a, button, pre):focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: 3px;
-}
-
-/*
  * Paper.
  *
  * These four documents are the ones anyone would print -- a résumé most of all
@@ -176,6 +173,9 @@
  * `.page.page` is doubled because the padding it overrides is declared on
  * `dockedPage` in another stylesheet at equal specificity, where the winner
  * would otherwise depend on the order the bundler emitted the two files in.
+ *
+ * Print rules stay last in this file: a media query adds no specificity, so
+ * these win their ties only by coming after the rules they override.
  */
 @media print {
   .page.page {

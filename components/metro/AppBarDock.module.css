@@ -23,6 +23,18 @@
     clamp(1rem, 4vw, 4.5rem),
     env(safe-area-inset-right, 0px)
   );
+  /*
+   * What the fixed bar costs whatever sits above it: the bar's own height, one
+   * content inset of air, and whatever the device reserves below. Two things
+   * have to clear the bar and they used to disagree by 16px -- `.dockedPage`
+   * padded by height + inset while the panorama's contact panel offset by
+   * height + the *title* gap, so an open panel sat closer to the bar than every
+   * page end does. One property, read by both.
+   */
+  --dock-reserve-bottom: calc(
+    var(--metro-appbar-height) + var(--metro-content-inset) +
+      env(safe-area-inset-bottom, 0px)
+  );
 
   width: min(100%, 100rem);
   margin-right: auto;
@@ -43,17 +55,12 @@
 }
 
 /*
- * A page that carries the dock. The bottom padding is the bar's own height
- * token plus one content inset, so the reserve is derived from the bar rather
- * than guessed alongside it.
+ * A page that carries the dock. The bottom padding is the reserve declared
+ * above, so it is derived from the bar rather than guessed alongside it.
  */
 .dockedPage {
   min-height: 100vh;
-  padding: 0 var(--dock-inset-right)
-    calc(
-      var(--metro-appbar-height) + var(--metro-content-inset) +
-        env(safe-area-inset-bottom, 0px)
-    )
+  padding: 0 var(--dock-inset-right) var(--dock-reserve-bottom)
     var(--dock-inset-left);
 }
 
@@ -61,6 +68,9 @@
  * Print has no application bar, so it has no dock and no reserve either: a
  * fixed strip would otherwise repeat itself on every sheet and the reserve
  * would leave 96px of white at the end of the document.
+ *
+ * Print rules stay last in this file: a media query adds no specificity, so
+ * these win their ties only by coming after the rules they override.
  */
 @media print {
   .dock {

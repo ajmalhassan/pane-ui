@@ -37,6 +37,17 @@
 }
 
 .tab {
+  composes: ring from "./focusRing.module.css";
+
+  /*
+   * The one consumer that draws the shared ring inside its own box. `.track`
+   * clips, and it has to: the next heading peeking past the right edge IS the
+   * navigation affordance. An outset ring on the tallest tab would be sliced
+   * top and bottom by that clip, and on the leading tab at the left edge as
+   * well. Same width, same colour, pulled 3px in.
+   */
+  --metro-focus-offset: -3px;
+
   flex: 0 0 auto;
   min-height: var(--metro-target-min);
   min-width: var(--metro-target-min);
@@ -53,7 +64,20 @@
   color: var(--metro-text);
 }
 
-.tab:focus-visible {
-  outline: 3px solid var(--metro-text);
-  outline-offset: -3px;
+/*
+ * On paper the panorama is one sheet, so the pivot line is a heading and three
+ * words next to it -- not a selected state and three affordances.
+ *
+ * Both states are named, and both have to be: the selected tab is the `<h1>`'s
+ * own anchor and printed `#f2f4f5` at 1.10:1 on white (the largest thing on the
+ * sheet, invisible), while the peeks printed `--metro-muted` at 2.92:1. Last in
+ * the file, because `@media` adds no specificity and `.tab[aria-selected]` is
+ * (0,2,0): these win by source order, and only by source order.
+ */
+@media print {
+  .heading,
+  .tab,
+  .tab[aria-selected="true"] {
+    color: #000;
+  }
 }

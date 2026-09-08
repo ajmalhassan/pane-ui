@@ -16,10 +16,17 @@
   --metro-command-stroke: 0.125rem; /* 2px command ring stroke */
   --metro-command-glyph: 1.25rem; /* 20px glyph inside the ring, ~59% of it */
   --metro-appbar-height: 4.5rem; /* 72px bar: ring, label, and its inset block */
-  /* 6px: the focus ring's own 3px width plus its 3px outline-offset. A clipped
-     region that holds focusable edge content has to be widened by exactly this
-     much, or the ring on the outermost item is cut in half. */
-  --metro-focus-bleed: 0.375rem;
+  /* The focus ring, drawn from `components/metro/focusRing.module.css` and
+     nowhere else. The offset is read per element, so a consumer inside a
+     clipping box can pull the ring inside itself (PanoramaNav's tab does). */
+  --metro-focus-width: 3px;
+  --metro-focus-offset: 3px;
+  /* 6px: the ring's own width plus its offset, derived rather than restated.
+     A clipped region that holds focusable edge content has to be widened by
+     exactly this much, or the ring on the outermost item is cut in half. */
+  --metro-focus-bleed: calc(
+    var(--metro-focus-width) + var(--metro-focus-offset)
+  );
 
   /* Colour: one cyan signature, one deep Windows blue, restrained greys. */
   --metro-cyan: #00a4ef;
@@ -71,7 +78,11 @@
   --metro-gap-title: 0.5rem; /* 8px under a panorama title */
   --metro-gap-pivot: 0.75rem; /* 12px between pivot headings */
   --metro-gap-section: 2rem; /* 32px between content sections */
-  --metro-gap-tile: 0.5rem; /* 8px between a tile's own title and label */
+  /* 8px between a tile's own title and label. Named for the copy it separates
+     and not for the tile it sits in: `--metro-gap-tile` and `--metro-tile-gap`
+     were one letter-order apart and meant different things -- the gutter
+     *between* tiles is the second one, up in the grid block. */
+  --metro-gap-copy: 0.5rem;
   --metro-gap-command-label: 0.25rem; /* 4px between command ring and its label */
   --metro-text-label: 0.7rem; /* small labels -- app-bar command labels, status line */
 
@@ -172,14 +183,18 @@ body {
   margin: 0;
   min-height: 100%;
   background: var(--metro-ink);
-  font-family:
-    "Segoe UI Variable",
-    "Segoe UI",
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  /*
+   * The spec's Typography section states one stack -- "prefers Segoe UI
+   * Variable and Segoe UI without distributing proprietary font files" -- and
+   * `--metro-font` is that stack. It was declared in Task 1 and left unwired
+   * for eight tasks, while `body` carried a hand-written near-copy that named
+   * Inter ahead of the system UI face and omitted `Segoe UI Variable Text`,
+   * the optical size Segoe actually serves body copy from.
+   *
+   * Two stacks meant the token could be changed without changing the site.
+   * There is one now.
+   */
+  font-family: var(--metro-font);
 }
 a {
   color: inherit;
@@ -212,6 +227,8 @@ a {
   }
 }
 
+/* Print rules stay last in this file: a media query adds no specificity, so
+   these win their ties only by coming after the rules they override. */
 @media print {
   html,
   body {

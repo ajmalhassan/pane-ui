@@ -293,6 +293,9 @@
  * `pre` inherit black from it; the rules below are the ones this file gives a
  * colour of their own -- a tag, a rule down a left edge, or a list marker,
  * which is a filled box and inherits nothing.
+ *
+ * Print rules stay last in this file: a media query adds no specificity, so
+ * these win their ties only by coming after the rules they override.
  */
 @media print {
   .prose,

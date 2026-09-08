@@ -111,37 +111,66 @@
 }
 
 /*
- * Every layout ships named rings: the bar's default state is expanded, so the
- * Résumé command is legible before anyone interacts with it. Wide layouts may
- * still be minimized down to the phone's rings-only bar on demand. The text
- * stays in the accessibility tree throughout, because it is what names each
- * command -- `display: none` here would erase those names, and the clipped
- * box keeps the bar's height on `min-height` rather than on this row.
+ * `min-height` is the one property `.label` and the shared `visuallyHidden`
+ * utility both declare, and both at (0,1,0) -- a tie the cascade settles by
+ * whichever stylesheet the bundler emitted last. It happens to resolve the
+ * right way today, and "happens to" is the problem: the clipped label is 1x1
+ * only while `min-height: 0` wins, and nothing in either file says it must.
+ *
+ * This is the same doubling `.tileNote.tileNote` uses for the same tie, kept on
+ * the consumer's side so the utility stays a (0,1,0) rule anything can
+ * override. `AppBar.tsx` adds it beside the utility, never alone.
+ *
+ * The phone rule below deliberately does not restore `min-height`: a phone
+ * paints its labels, so the row is held by their own text, and the 1.2em floor
+ * exists only to hold the empty label of the overflow command -- which a phone
+ * does not paint at all.
  */
-@media (min-width: 48rem) {
-  .bar[data-expanded="false"] .label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    min-height: 0;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    border: 0;
-    white-space: nowrap;
-  }
+.label.labelClipped {
+  min-height: 0;
 }
 
 /*
+ * Every layout ships named rings: the bar's default state is expanded, so the
+ * Résumé command is legible before anyone interacts with it. Wide layouts may
+ * still be minimized down to the phone's rings-only bar on demand, and the text
+ * stays in the accessibility tree throughout, because it is what names each
+ * command. Minimizing is `AppBar.tsx` adding the shared `visuallyHidden`
+ * utility to each label -- the clipped box keeps the bar's height on the bar's
+ * own `min-height` rather than on this row.
+ *
  * Phone layouts keep their labels in every state, which leaves the overflow
  * command nothing to toggle, so it is dropped from the paint rather than left
  * as a dead target. It stays in the markup -- and in the server-rendered HTML
  * -- so the component never has to branch on viewport width. The remaining
  * commands' own labels hold the row here, so the bar's height is unchanged.
+ *
+ * That guarantee is the one thing the component cannot see, so it stays here:
+ * a bar minimized on a wide window and then narrowed still paints its labels.
+ *
+ * The utility declares ten properties and `.label` above already overrides two
+ * of them (`min-height`, `white-space`), so eight survive into the clipped
+ * state and are the set this rule could have to undo: `position`, `width`,
+ * `height`, `margin`, `padding`, `overflow`, `clip-path`, `border`. Six are
+ * restored -- the six that change the box. `padding: 0` and `border: 0` are
+ * left standing because zero is what the painted label wants anyway: a label
+ * `<span>` has neither, so restoring them would assert a value rather than
+ * recover one.
+ *
+ * `.command .label` is (0,2,0) against the utility's (0,1,0), so the restore
+ * does not depend on which stylesheet the bundler emits first.
  */
 @media not all and (min-width: 48rem) {
   .overflow {
     display: none;
+  }
+
+  .command .label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
   }
 }

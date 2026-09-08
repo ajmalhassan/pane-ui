@@ -104,7 +104,6 @@ export function MetroIcon({ name, title }: Props): ReactElement {
       strokeWidth={STROKE_WIDTH}
       viewBox="0 0 24 24"
       width="1em"
-      xmlns="http://www.w3.org/2000/svg"
     >
       {title ? <title id={titleId}>{title}</title> : null}
       {GLYPHS[name]}

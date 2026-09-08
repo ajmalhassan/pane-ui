@@ -1,0 +1,42 @@
+/*
+ * The focus ring this application draws, in one declaration block.
+ *
+ * It was five: `.pressable`, `PanoramaNav .tab`, `.noteRow`, `.textLink` and
+ * `detailSurface .column`'s links each wrote `outline: 3px solid
+ * var(--metro-text)` for itself, and one of them additionally wrote
+ * `outline: none` over the top on the contact panel. Five copies of a value the
+ * spec states once ("focus rings meet contrast requirements on cyan, blue,
+ * black, and photographic surfaces") is five places a change has to be
+ * remembered, and a ring that is only right in four of them is a ring a
+ * keyboard user loses on one surface.
+ *
+ * Two ways in, because the DOM offers two:
+ *
+ *  - `ring` is composed onto an element that has a class of its own -- a
+ *    pressable tile, an app-bar command, a heading tab, a note row, a link in
+ *    prose the panorama authored.
+ *  - `scope` is composed onto a CONTAINER whose focusable contents have no
+ *    classes to compose onto, because they arrived as rendered markdown. The
+ *    reading column of every detail route is the only such container.
+ *
+ * `:where()` around the scope is the point of writing it that way rather than
+ * as a plain descendant selector. `.scope :is(a, button, pre):focus-visible`
+ * is (0,2,1) and would out-specify `.ring:focus-visible`'s (0,2,0) -- which is
+ * exactly the bug Task 8 found, where `.page :is(a, button):focus-visible`
+ * silently beat `.pressable` on every detail route and the two only agreed by
+ * coincidence. `:where()` contributes nothing, so the scope selector is
+ * (0,1,1): it cannot win against the ring, and the question of which of the two
+ * applies stops mattering anyway now that both name the same declarations.
+ *
+ * The offset is a custom property rather than a literal so a consumer that
+ * genuinely cannot paint outside its own box can say so in one line instead of
+ * forking the ring. `PanoramaNav .tab` is the one: its track clips (`overflow:
+ * hidden`, no bleed) because the next heading has to be cut off at the right
+ * edge, so an outset ring on the tallest tab would be sliced top and bottom.
+ * It sets `--metro-focus-offset: -3px` and draws the same width and colour.
+ */
+.ring:focus-visible,
+:where(.scope) :is(a, button, pre):focus-visible {
+  outline: var(--metro-focus-width) solid var(--metro-text);
+  outline-offset: var(--metro-focus-offset);
+}

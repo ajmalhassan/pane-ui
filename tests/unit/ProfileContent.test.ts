@@ -1,25 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { profile } from "@/content/profile";
+/*
+ * The same walker the shipped approved-metric tripwire uses
+ * (`lib/content/projects.ts`), so this guard and the one that runs in
+ * production cannot disagree about what "every string in this value" means.
+ * It closes the forbidden-fact rules below over the whole `start` object
+ * rather than a hand-maintained field list: a new field on `StartScreen` is
+ * in the set the moment it exists.
+ */
+import { everyString } from "@/lib/content/strings";
 
 const { start } = profile;
 const LIVE_TILES = [start.evidence, start.assessment] as const;
-
-/**
- * Every string, number, and boolean leaf reachable from a value, recursively.
- * Used to close the forbidden-fact guard below over the whole `start` object
- * rather than a hand-maintained field list: a new field on `StartScreen` is
- * automatically in the set the moment it exists, and TypeScript cannot
- * silently drop it the way a list of field references could.
- */
-function everyString(value: unknown): string[] {
-  if (typeof value === "string") return [value];
-  if (typeof value === "number" || typeof value === "boolean")
-    return [String(value)];
-  if (Array.isArray(value)) return value.flatMap(everyString);
-  if (value && typeof value === "object")
-    return Object.values(value).flatMap(everyString);
-  return [];
-}
 
 /**
  * Every string the Me Start screen can paint or announce. The rules below are

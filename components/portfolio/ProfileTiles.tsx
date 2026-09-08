@@ -46,7 +46,6 @@ function GraphMotif(): ReactNode {
       focusable="false"
       preserveAspectRatio="xMidYMid meet"
       viewBox="0 0 240 120"
-      xmlns="http://www.w3.org/2000/svg"
     >
       <g className={styles.graphTrace}>
         <path d="M24 24 120 60M24 60h96M24 96 120 60M120 60 216 36M120 60 216 84" />
@@ -79,7 +78,6 @@ function Waveform(): ReactNode {
       focusable="false"
       preserveAspectRatio="none"
       viewBox="0 0 120 24"
-      xmlns="http://www.w3.org/2000/svg"
     >
       <g className={styles.waveDrift}>
         <path d="M0 12q15-5 30 0t30 0t30 0t30 0" />

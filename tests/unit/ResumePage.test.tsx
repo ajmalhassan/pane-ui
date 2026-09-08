@@ -2,22 +2,13 @@ import { render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import Resume, { metadata } from "@/app/resume/page";
 import { profile } from "@/content/profile";
-
-/**
- * Every string, number, and boolean leaf reachable from a value. The
- * no-invented-copy guard below closes over the whole profile rather than a
+/*
+ * The no-invented-copy guard below closes over the whole profile rather than a
  * hand-maintained field list, so a fact added to `content/profile.ts` is in the
- * approved set the moment it exists.
+ * approved set the moment it exists. Same walker as the shipped tripwire in
+ * `lib/content/projects.ts`.
  */
-function everyString(value: unknown): string[] {
-  if (typeof value === "string") return [value];
-  if (typeof value === "number" || typeof value === "boolean")
-    return [String(value)];
-  if (Array.isArray(value)) return value.flatMap(everyString);
-  if (value && typeof value === "object")
-    return Object.values(value).flatMap(everyString);
-  return [];
-}
+import { everyString } from "@/lib/content/strings";
 
 /**
  * The page's own furniture: the words the résumé says that are not facts about

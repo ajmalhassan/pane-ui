@@ -17,6 +17,9 @@
  * On paper the outcome is the one number the page claims, and cyan on white is
  * 2.78:1. The shared surface blacks out everything it draws; this is the one
  * colour a case study draws itself.
+ *
+ * Print rules stay last in this file: a media query adds no specificity, so
+ * these win their ties only by coming after the rules they override.
  */
 @media print {
   .metric {

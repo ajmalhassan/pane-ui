@@ -2073,6 +2073,28 @@ test("the phone layout keeps its labels and drops the overflow command", async (
   await expect(
     page.getByRole("button", { name: /app bar labels/ }),
   ).toBeHidden();
+
+  /*
+   * "In every state" includes the state a phone cannot reach on its own.
+   * Minimizing is a class the component adds, and the component cannot see a
+   * viewport -- so a bar minimized on a wide window and then narrowed would
+   * arrive here with its labels clipped and no visible control to restore
+   * them. The stylesheet's phone rule is what stops that, and this is the
+   * only thing that exercises it.
+   */
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByRole("button", { name: "Hide app bar labels" }).click();
+  // Measured, not `toBeHidden`: a clipped label keeps a 1x1 box, and Playwright
+  // counts any non-empty box as visible (see the wide-layout test above).
+  expect(
+    (await labels.first().boundingBox())?.height ?? 99,
+  ).toBeLessThanOrEqual(1);
+
+  await page.setViewportSize({ width: 393, height: 851 });
+  for (const label of [labels.first(), labels.last()]) {
+    expect((await label.boundingBox())?.height ?? 0).toBeGreaterThan(1);
+  }
+  await expect(labels).toHaveText(["Résumé", "Contact"]);
 });
 
 test("the fixed app bar reserves its height instead of covering the page end", async ({
@@ -2098,6 +2120,64 @@ test("the fixed app bar reserves its height instead of covering the page end", a
     bar?.y ?? 0,
   );
 });
+
+/*
+ * There is ONE gap above the application bar, not two.
+ *
+ * Two things on this site have to clear the fixed bar, and they used to
+ * disagree: a docked page padded its end by the bar's height plus one content
+ * inset (24px), while the contact panel offset its bottom edge by the bar's
+ * height plus `--metro-gap-title` (8px) -- a typographic token borrowed for a
+ * layout reserve. An open panel therefore sat 16px closer to the bar than every
+ * page end on the site, which is the kind of difference nobody can name and
+ * everybody can see.
+ *
+ * Measured rather than read off the stylesheet: the panel's own bottom edge
+ * against the bar's own top edge, and the page's bottom padding against the
+ * same number. Both frames, because the reserve carries an `env()` term that
+ * only a device with a safe area fills in.
+ */
+for (const frame of [
+  { width: 320, height: 568 },
+  { width: 1440, height: 900 },
+] as const) {
+  test(`the contact panel and the page end clear the bar by the same gap at ${frame.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(frame);
+    await page.goto("/");
+    await page.getByRole("link", { name: "Contact" }).click();
+    await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
+
+    const bar = await page.locator(APP_BAR).boundingBox();
+    const panel = await page.locator("#contact").boundingBox();
+    expect(bar).not.toBeNull();
+    expect(panel).not.toBeNull();
+
+    // The dock is the bar plus nothing, so the bar's top edge is where the
+    // reserve has to end.
+    const gap = (bar?.y ?? 0) - ((panel?.y ?? 0) + (panel?.height ?? 0));
+    const reserve = await page.evaluate(() =>
+      Number.parseFloat(
+        getComputedStyle(document.querySelector("main")!).paddingBottom,
+      ),
+    );
+    const barHeight = await page.evaluate(
+      (selector) =>
+        Number.parseFloat(
+          getComputedStyle(document.querySelector(selector)!).minHeight,
+        ),
+      APP_BAR,
+    );
+
+    // 72px bar + 24px inset, and the panel's gap is what is left over the bar.
+    expect(reserve, `${frame.width} page reserve`).toBeCloseTo(
+      barHeight + 24,
+      1,
+    );
+    expect(gap, `${frame.width} panel gap`).toBeCloseTo(24, 1);
+  });
+}
 
 test("résumé uses a white page canvas when printed", async ({ page }) => {
   await page.emulateMedia({ media: "print" });
@@ -2240,6 +2320,29 @@ function nonInkPrintedBoxes(): string[] {
       }
     }
 
+    /*
+     * A replaced element renders no pseudo-elements, so a reading taken from
+     * one describes a box that is never drawn -- but Chromium does answer, and
+     * the answer is wrong in a way this walker would otherwise report.
+     * `next/image` writes `color: transparent` INLINE on every `<img>`, which
+     * no print stylesheet can reach, and `::marker` inherits it.
+     *
+     * Measured with the tile images forced back onto the sheet: exactly two
+     * findings, both spurious, both `::marker`, on `/` and on
+     * `/?view=photography` --
+     * `img.PortfolioPanorama_portrait__…::marker colour → rgba(0, 0, 0, 0)`
+     * and `img.—::marker colour → rgba(0, 0, 0, 0)` -- and none on `/resume`,
+     * which has no `<img>` at all. That is the whole of what this suppresses.
+     *
+     * As the tree stands it suppresses nothing, because no `<img>` reaches the
+     * paper: `MetroTile.module.css`'s print block hides `.media`, so the
+     * `offsetParent` test above has already dropped every one of them. The
+     * skip stays for the next image that does print -- an illustration in an
+     * article, say -- and an `<img>`'s own fill and rules are still checked
+     * above either way.
+     */
+    if (element.tagName === "IMG") continue;
+
     for (const pseudo of ["::before", "::after", "::marker"] as const) {
       const drawn = getComputedStyle(element, pseudo);
       if (drawn.content === "none") continue;
@@ -2318,6 +2421,160 @@ for (const route of [
     expect(await page.evaluate(nonInkPrintedBoxes), route.path).toEqual([]);
   });
 }
+
+/*
+ * The fifth sheet: the panorama, which had no print treatment at all.
+ *
+ * Printing the Start screen produced a blank page. Browsers drop background
+ * colours by default, so the shell's `--metro-ink` never reached the paper --
+ * while `--metro-text`, #f2f4f5, did, at 1.06:1 on white. The page came out
+ * empty with a ghost where the heading was.
+ *
+ * The first repair traded that for the opposite failure. It turned the ground
+ * white and asked the tiles to keep their fills (`print-color-adjust: exact`),
+ * and set `color: #000` on the shell alone -- which reaches only the type that
+ * inherits, and almost none of the panorama's does. Measured: about half the
+ * sheet in saturated ink, three tiles solid black, and the `<h1>` still at
+ * 1.10:1. The sheet was expensive AND unreadable, and `toBeVisible` could not
+ * see it, because Playwright's visibility is box-based and white-on-white has a
+ * box.
+ *
+ * So the assertions are now what a reader actually gets, measured rather than
+ * described: white ground, outlined white tiles, every visible word black, no
+ * atmosphere, no screen chrome, and no `print-color-adjust: exact` left
+ * anywhere. `nonBlackPrintedText` and `nonInkPrintedBoxes` are the same two
+ * walkers the four document sheets are held to; between them they are what a
+ * reader sees, which is why they carry this test too.
+ *
+ * One test over eight page loads rather than eight tests: the sheet is one
+ * treatment, and the four pivots share a DOM (the panorama renders all four
+ * panels and slides between them), so what differs per route is which tab is
+ * selected -- and the selected tab is the `<h1>`, the exact element that was
+ * invisible.
+ */
+test("the panorama prints as a legible black-on-white sheet", async ({
+  page,
+}) => {
+  await page.emulateMedia({ media: "print" });
+
+  for (const frame of [
+    { width: 1440, height: 900 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(frame);
+
+    for (const view of ["me", "projects", "blog", "photography"]) {
+      const where = `${view} @ ${frame.width}`;
+      await page.goto(`/?view=${view}`);
+
+      const shell = page.locator("main");
+      await expect(shell, where).toHaveCSS(
+        "background-color",
+        "rgb(255, 255, 255)",
+      );
+      await expect(shell, where).toHaveCSS("color", "rgb(0, 0, 0)");
+      await expect(page.locator("body"), where).toHaveCSS(
+        "background-color",
+        "rgb(255, 255, 255)",
+      );
+
+      const sheet = await page.evaluate((identity) => {
+        const colourOf = (selector: string) => {
+          const node = document.querySelector(selector);
+          return node ? getComputedStyle(node).color : null;
+        };
+        const line = [...document.querySelectorAll<HTMLElement>("div")].find(
+          (node) => node.textContent?.startsWith(identity),
+        );
+        const bar = document.querySelector('nav[aria-label="Page actions"]');
+        const tiles = [...document.querySelectorAll("[data-tile-role]")];
+
+        return {
+          // The atmosphere is a pseudo-element that exists only to carry a
+          // pattern, so on paper it does not exist.
+          atmosphere: getComputedStyle(
+            document.querySelector("main")!,
+            "::before",
+          ).content,
+          // Screen chrome takes itself out from its own stylesheets.
+          identity: line ? getComputedStyle(line).display : null,
+          dock: bar ? getComputedStyle(bar.parentElement!).display : null,
+          // The four surfaces the old test could not see: the selected pivot
+          // (which IS the h1's own anchor), a tile headline, a tile caption,
+          // and one of the contact panel's profile links.
+          selectedTab: colourOf('h1 a[aria-selected="true"]'),
+          tileTitle: colourOf("[data-tile-role] strong"),
+          tileCaption: colourOf("[data-tile-role] > span:last-child"),
+          contactLink: colourOf("#contact a[href]"),
+          tiles: tiles.length,
+          // A printed tile is a white block with a black hairline, and it no
+          // longer asks the printer for its screen fill.
+          fills: [
+            ...new Set(tiles.map((t) => getComputedStyle(t).backgroundColor)),
+          ],
+          rules: [
+            ...new Set(
+              tiles.map((t) => {
+                const style = getComputedStyle(t);
+                return `${style.borderTopWidth} ${style.borderTopStyle} ${style.borderTopColor}`;
+              }),
+            ),
+          ],
+          forcedInk: [...document.querySelectorAll("main, main *")].filter(
+            (node) =>
+              getComputedStyle(node).getPropertyValue("print-color-adjust") ===
+              "exact",
+          ).length,
+        };
+      }, IDENTITY);
+
+      const { tiles, ...paper } = sheet;
+
+      // The evidence is still on the sheet; how many tiles carry it is the
+      // content's business, not this test's.
+      expect(tiles, where).toBeGreaterThan(4);
+      expect(paper, where).toEqual({
+        atmosphere: "none",
+        identity: "none",
+        dock: "none",
+        selectedTab: "rgb(0, 0, 0)",
+        tileTitle: "rgb(0, 0, 0)",
+        tileCaption: "rgb(0, 0, 0)",
+        contactLink: "rgb(0, 0, 0)",
+        fills: ["rgb(255, 255, 255)"],
+        rules: ["1px solid rgb(0, 0, 0)"],
+        forcedInk: 0,
+      });
+
+      expect(await page.evaluate(nonBlackPrintedText), where).toEqual([]);
+      expect(await page.evaluate(nonInkPrintedBoxes), where).toEqual([]);
+
+      /*
+       * No tile photograph reaches the paper. Structural rather than
+       * photometric, and it is the walkers' blind spot: `nonBlackPrintedText`
+       * asks a text node for its colour and `nonInkPrintedBoxes` skips
+       * `<img>`, so a caption printed in black directly over a photograph --
+       * which is what `.media ~ .label` does once the screen's veil is
+       * dropped, measured at 1.05:1 -- passed both of them.
+       *
+       * Measured by the rectangle rather than by `offsetParent` or the class,
+       * so a future change that hides the image some other way (zero size,
+       * `visibility`, a `<picture>` swap) is still judged on what reaches the
+       * sheet. `alt` is the identity a failure needs: it names which
+       * photograph printed.
+       *
+       * The photography hub's backdrop is not in scope and does not need to
+       * be -- it sits outside every tile and is already 0px wide here.
+       */
+      const printedTileImages = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>("[data-tile-role] img")]
+          .filter((img) => img.getBoundingClientRect().width > 0)
+          .map((img) => (img as HTMLImageElement).alt.slice(0, 40)),
+      );
+      expect(printedTileImages, where).toEqual([]);
+    }
+  }
+});
 
 /*
  * The résumé's sections survive a page break rather than being split across
@@ -2498,6 +2755,142 @@ test("every link on a detail route draws the Metro ring", async ({ page }) => {
 });
 
 /*
+ * EVERY focusable thing, on every route, at the narrowest frame.
+ *
+ * The two tests above check the surfaces someone thought to name -- the dock's
+ * back command, the links inside a reading column. This one enumerates the
+ * document instead, so a control that arrives later is inside the guarantee
+ * without anyone remembering to add it. The spec asks for exactly this
+ * coverage: "focus rings meet contrast requirements on cyan, blue, black, and
+ * photographic surfaces", and the surfaces are what vary between these routes.
+ *
+ * It is the test that found the last hole. The open contact panel's two profile
+ * links and its close button set `outline: none` and showed focus as a 1px
+ * border turning cyan -- the only three focusable surfaces in the application
+ * that did not draw the 3px ring. Deleting the `outline: none` and composing
+ * the shared ring is what makes this pass.
+ *
+ * ONE exception, asserted rather than skipped: `PanoramaNav`'s heading tabs
+ * draw the ring at `-3px`. Their track clips (the next heading peeking past the
+ * right edge IS the affordance), so an outset ring on the tallest tab would be
+ * sliced. Same width, same colour, pulled inside -- and the test says so, so
+ * a tab that quietly stopped drawing a ring at all still fails.
+ *
+ * 320 because a narrow frame is where a ring runs out of room: it is the width
+ * at which the panorama's clip box, the app bar's command row and the reading
+ * column are all tightest.
+ */
+test("every focusable surface on every route draws the Metro ring", async ({
+  page,
+}) => {
+  test.slow();
+  await page.setViewportSize({ width: 320, height: 568 });
+
+  const routes = [
+    { name: "me", path: "/" },
+    { name: "projects", path: "/?view=projects" },
+    { name: "blog", path: "/?view=blog" },
+    { name: "photography", path: "/?view=photography" },
+    { name: "contact", path: "/", open: true },
+    { name: "case study", path: LEAD_PLATFORM },
+    { name: "note", path: newestHref },
+    { name: "note index", path: "/blog" },
+    { name: "résumé", path: "/resume" },
+  ];
+
+  for (const route of routes) {
+    await page.goto(route.path);
+
+    if (route.open) {
+      /*
+       * Opened from the keyboard, and it matters. `:focus-visible` follows the
+       * last input modality, so a mouse click on the Contact command puts the
+       * document in pointer mode and every programmatic focus after it stops
+       * matching -- the panel would report no ring anywhere and the test would
+       * be measuring Chromium's heuristic instead of this application's CSS.
+       */
+      await page.getByRole("link", { name: "Contact" }).focus();
+      await page.keyboard.press("Enter");
+      await expect(page.locator("#contact")).toHaveAttribute(
+        "data-open",
+        "true",
+      );
+    }
+
+    /*
+     * Everything a keyboard can land on, in document order, minus what is
+     * genuinely unreachable: a control inside the panel a pivot is not showing
+     * (`inert`) and anything explicitly taken out of the tab order.
+     *
+     * Rooted at `<main>`, which is the application: the dev server injects its
+     * own toolbar button into `<body>`, and a ring on Next's overlay is not
+     * something this project draws or should assert.
+     */
+    const focusables = page.locator(
+      ["a[href]", "button:not([disabled])", "[tabindex]:not([tabindex='-1'])"]
+        .map((selector) => `main ${selector}:not([inert] *):not([inert])`)
+        .join(", "),
+    );
+    const matched = await focusables.count();
+    let asserted = 0;
+
+    for (let index = 0; index < matched; index += 1) {
+      const target = focusables.nth(index);
+      if (!(await target.isVisible())) continue;
+      asserted += 1;
+
+      const at = `${route.name} #${index} <${await target.evaluate((node) =>
+        node.tagName.toLowerCase(),
+      )}> "${((await target.textContent()) ?? "").trim().slice(0, 24)}"`;
+
+      await target.focus();
+      /*
+       * A programmatic focus matches `:focus-visible` in Chromium as long as
+       * the document has not been put into pointer mode, which is why nothing
+       * above this loop clicks anything with a mouse.
+       */
+      await expect(target, at).toHaveCSS("outline-width", "3px");
+      await expect(target, at).toHaveCSS("outline-color", "rgb(242, 244, 245)");
+      await expect(target, at).toHaveCSS("outline-style", "solid");
+
+      const isTab = await target.evaluate(
+        (node) => node.getAttribute("role") === "tab",
+      );
+      await expect(target, at).toHaveCSS(
+        "outline-offset",
+        isTab ? "-3px" : "3px",
+      );
+    }
+
+    /*
+     * The guard is on what was ASSERTED, not on what was matched: the loop
+     * skips anything invisible, so a route whose controls stopped being
+     * painted would sweep zero of them and still have matched a document full
+     * of links.
+     *
+     * Exactly one match per route is invisible at 320, and it is always the
+     * same one -- the app bar's overflow command, which is `display: none`
+     * below 48rem and stays in the markup so the component never branches on
+     * viewport width. Measured matched/asserted at 320: me 11/10, projects
+     * 14/13, blog 12/11, photography 9/8, contact 12/11, case study 4/3,
+     * note 4/3, note index 6/5, résumé 9/8.
+     *
+     * So `matched - 1` is the real floor, and it is exact on six of the nine
+     * routes. The absolute floor stays too, because `asserted >= matched - 1`
+     * is also satisfied by a route that matched nothing.
+     */
+    expect(
+      asserted,
+      `${route.name} swept ${asserted} of ${matched} focusable surfaces`,
+    ).toBeGreaterThanOrEqual(matched - 1);
+    expect(
+      asserted,
+      `${route.name} has focusable content`,
+    ).toBeGreaterThanOrEqual(3);
+  }
+});
+
+/*
  * The primary commands are not decoration on a detail route: contact from a
  * case study lands on the panorama with the panel open, which is the whole
  * point of carrying it there. `/#contact` and not `#contact`, because the panel
@@ -2587,6 +2980,61 @@ test.describe("without JavaScript", () => {
 
     expect(box).not.toBeNull();
     expect(Math.abs((box?.x ?? 0) - inset)).toBeLessThanOrEqual(1);
+  });
+
+  /*
+   * The other half of "no-JavaScript navigation and content access continue to
+   * work", and the half nothing was checking: the tests above read `href`
+   * attributes off the hubs and stopped there. An attribute is a promise; this
+   * follows it.
+   *
+   * Both destinations are server-rendered routes, so the only thing that could
+   * break them is the hub -- a tile whose whole rectangle is a `<button>` with
+   * an `onClick` router push looks identical in a screenshot and is a dead end
+   * without script. That is the failure mode the spec's "the whole navigation
+   * tile opens its case study" exists to prevent, and it is invisible until
+   * somebody turns script off and clicks.
+   *
+   * `getByRole("link")` rather than a CSS selector, because what has to be true
+   * is that the destination is a LINK: a `<button>` is not a link to the
+   * accessibility tree and is not one to a browser with no script either.
+   */
+  test("a project tile and a note row still navigate", async ({ page }) => {
+    await page.goto("/?view=projects");
+    const tile = page
+      .getByRole("tabpanel", { name: HEADINGS.projects })
+      .getByRole("link", { name: /lead/i })
+      .first();
+    await expect(tile).toHaveAttribute("href", LEAD_PLATFORM);
+    await tile.click();
+
+    await expect(page).toHaveURL(new RegExp(`${LEAD_PLATFORM}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText("Status: shipped")).toBeVisible();
+
+    // And back out of the document the same way, through the bar's own command.
+    await page.getByRole("link", { name: "projects" }).click();
+    await expect(page).toHaveURL(/\/\?view=projects$/);
+    await expect(
+      page.getByRole("tab", { name: HEADINGS.projects }),
+    ).toHaveAttribute("aria-selected", "true");
+
+    await page.goto("/?view=blog");
+    // The panel's tiles arrive on a staggered entrance capped at 240ms and
+    // running for 420; a click during it is a click at a moving target.
+    await page.waitForTimeout(900);
+    const row = page
+      .getByRole("tabpanel", { name: HEADINGS.blog })
+      .getByRole("link")
+      .first();
+    const href = await row.getAttribute("href");
+    expect(href, "the Blog pivot leads with a real destination").toMatch(
+      /^\/blog\//,
+    );
+    await row.click();
+
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 });
 
@@ -2852,6 +3300,101 @@ test("the two Me evidence tiles never change in the same second", async ({
   }
 });
 
+/*
+ * The live tile's two promises to the person reading it, in a real browser.
+ *
+ * The spec asks for both and names them separately: the cycle "pauses on hover
+ * and keyboard focus", and "direct activation advances it intentionally". The
+ * unit tests drive `useLiveCycle` with fake timers and the test above pauses a
+ * tile with the pointer, so what was missing is the KEYBOARD half -- a reader
+ * who tabs onto the tile to read the claim and has it replaced under them
+ * three seconds later -- and the activation half, which is the whole reason the
+ * tile is a `<button>` at all.
+ *
+ * Seven seconds is the wait, against a six-second cycle: long enough that an
+ * unpaused tile would certainly have turned over, short enough not to spend the
+ * suite's budget twice. The press is checked immediately after, because
+ * "intentionally" means now and not on the next tick of a timer.
+ *
+ * A negative assertion over a fixed wait cannot fail on a slow machine, it can
+ * only stop proving anything -- so the wait carries a POSITIVE CONTROL. Me
+ * renders two live tiles and only the first is focused; the second is left
+ * alone, and it has to turn over on its own while the first does not. Without
+ * it, hydration landing a couple of seconds later than usual would leave a
+ * green test that never demonstrated the pause at all.
+ *
+ * The control is polled rather than read at the seven-second mark, and the
+ * reason is a real number: `useLiveCycle` spends the phase ONCE, as
+ * `now + intervalMs + offsetMs`, so the second tile's first turn is at mount
+ * + 9000ms (6000 + the 3000ms `ASSESSMENT_OFFSET_MS`), not at 3000ms. Measured
+ * here: first tile focused 593ms after `goto`, control turned over 8501ms into
+ * the hold. Polling with its own budget on top of the seven seconds keeps the
+ * control honest on a slow machine instead of turning it into the flake the
+ * fixed wait was.
+ */
+test("a focused live tile holds its claim, and a press advances it", async ({
+  page,
+}) => {
+  test.slow();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?view=me");
+  await page.waitForTimeout(500);
+
+  const live = page.locator('[data-pivot="me"] [data-tile-role="live"]');
+  await expect(live).toHaveCount(2);
+  const tile = live.first();
+  const control = live.nth(1);
+  await expect(tile).toHaveAttribute("data-live-index", /\d+/);
+
+  // Focus, not hover: the pointer path is covered above, and a keyboard reader
+  // has no way to ask a moving tile to wait.
+  await tile.focus();
+  await expect(tile).toBeFocused();
+  const held = await tile.getAttribute("data-live-index");
+  const claim = await tile.locator('[aria-live="off"]').innerText();
+  const heldControl = await control.getAttribute("data-live-index");
+
+  await page.waitForTimeout(7000);
+  expect(
+    await tile.getAttribute("data-live-index"),
+    "focused tile advanced",
+  ).toBe(held);
+  expect(await tile.locator('[aria-live="off"]').innerText()).toBe(claim);
+
+  // The control: nothing was done to this tile, so it must move. If it has
+  // not, the seven seconds above proved nothing about the pause.
+  await expect
+    .poll(() => control.getAttribute("data-live-index"), {
+      message: "the unfocused live tile never advanced",
+      timeout: 8000,
+    })
+    .not.toBe(heldControl);
+  expect(
+    await tile.getAttribute("data-live-index"),
+    "focused tile advanced while its unfocused neighbour cycled",
+  ).toBe(held);
+
+  /*
+   * And the press. The tile is its own interactive owner -- one button, no
+   * overlaid link -- so this is a reader asking for the next claim, and the
+   * answer has to arrive without waiting out the rest of the interval.
+   */
+  await tile.click();
+  await expect(tile).not.toHaveAttribute("data-live-index", held ?? "");
+  await expect(tile.locator('[aria-live="off"]')).not.toHaveText(claim);
+
+  /*
+   * `aria-live="off"` throughout, focused or not: the tile's own accessible
+   * name is what a screen reader is given, and it does not change every six
+   * seconds.
+   */
+  await expect(tile.locator('[aria-live="off"]').first()).toHaveAttribute(
+    "aria-live",
+    "off",
+  );
+  await expect(tile).toHaveAccessibleName(/\S/);
+});
+
 /**
  * The 8px cells of the viewport that nothing but the shell's own ground paints.
  *
@@ -3092,9 +3635,33 @@ for (const frame of [
  */
 
 /**
- * What the sweep is supposed to be looking at, per pivot: the same numbers at
- * 320 and at 1440, because nothing here is painted at one width and dropped at
- * the other -- the notes a narrow tile cannot show are clipped, not removed.
+ * The frames the sweep runs at.
+ *
+ * 320 and 1440 are two of the four required review frames, and the widest and
+ * narrowest layouts this application has. 768 is here because the fault the
+ * sweep was built for was worst there and the sweep could not see it: the Me
+ * hero's body copy measured 2.40:1 at 768 against 3.90 at 900 and above,
+ * because that is the width where the graph motif and the copy were closest to
+ * the same band. It is also the 48rem step itself -- the tile grid goes from
+ * four columns to eight across it -- so it is the width where a type step and
+ * a box size change at the same time.
+ */
+const SWEEP_FRAMES = [
+  { width: 320, height: 568 },
+  { width: 768, height: 1024 },
+  { width: 1440, height: 900 },
+] as const;
+
+/**
+ * What the sweep is supposed to be looking at, per pivot and per frame.
+ *
+ * All three frames agree today, and the table is written per frame anyway.
+ * Nothing on these pivots is painted at one width and dropped at another --
+ * the supporting note a narrow tile cannot show is clipped, not removed, and
+ * the 84rem threshold that paints it is above every frame here. Keeping the
+ * shape per frame is what lets a future width answer differently without
+ * anyone having to notice that the constant had been a single number all
+ * along.
  *
  * Exact rather than a floor, and deliberately brittle. The bounds they replace
  * (`> 2` ground, `> 0` tile) sat so far below the real counts that the
@@ -3102,12 +3669,31 @@ for (const frame of [
  * passed, measuring almost nothing and reporting green. Copy that moves these
  * numbers is copy that moved the coverage, and it should be a deliberate edit.
  */
-const SWEEP_SUBJECTS = {
-  me: { ground: 14, tile: 24 },
-  projects: { ground: 13, tile: 13 },
-  blog: { ground: 20, tile: 3 },
-  photography: { ground: 14, tile: 6 },
-} as const;
+const SWEEP_SUBJECTS: Record<
+  (typeof VIEWS)[number],
+  Record<number, { ground: number; tile: number }>
+> = {
+  me: {
+    320: { ground: 14, tile: 24 },
+    768: { ground: 14, tile: 24 },
+    1440: { ground: 14, tile: 24 },
+  },
+  projects: {
+    320: { ground: 13, tile: 13 },
+    768: { ground: 13, tile: 13 },
+    1440: { ground: 13, tile: 13 },
+  },
+  blog: {
+    320: { ground: 20, tile: 3 },
+    768: { ground: 20, tile: 3 },
+    1440: { ground: 20, tile: 3 },
+  },
+  photography: {
+    320: { ground: 14, tile: 6 },
+    768: { ground: 14, tile: 6 },
+    1440: { ground: 14, tile: 6 },
+  },
+};
 
 /** Whichever claim each live tile is showing has to be one of its own. */
 const LIVE_CLAIMS: Record<"evidence" | "assessment", string[]> = {
@@ -3311,10 +3897,7 @@ async function glyphContrast(
 }
 
 test.describe("every line clears 4.5:1, ground and tile alike", () => {
-  for (const frame of [
-    { width: 320, height: 568 },
-    { width: 1440, height: 900 },
-  ] as const) {
+  for (const frame of SWEEP_FRAMES) {
     for (const view of VIEWS) {
       test(`${view} keeps every line above 4.5:1 at ${frame.width}px`, async ({
         page,
@@ -3343,12 +3926,9 @@ test.describe("every line clears 4.5:1, ground and tile alike", () => {
         // the identity line, and every pivot has tiles.
         const subjects = await page.evaluate(contrastSubjects);
         const at = `${view}@${frame.width}`;
-        expect(subjects.ground, `${at} ground subjects`).toBe(
-          SWEEP_SUBJECTS[view].ground,
-        );
-        expect(subjects.tile, `${at} tile subjects`).toBe(
-          SWEEP_SUBJECTS[view].tile,
-        );
+        const expected = SWEEP_SUBJECTS[view][frame.width];
+        expect(subjects.ground, `${at} ground subjects`).toBe(expected.ground);
+        expect(subjects.tile, `${at} tile subjects`).toBe(expected.tile);
         // Me's two live claims are in the sweep by name, whichever pair of them
         // the cycle happens to be holding.
         if (view === "me") {
