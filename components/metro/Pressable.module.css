@@ -32,7 +32,10 @@
   --press-scale: var(--metro-press-scale);
 }
 
-.pressable:focus-visible { outline: 3px solid var(--metro-text); outline-offset: 3px; }
+.pressable:focus-visible {
+  outline: 3px solid var(--metro-text);
+  outline-offset: 3px;
+}
 
 /*
  * Reduced motion removes the tilt AND the depression -- there is no spatial
@@ -41,5 +44,8 @@
  * pre-hydration render honest.
  */
 @media (prefers-reduced-motion: reduce) {
-  .pressable, .pressable:active { transform: none; }
+  .pressable,
+  .pressable:active {
+    transform: none;
+  }
 }

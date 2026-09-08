@@ -45,10 +45,19 @@ it("keeps action labels accessible and hides them only on demand", async () => {
       actions={[{ label: "Résumé", href: "/resume", icon: "arrow-northeast" }]}
     />,
   );
-  expect(screen.getByRole("link", { name: "Résumé" })).toHaveAttribute("href", "/resume");
-  expect(screen.getByTestId("app-bar")).toHaveAttribute("data-expanded", "true");
+  expect(screen.getByRole("link", { name: "Résumé" })).toHaveAttribute(
+    "href",
+    "/resume",
+  );
+  expect(screen.getByTestId("app-bar")).toHaveAttribute(
+    "data-expanded",
+    "true",
+  );
   await user.click(screen.getByRole("button", { name: "Hide app bar labels" }));
-  expect(screen.getByTestId("app-bar")).toHaveAttribute("data-expanded", "false");
+  expect(screen.getByTestId("app-bar")).toHaveAttribute(
+    "data-expanded",
+    "false",
+  );
 });
 
 it("enhances ordinary href clicks without intercepting modified clicks", () => {
@@ -73,10 +82,16 @@ it("renders every command with a production SVG icon and no unicode placeholder"
   const bar = within(container);
   const nav = bar.getByTestId("app-bar");
 
-  expect(bar.getByRole("link", { name: "Résumé" }).querySelector("svg")).toBeInTheDocument();
-  expect(bar.getByRole("link", { name: "Contact" }).querySelector("svg")).toBeInTheDocument();
   expect(
-    bar.getByRole("button", { name: "Hide app bar labels" }).querySelector("svg"),
+    bar.getByRole("link", { name: "Résumé" }).querySelector("svg"),
+  ).toBeInTheDocument();
+  expect(
+    bar.getByRole("link", { name: "Contact" }).querySelector("svg"),
+  ).toBeInTheDocument();
+  expect(
+    bar
+      .getByRole("button", { name: "Hide app bar labels" })
+      .querySelector("svg"),
   ).toBeInTheDocument();
   expect(nav.querySelectorAll("svg")).toHaveLength(3);
   expect(nav.textContent).not.toMatch(/[↗✉…]/);
@@ -111,7 +126,9 @@ it("lowercases command labels visually while keeping their accessible names", ()
 
   expect(command("Résumé")).toHaveAccessibleName("Résumé");
   expect(command("Contact")).toHaveAccessibleName("Contact");
-  expect(getComputedStyle(screen.getByText("Résumé")).textTransform).toBe("lowercase");
+  expect(getComputedStyle(screen.getByText("Résumé")).textTransform).toBe(
+    "lowercase",
+  );
 });
 
 it("names the overflow command for the state its activation produces", async () => {
@@ -176,7 +193,9 @@ it("hands the owner a ref to the anchor it rendered for a command", () => {
   const contact = createRef<HTMLAnchorElement>();
   render(
     <AppBar
-      actions={[{ label: "Contact", href: "#contact", icon: "mail", ref: contact }]}
+      actions={[
+        { label: "Contact", href: "#contact", icon: "mail", ref: contact },
+      ]}
     />,
   );
 
@@ -209,12 +228,20 @@ it("presses the command itself and tilts a touch press like a mouse press", () =
   stubBox(contact, { width: 100, height: 50 });
 
   // A moving touch pointer is a scroll in progress and writes nothing...
-  fireEvent.pointerMove(contact, { clientX: 30, clientY: 10, pointerType: "touch" });
+  fireEvent.pointerMove(contact, {
+    clientX: 30,
+    clientY: 10,
+    pointerType: "touch",
+  });
   expect(contact.style.getPropertyValue("--press-rotate-x")).toBe("");
   expect(contact.style.getPropertyValue("--press-rotate-y")).toBe("");
 
   // ...but a touch PRESS tilts from its own point, exactly as a mouse does.
-  fireEvent.pointerDown(contact, { clientX: 30, clientY: 10, pointerType: "touch" });
+  fireEvent.pointerDown(contact, {
+    clientX: 30,
+    clientY: 10,
+    pointerType: "touch",
+  });
   expect(contact.style.getPropertyValue("--press-rotate-x")).toMatch(/deg$/);
   expect(contact.style.getPropertyValue("--press-rotate-y")).toMatch(/deg$/);
 
@@ -223,7 +250,11 @@ it("presses the command itself and tilts a touch press like a mouse press", () =
   expect(contact.style.getPropertyValue("--press-rotate-y")).toBe("");
 
   // The hover path is the mouse's own, and it lands on the same variables.
-  fireEvent.pointerMove(contact, { clientX: 30, clientY: 10, pointerType: "mouse" });
+  fireEvent.pointerMove(contact, {
+    clientX: 30,
+    clientY: 10,
+    pointerType: "mouse",
+  });
   expect(contact.style.getPropertyValue("--press-rotate-x")).toMatch(/deg$/);
   expect(contact.style.getPropertyValue("--press-rotate-y")).toMatch(/deg$/);
 

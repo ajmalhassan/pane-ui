@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:a11y": "playwright test tests/e2e/accessibility.spec.ts",
     "test:e2e": "playwright test tests/e2e/portfolio.spec.ts",

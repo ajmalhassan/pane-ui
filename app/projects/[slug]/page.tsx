@@ -11,7 +11,9 @@ export function generateStaticParams() {
   return projects.map(({ slug }) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: SlugProps): Promise<Metadata> {
   const { slug } = await params;
   const project = getProject(slug);
 

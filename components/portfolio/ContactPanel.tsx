@@ -29,11 +29,7 @@ export function ContactPanel({ open = false, onClose }: Props) {
           >
             {profile.links.linkedin.label}
           </a>
-          <a
-            href={profile.links.github.href}
-            rel="noreferrer"
-            target="_blank"
-          >
+          <a href={profile.links.github.href} rel="noreferrer" target="_blank">
             {profile.links.github.label}
           </a>
         </div>

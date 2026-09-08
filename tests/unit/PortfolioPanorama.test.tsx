@@ -21,7 +21,8 @@ const HEADINGS = {
   photography: "photography",
 } as const;
 
-const REPEATED_HEADING = /^(technical leader \/ builder|projects|blog|photography)$/i;
+const REPEATED_HEADING =
+  /^(technical leader \/ builder|projects|blog|photography)$/i;
 
 function resetUrl() {
   window.history.replaceState(null, "", "/");
@@ -176,10 +177,9 @@ it("restores selection when server query state changes", () => {
     />,
   );
 
-  expect(screen.getByRole("tab", { name: HEADINGS.photography })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  expect(
+    screen.getByRole("tab", { name: HEADINGS.photography }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 it("enhances the contact destination and records a history marker", async () => {

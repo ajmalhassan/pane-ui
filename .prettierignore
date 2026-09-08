@@ -1,3 +1,17 @@
 # Ignore artifacts:
 build
 coverage
+
+# Generated, vendored, or not ours to format:
+node_modules
+.next
+out
+package-lock.json
+*.tsbuildinfo
+# Local SDD and design exploration, git-ignored.
+.superpowers
+
+# The approved specification and its plans. These are signed-off documents
+# rather than source: `format` must not rewrite them, and `format:check` must
+# not report them.
+docs/superpowers

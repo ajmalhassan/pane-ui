@@ -14,7 +14,9 @@ it("offers real public contact destinations without inventing an email", () => {
     "href",
     "https://github.com/ajmalhassan",
   );
-  expect(screen.queryByRole("link", { name: /email/i })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: /email/i }),
+  ).not.toBeInTheDocument();
 });
 
 it("keeps detailed employment chronology on LinkedIn while portfolio review is underway", () => {
@@ -22,8 +24,7 @@ it("keeps detailed employment chronology on LinkedIn while portfolio review is u
   const reviewNote = container.querySelector("aside");
 
   expect(reviewNote).toHaveTextContent(/portfolio content review is complete/i);
-  expect(within(reviewNote as HTMLElement).getByRole("link", { name: /linkedin/i })).toHaveAttribute(
-    "href",
-    "https://www.linkedin.com/in/ajmalhassankn/",
-  );
+  expect(
+    within(reviewNote as HTMLElement).getByRole("link", { name: /linkedin/i }),
+  ).toHaveAttribute("href", "https://www.linkedin.com/in/ajmalhassankn/");
 });

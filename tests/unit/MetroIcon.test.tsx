@@ -52,7 +52,9 @@ it("never falls back to placeholder unicode glyphs", () => {
 it("names a titled standalone icon for assistive technology", () => {
   const { container } = render(<MetroIcon name="mail" title="Contact" />);
 
-  expect(within(container).getByRole("img", { name: "Contact" })).toBeInTheDocument();
+  expect(
+    within(container).getByRole("img", { name: "Contact" }),
+  ).toBeInTheDocument();
 });
 
 it("hides an untitled decorative icon from assistive technology", () => {

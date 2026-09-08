@@ -66,9 +66,8 @@
   --metro-bg-veil: rgba(7, 9, 10, 0.72);
 
   /* Typography: prefer Segoe without distributing proprietary font files. */
-  --metro-font:
-    "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui,
-    -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --metro-font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI",
+    system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --metro-gap-title: 0.5rem; /* 8px under a panorama title */
   --metro-gap-pivot: 0.75rem; /* 12px between pivot headings */
   --metro-gap-section: 2rem; /* 32px between content sections */

@@ -13,7 +13,9 @@
   --command-gap: calc(var(--metro-grid) * 4);
 
   box-sizing: border-box;
-  min-height: calc(var(--metro-appbar-height) + env(safe-area-inset-bottom, 0px));
+  min-height: calc(
+    var(--metro-appbar-height) + env(safe-area-inset-bottom, 0px)
+  );
   display: flex;
   align-items: center;
   justify-content: space-between;

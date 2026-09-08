@@ -238,10 +238,9 @@ test("Next links update pivot history and back/forward restore selected state", 
   page,
 }) => {
   await page.goto("/?view=projects");
-  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    page.getByRole("tab", { name: HEADINGS.projects }),
+  ).toHaveAttribute("aria-selected", "true");
 
   await page.getByRole("tab", { name: HEADINGS.blog }).click();
   await expect(page).toHaveURL(/\?view=blog$/);
@@ -253,10 +252,9 @@ test("Next links update pivot history and back/forward restore selected state", 
 
   await page.goBack();
   await expect(page).toHaveURL(/\?view=projects$/);
-  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    page.getByRole("tab", { name: HEADINGS.projects }),
+  ).toHaveAttribute("aria-selected", "true");
 
   await page.goForward();
   await expect(page).toHaveURL(/\?view=blog$/);
@@ -283,10 +281,9 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
   });
 
   await expect(newPage).toHaveURL(/\?view=projects$/);
-  await expect(newPage.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    newPage.getByRole("tab", { name: HEADINGS.projects }),
+  ).toHaveAttribute("aria-selected", "true");
   await expect(page).toHaveURL(openerUrl);
   await expect(page.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
     "aria-selected",
@@ -328,15 +325,21 @@ test("keyboard reaches pivots, project links, and app-bar actions", async ({
   await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
 });
 
-test("contact follows fragment history and close clears it", async ({ page }) => {
+test("contact follows fragment history and close clears it", async ({
+  page,
+}) => {
   await page.goto("/?view=me");
   await page.getByRole("link", { name: "Contact" }).click();
   await expect(page).toHaveURL(/#contact$/);
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeVisible();
 
   await page.goBack();
   await expect(page).not.toHaveURL(/#contact$/);
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeHidden();
 
   await page.getByRole("link", { name: "Contact" }).click();
   await page.getByRole("button", { name: "Close contact" }).click();
@@ -348,15 +351,18 @@ test("direct fragment load opens contact and close keeps the pivot query", async
   page,
 }) => {
   await page.goto("/?view=projects#contact");
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
-  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("tab", { name: HEADINGS.projects }),
+  ).toHaveAttribute("aria-selected", "true");
 
   await page.getByRole("button", { name: "Close contact" }).click();
   await expect(page).toHaveURL(/\/\?view=projects$/);
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeHidden();
   await expect(page.getByRole("link", { name: "Contact" })).toBeFocused();
 });
 
@@ -372,12 +378,16 @@ test("pivot navigation while contact is open follows the fragment-less URL", asy
 
   await page.getByRole("tab", { name: HEADINGS.projects }).click();
   await expect(page).toHaveURL(/\/\?view=projects$/);
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeHidden();
   await expect(page.getByRole("link", { name: "Contact" })).not.toBeFocused();
 
   await page.goBack();
   await expect(page).toHaveURL(/\/\?view=me#contact$/);
-  await expect(page.getByRole("button", { name: "Close contact" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Close contact" }),
+  ).toBeVisible();
 });
 
 test("arrow keys navigate pivots through their real links", async ({
@@ -388,11 +398,12 @@ test("arrow keys navigate pivots through their real links", async ({
   await page.keyboard.press("ArrowRight");
 
   await expect(page).toHaveURL(/\?view=projects$/);
-  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toBeFocused();
-  await expect(page.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    page.getByRole("tab", { name: HEADINGS.projects }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("tab", { name: HEADINGS.projects }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("every valid pivot keeps exactly one persistent page heading", async ({
@@ -893,16 +904,20 @@ for (const frame of [
     expect(gap, at).toBeGreaterThan(0);
 
     // A 2x2 tile is square, so the grid's rows really are unit-high.
-    expect(Math.abs((large?.width ?? 0) - (large?.height ?? 1)), at)
-      .toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((large?.width ?? 0) - (large?.height ?? 1)),
+      at,
+    ).toBeLessThanOrEqual(1);
     // A 4x2 tile spans three gutters across and one down, so its width is two
     // of its own heights plus the extra gutter -- the 4:2 ratio in a gapped grid.
     expect(
       Math.abs((hero?.width ?? 0) - (2 * (hero?.height ?? 0) + gap)),
       at,
     ).toBeLessThanOrEqual(2);
-    expect(Math.abs((hero?.height ?? 0) - (large?.height ?? 1)), at)
-      .toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((hero?.height ?? 0) - (large?.height ?? 1)),
+      at,
+    ).toBeLessThanOrEqual(1);
   });
 }
 
@@ -1786,9 +1801,7 @@ test("Me animates one restrained waveform and stills it for reduced motion", asy
   expect(stilled.animated).toBe("metroTileFade");
   expect(stilled.transform).toBe("matrix(1, 0, 0, 1, 0, 0)");
   expect((await shiftOf()).shift).toBe(stilled.shift);
-  expect(
-    await page.evaluate(() => document.getAnimations().length),
-  ).toBe(0);
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 
 /*
@@ -2036,9 +2049,9 @@ test("a wide layout ships labelled commands and collapses only on demand", async
   await expect(page.getByRole("link", { name: "Résumé" })).toHaveAccessibleName(
     "Résumé",
   );
-  await expect(page.getByRole("link", { name: "Contact" })).toHaveAccessibleName(
-    "Contact",
-  );
+  await expect(
+    page.getByRole("link", { name: "Contact" }),
+  ).toHaveAccessibleName("Contact");
   expect((await bar.boundingBox())?.height ?? 0).toBeCloseTo(expandedHeight, 1);
 
   await show.click();
@@ -2598,17 +2611,21 @@ const TILE_LIFT_PX = 8;
 const BACKGROUND_ALPHA_CEILING = 0.08;
 
 /** The delay each tile of the active panel is running its entrance on. */
-function entranceDelays(root: Element): { index: string; delay: string; name: string }[] {
-  return [...root.querySelectorAll<HTMLElement>("[data-tile-role]")].map((tile) => {
-    const style = getComputedStyle(tile);
-    return {
-      index: tile.dataset.tileIndex ?? "",
-      // The last item of the list, because the one tile that also drifts a
-      // waveform puts that first: the entrance is what this reads.
-      delay: style.animationDelay.split(", ").at(-1) ?? "",
-      name: style.animationName,
-    };
-  });
+function entranceDelays(
+  root: Element,
+): { index: string; delay: string; name: string }[] {
+  return [...root.querySelectorAll<HTMLElement>("[data-tile-role]")].map(
+    (tile) => {
+      const style = getComputedStyle(tile);
+      return {
+        index: tile.dataset.tileIndex ?? "",
+        // The last item of the list, because the one tile that also drifts a
+        // waveform puts that first: the entrance is what this reads.
+        delay: style.animationDelay.split(", ").at(-1) ?? "",
+        name: style.animationName,
+      };
+    },
+  );
 }
 
 test("tiles arrive staggered by their place in the grid, capped", async ({
@@ -2658,7 +2675,8 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
   expect(meDelays[ASSESSMENT].name).toMatch(/metroTileRise$/);
   // Every other tile runs the entrance alone.
   for (const [index, tile] of meDelays.entries()) {
-    if (index !== ASSESSMENT) expect(tile.name, `tile ${index}`).toBe("metroTileRise");
+    if (index !== ASSESSMENT)
+      expect(tile.name, `tile ${index}`).toBe("metroTileRise");
   }
 
   /*
@@ -2737,9 +2755,7 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
   );
   // The live tile's own claim fade is the one exception, and it is inside a
   // tile rather than beside one.
-  expect(
-    elsewhere.filter((entry) => !/tileClaimIn/.test(entry)),
-  ).toEqual([]);
+  expect(elsewhere.filter((entry) => !/tileClaimIn/.test(entry))).toEqual([]);
 
   // And it settles: an entrance is an arrival, not a state a tile stays in.
   await expect
@@ -2751,7 +2767,9 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
   // Settled means the lift is spent and the tilt's transform is where it was
   // all along: the two properties never touched each other.
   const settled = await projects.evaluate(positions);
-  expect(settled.map((tile) => tile.translate)).toEqual(rising.map(() => "none"));
+  expect(settled.map((tile) => tile.translate)).toEqual(
+    rising.map(() => "none"),
+  );
   expect(settled.map((tile) => tile.transform)).toEqual(
     rising.map((tile) => tile.transform),
   );
@@ -3021,7 +3039,10 @@ for (const frame of [
       expect(ground.cells, `${at} ground cells`).toBeGreaterThan(20);
       if (view === "photography")
         expect(ground.spread, `${at} flat ground`).toBeLessThanOrEqual(2);
-      else expect(ground.spread, `${at} patterned ground`).toBeGreaterThanOrEqual(3);
+      else
+        expect(ground.spread, `${at} patterned ground`).toBeGreaterThanOrEqual(
+          3,
+        );
 
       seen.set(view, { image: layer.image, position: layer.position });
 
@@ -3412,17 +3433,18 @@ test("reduced motion removes every spatial transform and hides no evidence", asy
     expect(
       await page.evaluate(
         () =>
-          getComputedStyle(document.querySelector("main") as HTMLElement, "::before")
-            .transitionProperty,
+          getComputedStyle(
+            document.querySelector("main") as HTMLElement,
+            "::before",
+          ).transitionProperty,
       ),
       at,
     ).toBe("none");
 
     // Nothing at all is animating, on any pivot.
-    expect(
-      await page.evaluate(() => document.getAnimations().length),
-      at,
-    ).toBe(0);
+    expect(await page.evaluate(() => document.getAnimations().length), at).toBe(
+      0,
+    );
   }
 });
 
@@ -3479,7 +3501,10 @@ test("the page still scrolls natively and traps no gesture", async ({
   const locks = await page.evaluate(() => {
     const of = (node: Element) => {
       const style = getComputedStyle(node);
-      return { touchAction: style.touchAction, overscroll: style.overscrollBehavior };
+      return {
+        touchAction: style.touchAction,
+        overscroll: style.overscrollBehavior,
+      };
     };
     return {
       html: of(document.documentElement),
@@ -3529,30 +3554,35 @@ test("a press leans the tile it is on, and the release scale composes with the l
       transform: getComputedStyle(node).transform,
     }));
 
-  const IDENTITY = /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, [-\d.e]+, 0, 0, 0, 1\)$/;
-  expect((await state()).transform, "a tile at rest carries only its perspective").toMatch(
-    IDENTITY,
-  );
+  const IDENTITY =
+    /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, [-\d.e]+, 0, 0, 0, 1\)$/;
+  expect(
+    (await state()).transform,
+    "a tile at rest carries only its perspective",
+  ).toMatch(IDENTITY);
 
   /*
    * Touch parity. A dispatched pointer event rather than `touchscreen.tap`,
    * because the claim is about the pointer TYPE reaching the handler -- and a
    * tap gives no moment in the middle to measure.
    */
-  await tile.evaluate((node, at) => {
-    for (const type of ["pointerover", "pointerenter", "pointerdown"]) {
-      node.dispatchEvent(
-        new PointerEvent(type, {
-          bubbles: true,
-          clientX: at.x,
-          clientY: at.y,
-          isPrimary: true,
-          pointerId: 1,
-          pointerType: "touch",
-        }),
-      );
-    }
-  }, { x: box.x + box.width * 0.75, y: box.y + box.height * 0.25 });
+  await tile.evaluate(
+    (node, at) => {
+      for (const type of ["pointerover", "pointerenter", "pointerdown"]) {
+        node.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            clientX: at.x,
+            clientY: at.y,
+            isPrimary: true,
+            pointerId: 1,
+            pointerType: "touch",
+          }),
+        );
+      }
+    },
+    { x: box.x + box.width * 0.75, y: box.y + box.height * 0.25 },
+  );
   await page.waitForTimeout(250);
 
   const touched = await state();
@@ -3560,9 +3590,10 @@ test("a press leans the tile it is on, and the release scale composes with the l
   // 4-degree intensity, is one degree each -- and both read positive there.
   expect(Number.parseFloat(touched.x)).toBeCloseTo(1, 5);
   expect(Number.parseFloat(touched.y)).toBeCloseTo(1, 5);
-  expect(touched.transform, "a touch press must actually lean the tile").not.toMatch(
-    IDENTITY,
-  );
+  expect(
+    touched.transform,
+    "a touch press must actually lean the tile",
+  ).not.toMatch(IDENTITY);
 
   await tile.evaluate((node) =>
     node.dispatchEvent(
