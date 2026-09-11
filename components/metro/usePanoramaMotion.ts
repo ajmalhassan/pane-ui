@@ -375,8 +375,9 @@ export function usePanoramaMotion({ active, onGestureCommit }: Options) {
         endGesture(event, false),
       onPointerCancel: (event: PointerEvent<HTMLDivElement>) =>
         endGesture(event, true),
-      onLostPointerCapture: (event: PointerEvent<HTMLDivElement>) =>
-        endGesture(event, true),
+      onLostPointerCapture: (event: PointerEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) endGesture(event, true);
+      },
       onClickCapture,
     },
   };

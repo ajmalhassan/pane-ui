@@ -43,6 +43,10 @@ const IDENTITY = "AJMAL / PORTFOLIO";
  * needs.
  */
 async function pivotArrived(page: Page): Promise<void> {
+  await expect(page.locator("[data-panorama]")).toHaveAttribute(
+    "data-motion-state",
+    "idle",
+  );
   await expect
     .poll(
       () =>
@@ -316,11 +320,15 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
     .getByRole("tab", { name: HEADINGS.projects })
     .click({ modifiers: ["ControlOrMeta"] });
   const newPage = await newPagePromise;
+  await newPage.bringToFront();
+  await newPage.waitForLoadState("domcontentloaded");
   await newPage.waitForURL(/\?view=projects$/, {
     waitUntil: "domcontentloaded",
   });
 
-  await expect(newPage).toHaveURL(/\?view=projects$/);
+  await expect
+    .poll(() => newPage.evaluate(() => location.href))
+    .toMatch(/\?view=projects$/);
   await expect(
     newPage.getByRole("tab", { name: HEADINGS.projects }),
   ).toHaveAttribute("aria-selected", "true");
@@ -1058,6 +1066,7 @@ for (const frame of HUB_FRAMES) {
   }) => {
     await page.setViewportSize(frame);
     await page.goto("/?view=blog");
+    await pivotArrived(page);
 
     const at = `${frame.width}px`;
     const panel = page.getByRole("tabpanel", { name: HEADINGS.blog });
@@ -2232,9 +2241,11 @@ test("résumé uses a white page canvas when printed", async ({ page }) => {
    * strip would repeat on every sheet, and a clock is not part of a résumé.
    */
   const chrome = await page.evaluate((identity) => {
-    const line = [...document.querySelectorAll<HTMLElement>("div")].find(
-      (node) => node.textContent?.startsWith(identity),
-    );
+    const line = [
+      ...document.querySelectorAll<HTMLElement>(
+        'main > div[aria-hidden="true"]',
+      ),
+    ].find((node) => node.textContent?.startsWith(identity));
     const bar = document.querySelector('nav[aria-label="Page actions"]');
 
     return {
@@ -2433,9 +2444,11 @@ for (const route of [
     // The application around the document does not print: the status line and
     // the dock take themselves out from their own stylesheets.
     const chrome = await page.evaluate((identity) => {
-      const line = [...document.querySelectorAll<HTMLElement>("div")].find(
-        (node) => node.textContent?.startsWith(identity),
-      );
+      const line = [
+        ...document.querySelectorAll<HTMLElement>(
+          'main > div[aria-hidden="true"]',
+        ),
+      ].find((node) => node.textContent?.startsWith(identity));
       const bar = document.querySelector('nav[aria-label="Page actions"]');
 
       return {
@@ -2511,9 +2524,11 @@ test("the panorama prints as a legible black-on-white sheet", async ({
           const node = document.querySelector(selector);
           return node ? getComputedStyle(node).color : null;
         };
-        const line = [...document.querySelectorAll<HTMLElement>("div")].find(
-          (node) => node.textContent?.startsWith(identity),
-        );
+        const line = [
+          ...document.querySelectorAll<HTMLElement>(
+            'main > div[aria-hidden="true"]',
+          ),
+        ].find((node) => node.textContent?.startsWith(identity));
         const bar = document.querySelector('nav[aria-label="Page actions"]');
         const tiles = [...document.querySelectorAll("[data-tile-role]")];
 
@@ -3232,14 +3247,24 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
     )
     .toBe(0);
 
-  // Settled means the lift is spent and the tilt's transform is where it was
-  // all along: the two properties never touched each other.
+  // Settled means the lift is spent and the entrance never wrote into the
+  // press channel. Chromium may interpolate the perspective coefficient while
+  // a newly painted tile becomes active, so compare every other matrix term:
+  // rotation, scale and translation must remain exactly unchanged.
   const settled = await projects.evaluate(positions);
   expect(settled.map((tile) => tile.translate)).toEqual(
     rising.map(() => "none"),
   );
-  expect(settled.map((tile) => tile.transform)).toEqual(
-    rising.map((tile) => tile.transform),
+  const withoutPerspectiveCoefficient = (transform: string) => {
+    const matrix = transform.match(/^matrix3d\((.+)\)$/)?.[1].split(", ");
+    if (!matrix || matrix.length !== 16) return transform;
+    matrix[11] = "<perspective>";
+    return matrix.join(", ");
+  };
+  expect(
+    settled.map((tile) => withoutPerspectiveCoefficient(tile.transform)),
+  ).toEqual(
+    rising.map((tile) => withoutPerspectiveCoefficient(tile.transform)),
   );
 });
 
@@ -4183,6 +4208,7 @@ test("a press leans the tile it is on, and the release scale composes with the l
       x: node.style.getPropertyValue("--press-rotate-x"),
       y: node.style.getPropertyValue("--press-rotate-y"),
       scale: getComputedStyle(node).getPropertyValue("--press-scale").trim(),
+      translate: getComputedStyle(node).translate,
       transform: getComputedStyle(node).transform,
     }));
 
@@ -4197,12 +4223,16 @@ test("a press leans the tile it is on, and the release scale composes with the l
    * up to 8px off the quadrant whose one-degree lean it then asserts to five
    * decimal places.
    */
+  await pivotArrived(page);
   await expect
-    .poll(async () => (await state()).transform, {
+    .poll(async () => await state(), {
       message: "a tile at rest carries only its perspective",
       timeout: 3_000,
     })
-    .toMatch(AT_REST);
+    .toMatchObject({
+      transform: expect.stringMatching(AT_REST),
+      translate: "none",
+    });
 
   const box = await tile.boundingBox();
   if (!box) throw new Error("the lead project tile has no box to press");
@@ -4254,7 +4284,14 @@ test("a press leans the tile it is on, and the release scale composes with the l
   expect(await state()).toMatchObject({ x: "", y: "" });
 
   // The mouse path, and the composition. Held down, so `:active` applies.
-  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.25);
+  // Read the box again after the touch path so these coordinates describe the
+  // tile's current visual position rather than an earlier animation frame.
+  const mouseBox = await tile.boundingBox();
+  if (!mouseBox) throw new Error("the lead project tile lost its mouse box");
+  await page.mouse.move(
+    mouseBox.x + mouseBox.width * 0.75,
+    mouseBox.y + mouseBox.height * 0.25,
+  );
   await page.waitForTimeout(120);
   const hovered = await state();
   expect(Number.parseFloat(hovered.x)).toBeCloseTo(1, 5);
@@ -4287,7 +4324,7 @@ test("reduced motion leaves a pressed tile with no transform at all", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?view=projects");
-  await page.waitForTimeout(400);
+  await pivotArrived(page);
 
   const tile = page
     .locator('[data-active="true"] [data-tile-role="navigation"]')

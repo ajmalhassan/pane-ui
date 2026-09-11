@@ -185,6 +185,23 @@ it.each(["pointercancel", "lostpointercapture"])(
   },
 );
 
+it("keeps dragging when implicit capture leaves a descendant during handover", () => {
+  const commit = vi.fn();
+  render(<Harness active="projects" commit={commit} />);
+  const tile = screen.getByText("Tile");
+
+  pointer("pointerdown", 300, 0, tile);
+  pointer("pointermove", 180, 0, tile);
+  tick(20);
+  expect(surface()).toHaveAttribute("data-motion-state", "dragging");
+
+  pointer("lostpointercapture", 180, 0, tile);
+  expect(surface()).toHaveAttribute("data-motion-state", "dragging");
+
+  pointer("pointerup", 100);
+  expect(commit).toHaveBeenCalledExactlyOnceWith("blog");
+});
+
 it("commits one adjacent section after accepted drag and keeps vertical intent native", () => {
   const commit = vi.fn();
   render(<Harness active="projects" commit={commit} />);
