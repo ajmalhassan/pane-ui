@@ -4,6 +4,7 @@ import type { MouseEvent, Ref } from "react";
 import { useState } from "react";
 import { MetroIcon, type MetroIconName } from "./MetroIcon";
 import { PRESS_TILT } from "./Pressable";
+import { useProjectTransition } from "./ProjectTransitionProvider";
 import styles from "./AppBar.module.css";
 import hidden from "./visuallyHidden.module.css";
 
@@ -11,6 +12,8 @@ type CommandBase = {
   label: string;
   icon: MetroIconName;
   onSelect?: (event: MouseEvent<HTMLElement>) => void;
+  /** Serializable opt-in for the Projects return coordinator. */
+  projectReturn?: boolean;
 };
 
 /**
@@ -96,6 +99,7 @@ function AppBarCommand({
   action: AppAction;
   clipped: boolean;
 }) {
+  const transition = useProjectTransition();
   const face = (
     <CommandFace clipped={clipped} icon={action.icon} label={action.label} />
   );
@@ -104,6 +108,7 @@ function AppBarCommand({
     return (
       <a
         className={styles.command}
+        data-project-return={action.projectReturn || undefined}
         href={action.href}
         onClick={(event) => {
           if (
@@ -116,6 +121,10 @@ function AppBarCommand({
             return;
           }
 
+          if (action.projectReturn && transition) {
+            event.preventDefault();
+            transition.returnToProjects();
+          }
           action.onSelect?.(event);
         }}
         {...PRESS_TILT}

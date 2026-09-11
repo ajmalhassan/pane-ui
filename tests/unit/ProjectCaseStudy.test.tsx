@@ -79,6 +79,7 @@ it("leaves the way back to the application bar's own command", () => {
 
   expect(back).toHaveAttribute("href", BACK.href);
   expect(back).toHaveAccessibleName(BACK.label);
+  expect(back).toHaveAttribute("data-project-return", "true");
   // A drawn command, not a text arrow: the MetroIcon `back` glyph.
   expect(back.querySelector("svg")).toBeInTheDocument();
   expect(back.closest('nav[aria-label="Page actions"]')).not.toBeNull();
@@ -87,6 +88,19 @@ it("leaves the way back to the application bar's own command", () => {
   // survive: the class that drew its box, and the copy that named it.
   expect(container.querySelector('[class*="returnLink"]')).toBeNull();
   expect(screen.queryByText(/^back to/i)).toBeNull();
+});
+
+it("marks only the project reading column as the route motion surface", () => {
+  const project = getProject("lead-platform")!;
+  const { container } = render(<ProjectCaseStudy project={project} />);
+
+  const reading = container.querySelector("[data-project-reading]");
+  expect(reading).not.toBeNull();
+  expect(reading).toContainElement(
+    screen.getByRole("heading", { level: 1, name: project.title }),
+  );
+  expect(reading?.tagName).toBe("DIV");
+  expect(reading?.closest("main")).not.toHaveAttribute("data-project-reading");
 });
 
 /*

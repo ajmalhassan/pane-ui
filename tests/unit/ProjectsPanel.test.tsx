@@ -19,6 +19,17 @@ it("gives every project exactly one full-tile destination", () => {
   expect(container.querySelector("button")).toBeNull();
 });
 
+it("keeps project tiles as the grid's direct children while opting them into route motion", () => {
+  const { container } = render(<ProjectsPanel projects={projects} />);
+  const grid = container.querySelector("[data-tile-grid]");
+
+  expect(grid?.children).toHaveLength(projects.length);
+  for (const tile of grid?.children ?? []) {
+    expect(tile).toHaveAttribute("data-project-tile", "true");
+    expect(tile).toHaveAttribute("data-tile-role", "navigation");
+  }
+});
+
 /*
  * The panel used to pair a full-tile flip button with a separately positioned
  * "View <project>" link -- two owners over one rectangle, and the collision

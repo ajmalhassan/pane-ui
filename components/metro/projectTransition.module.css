@@ -1,0 +1,14 @@
+.root {
+  display: contents;
+}
+
+.root :global([data-pivot="projects"]) :global([data-tile-grid]) {
+  perspective: 80rem;
+}
+
+.root :global([data-project-tile]),
+.root :global([data-project-reading]) {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}

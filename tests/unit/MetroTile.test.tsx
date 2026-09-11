@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
 import { MetroTile, tileTextClass } from "@/components/metro/MetroTile";
 import styles from "@/components/metro/MetroTile.module.css";
 
@@ -108,6 +109,50 @@ function renderLive(props: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("navigation tiles", () => {
+  it("supplies its rendered anchor separately to an opted-in navigation callback", () => {
+    const onNavigate = vi.fn();
+    render(
+      <RouterContext.Provider
+        value={
+          {
+            asPath: "/?view=projects",
+            back: vi.fn(),
+            basePath: "",
+            beforePopState: vi.fn(),
+            events: { emit: vi.fn(), off: vi.fn(), on: vi.fn() },
+            forward: vi.fn(),
+            isFallback: false,
+            isLocaleDomain: false,
+            isPreview: false,
+            isReady: true,
+            pathname: "/",
+            prefetch: vi.fn().mockResolvedValue(undefined),
+            push: vi.fn().mockResolvedValue(true),
+            query: {},
+            reload: vi.fn(),
+            replace: vi.fn().mockResolvedValue(true),
+            route: "/",
+          } as never
+        }
+      >
+        <MetroTile
+          href="/projects/metro-revival"
+          label="Lumia Metro Revival"
+          onNavigate={onNavigate}
+          role="navigation"
+        >
+          <strong>Lumia Metro Revival</strong>
+        </MetroTile>
+      </RouterContext.Provider>,
+    );
+
+    const link = screen.getByRole("link");
+    fireEvent.click(link);
+
+    expect(onNavigate).toHaveBeenCalledOnce();
+    expect(onNavigate.mock.calls[0]?.[1]).toBe(link);
+  });
+
   it("makes the whole tile the one link to its destination", () => {
     const { container } = render(
       <MetroTile

@@ -77,6 +77,25 @@ it("enhances ordinary href clicks without intercepting modified clicks", () => {
   expect(onSelect).toHaveBeenCalledOnce();
 });
 
+it("keeps project return intent as serializable link metadata", () => {
+  render(
+    <AppBar
+      actions={[
+        {
+          label: "Projects",
+          href: "/?view=projects",
+          icon: "back",
+          projectReturn: true,
+        },
+      ]}
+    />,
+  );
+
+  const projects = screen.getByRole("link", { name: "Projects" });
+  expect(projects).toHaveAttribute("href", "/?view=projects");
+  expect(projects).toHaveAttribute("data-project-return", "true");
+});
+
 it("renders every command with a production SVG icon and no unicode placeholder", () => {
   const { container } = render(<AppBar actions={PRIMARY} />);
   const bar = within(container);

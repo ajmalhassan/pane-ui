@@ -1,4 +1,7 @@
+"use client";
+
 import { MetroTile, TileGrid, tileTextClass } from "@/components/metro";
+import { useProjectTransition } from "@/components/metro/ProjectTransitionProvider";
 import type { Project } from "@/lib/content/projects";
 import styles from "./PortfolioPanorama.module.css";
 
@@ -24,6 +27,8 @@ type Props = {
  * decided here: the grid places tiles in DOM order, which is content order.
  */
 export function ProjectsPanel({ projects }: Props) {
+  const transition = useProjectTransition();
+
   return (
     <div className={styles.panelContent}>
       <TileGrid>
@@ -33,6 +38,15 @@ export function ProjectsPanel({ projects }: Props) {
             href={`/projects/${project.slug}`}
             key={project.slug}
             label={project.tileLabel}
+            onNavigate={
+              transition
+                ? (event, source) => {
+                    event.preventDefault();
+                    transition.openProject(`/projects/${project.slug}`, source);
+                  }
+                : undefined
+            }
+            projectMotion
             role={project.tileRole}
             size={project.tileSize}
           >

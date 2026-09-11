@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { PRESS_TILT, Pressable } from "./Pressable";
 import type { TileSize } from "./types";
 import { useDocumentVisible } from "./useDocumentVisible";
@@ -77,6 +83,11 @@ export type NavigationTileProps = BaseTileProps & {
   role: "navigation";
   href: string;
   children: ReactNode;
+  onNavigate?: (
+    event: { preventDefault(): void },
+    source: HTMLAnchorElement,
+  ) => void;
+  projectMotion?: boolean;
 };
 
 export type RevealTileProps = BaseTileProps & {
@@ -258,14 +269,27 @@ function NavigationShell({
   index,
   label,
   media,
+  onNavigate,
+  projectMotion,
   size = "small",
 }: NavigationTileProps): ReactNode {
+  const anchorRef = useRef<HTMLAnchorElement>(null);
+
   return (
     <Link
       className={rootClass(size, accent, styles.navigation, className)}
       data-tile-role="navigation"
       data-tile-size={size}
       href={href}
+      onNavigate={
+        onNavigate
+          ? (event) => {
+              if (anchorRef.current) onNavigate(event, anchorRef.current);
+            }
+          : undefined
+      }
+      ref={anchorRef}
+      {...(projectMotion ? { "data-project-tile": "true" } : {})}
       {...tilePlace(index)}
       {...PRESS_TILT}
     >

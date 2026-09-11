@@ -39,6 +39,8 @@ const CONTACT: AppAction = {
 
 type Props = {
   back: BackCommand;
+  /** Marks the existing reading column and its serializable return command. */
+  projectReading?: boolean;
   /**
    * Whether the résumé is offered as a command. Every detail surface offers it
    * except the résumé itself, which would be a command pointing at the page the
@@ -68,15 +70,30 @@ type Props = {
  * exports the panorama's client components, and a server-rendered document has
  * no use for a tile grid in its bundle.
  */
-export function DetailSurface({ back, showResume = true, children }: Props) {
+export function DetailSurface({
+  back,
+  projectReading = false,
+  showResume = true,
+  children,
+}: Props) {
   return (
     <main className={styles.page}>
       <StatusBar label={APP_IDENTITY} />
-      <div className={styles.column}>{children}</div>
+      <div
+        className={styles.column}
+        {...(projectReading ? { "data-project-reading": "true" } : {})}
+      >
+        {children}
+      </div>
       <AppBarDock>
         <AppBar
           actions={[
-            { label: back.label, href: back.href, icon: "back" },
+            {
+              label: back.label,
+              href: back.href,
+              icon: "back",
+              projectReturn: projectReading,
+            },
             ...(showResume ? [RESUME] : []),
             CONTACT,
           ]}

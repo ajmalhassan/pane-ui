@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProjectTransitionProvider } from "@/components/metro/ProjectTransitionProvider";
 
 import "./globals.css";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ProjectTransitionProvider>{children}</ProjectTransitionProvider>
+      </body>
     </html>
   );
 }

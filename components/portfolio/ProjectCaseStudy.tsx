@@ -18,10 +18,15 @@ function formatStatus(status: Project["status"]) {
 
 export function ProjectCaseStudy({ project }: Props) {
   return (
-    <DetailSurface back={{ label: "Projects", href: "/?view=projects" }}>
+    <DetailSurface
+      back={{ label: "Projects", href: "/?view=projects" }}
+      projectReading
+    >
       <header className={detail.header}>
         <p className={detail.marker}>Status: {formatStatus(project.status)}</p>
-        <h1 className={detail.title}>{project.title}</h1>
+        <h1 className={detail.title} tabIndex={-1}>
+          {project.title}
+        </h1>
         <p className={detail.summary}>{project.summary}</p>
         {/* The one approved number this project is allowed to claim, at the
             size the claim deserves. Most case studies have none. */}
