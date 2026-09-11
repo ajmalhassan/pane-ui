@@ -93,6 +93,21 @@ test("native touch capture handover commits one adjacent pivot and one history e
   expect(await page.evaluate(() => history.length)).toBe(before + 1);
 });
 
+test("a native short touch drag settles without adding history", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 851 });
+  await page.goto("/?view=projects");
+  await panoramaReady(page);
+  const before = await page.evaluate(() => history.length);
+
+  await nativeTouch(page, { x: 300, y: 270 }, { x: 282, y: 270 });
+
+  await panoramaReady(page);
+  await expect(page).toHaveURL(/\?view=projects$/);
+  expect(await page.evaluate(() => history.length)).toBe(before);
+});
+
 test("a short horizontal drag settles without navigating", async ({ page }) => {
   await page.goto("/?view=projects");
   await panoramaReady(page);

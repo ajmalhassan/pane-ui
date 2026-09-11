@@ -329,9 +329,23 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
   await expect
     .poll(() => newPage.evaluate(() => location.href))
     .toMatch(/\?view=projects$/);
-  await expect(
-    newPage.getByRole("tab", { name: HEADINGS.projects }),
-  ).toHaveAttribute("aria-selected", "true");
+  await expect
+    .poll(() =>
+      newPage.evaluate((name) => {
+        const tab = [
+          ...document.querySelectorAll<HTMLElement>('[role="tab"]'),
+        ].find((candidate) => candidate.textContent?.trim() === name);
+        const panel = document.querySelector<HTMLElement>(
+          '[role="tabpanel"][data-pivot="projects"]',
+        );
+
+        return {
+          tabSelected: tab?.getAttribute("aria-selected") ?? null,
+          panelHidden: panel?.getAttribute("aria-hidden") ?? null,
+        };
+      }, HEADINGS.projects),
+    )
+    .toEqual({ tabSelected: "true", panelHidden: "false" });
   await expect(page).toHaveURL(openerUrl);
   await expect(page.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
     "aria-selected",
