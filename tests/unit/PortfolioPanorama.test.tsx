@@ -380,3 +380,151 @@ it("keeps the two Me evidence tiles a phase apart", () => {
     vi.useRealTimers();
   }
 });
+
+it("keeps real outgoing panels painted but inaccessible while a heading selection settles", () => {
+  const geometry = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      width: 400,
+      height: 600,
+      right: 400,
+      bottom: 600,
+      toJSON: () => ({}),
+    });
+  try {
+    render(
+      <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: HEADINGS.projects }));
+    expect(document.querySelector("[data-panorama]")).toHaveAttribute(
+      "data-motion-state",
+      "settling",
+    );
+    const outgoing = document.getElementById("pivot-panel-me");
+    expect(outgoing).toHaveAttribute("data-painted", "true");
+    expect(outgoing).toHaveAttribute("inert");
+    expect(outgoing).toHaveAttribute("aria-hidden", "true");
+    expect(outgoing?.style.height).not.toBe("0px");
+    expect(screen.getAllByRole("tab")[0]).toHaveAttribute("id", "pivot-tab-me");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+      "projects",
+    );
+    expect(document.querySelectorAll("#pivot-tab-me")).toHaveLength(1);
+  } finally {
+    geometry.mockRestore();
+  }
+});
+
+it("synchronizes a cancelled optimistic selection with native Back navigation", () => {
+  render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  fireEvent.click(screen.getByRole("tab", { name: HEADINGS.projects }));
+  expect(screen.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  window.history.replaceState(null, "", "/?view=blog");
+  fireEvent(window, new PopStateEvent("popstate"));
+  expect(screen.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+it("ignores an obsolete route response after a second heading selection", () => {
+  const { rerender } = render(
+    <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+  );
+  fireEvent.click(screen.getByRole("tab", { name: HEADINGS.projects }));
+  fireEvent.click(screen.getByRole("tab", { name: HEADINGS.blog }));
+  rerender(
+    <PortfolioPanorama
+      initialPivot="projects"
+      projects={projects}
+      posts={[]}
+    />,
+  );
+  expect(screen.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  rerender(
+    <PortfolioPanorama initialPivot="blog" projects={projects} posts={[]} />,
+  );
+  expect(screen.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+it("restores the canonical tab when a requested route never commits", () => {
+  vi.useFakeTimers();
+  try {
+    render(
+      <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: HEADINGS.projects }));
+    act(() => vi.advanceTimersByTime(1500));
+    expect(screen.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("routes an accepted swipe through exactly one existing Next tab link activation", () => {
+  const geometry = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      width: 400,
+      height: 600,
+      right: 400,
+      bottom: 600,
+      toJSON: () => ({}),
+    });
+  try {
+    render(
+      <PortfolioPanorama initialPivot="me" projects={projects} posts={[]} />,
+    );
+    const tab = screen.getByRole("tab", { name: HEADINGS.projects });
+    const activation = vi.fn();
+    tab.addEventListener("click", (event) => {
+      event.preventDefault();
+      activation();
+    });
+    const surface = document.querySelector("[data-panorama-surface]")!;
+    for (const [type, x] of [
+      ["pointerdown", 300],
+      ["pointermove", 150],
+      ["pointerup", 150],
+    ] as const) {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientX: x,
+      });
+      Object.defineProperties(event, {
+        pointerId: { value: 1 },
+        isPrimary: { value: true },
+        pointerType: { value: "touch" },
+      });
+      fireEvent(surface, event);
+    }
+    expect(activation).toHaveBeenCalledOnce();
+    expect(tab).toHaveAttribute("href", "/?view=projects");
+    expect(tab).toHaveAttribute("aria-selected", "true");
+  } finally {
+    geometry.mockRestore();
+  }
+});

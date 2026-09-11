@@ -13,17 +13,20 @@ import {
   pivotTabId,
   type PivotId,
 } from "@/lib/content/pivots";
+import type { PanoramaMotion } from "./usePanoramaMotion";
 import styles from "./Panorama.module.css";
 
 type Props = {
   active: PivotId;
   navigation?: ReactNode;
+  motion?: PanoramaMotion;
   children: ReactNode;
 };
 
 type PanelProps = HTMLAttributes<HTMLElement> & {
   "data-pivot": PivotId;
   "data-active"?: "true" | "false";
+  "data-painted"?: "true" | "false";
 };
 
 type PanoramaStyle = CSSProperties & {
@@ -46,7 +49,7 @@ function assertPanels(children: ReactNode) {
   }
 }
 
-export function Panorama({ active, navigation, children }: Props) {
+export function Panorama({ active, navigation, children, motion }: Props) {
   if (process.env.NODE_ENV !== "production") assertPanels(children);
 
   const panoramaStyle: PanoramaStyle = {
@@ -54,19 +57,32 @@ export function Panorama({ active, navigation, children }: Props) {
   };
 
   return (
-    <div className={styles.panorama} data-panorama style={panoramaStyle}>
+    <div
+      className={styles.panorama}
+      data-panorama
+      data-motion-state={motion?.phase ?? "idle"}
+      style={panoramaStyle}
+    >
       {navigation}
-      <div className={styles.plane}>
+      <div
+        className={styles.plane}
+        data-panorama-surface
+        data-motion-ready={motion?.ready ?? false}
+        ref={motion?.surfaceRef}
+        {...motion?.handlers}
+      >
         {Children.map(children, (child) => {
           if (!isValidElement<PanelProps>(child) || child.type !== "section")
             return child;
 
           const pivot = child.props["data-pivot"];
           const isActive = pivot === active;
+          const isPainted =
+            isActive || (motion?.visualPivots.includes(pivot) ?? false);
           const className = [styles.panel, child.props.className]
             .filter(Boolean)
             .join(" ");
-          const panelStyle = isActive
+          const panelStyle = isPainted
             ? child.props.style
             : { ...child.props.style, height: 0, overflow: "hidden" };
 
@@ -74,6 +90,7 @@ export function Panorama({ active, navigation, children }: Props) {
             "aria-hidden": !isActive,
             "aria-labelledby": pivotTabId(pivot),
             "data-active": isActive ? "true" : "false",
+            "data-painted": isPainted ? "true" : "false",
             className,
             id: pivotPanelId(pivot),
             inert: !isActive,

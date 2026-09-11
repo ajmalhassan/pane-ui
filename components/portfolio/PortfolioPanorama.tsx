@@ -20,7 +20,13 @@ import {
 } from "@/components/metro";
 import type { PostSummary } from "@/lib/content/posts";
 import type { Project } from "@/lib/content/projects";
-import { pivotIndex, type PivotId } from "@/lib/content/pivots";
+import {
+  parsePivot,
+  pivotIndex,
+  pivotTabId,
+  type PivotId,
+} from "@/lib/content/pivots";
+import { usePanoramaMotion } from "@/components/metro/usePanoramaMotion";
 import { BioPanel } from "./BioPanel";
 import { BlogPanel } from "./BlogPanel";
 import { ContactPanel } from "./ContactPanel";
@@ -80,9 +86,67 @@ export function PortfolioPanorama({
     contactRef.current?.focus();
   }, []);
 
+  // One Next Link owns every canonical pivot navigation, including a swipe.
+  // Pending selections provide immediate semantics without letting an earlier
+  // route response overwrite a newer tab click.
+  const pendingPivot = useRef<PivotId | null>(null);
+  const obsoletePivots = useRef(new Set<PivotId>());
+  const rollbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearPending = useCallback(() => {
+    pendingPivot.current = null;
+    obsoletePivots.current.clear();
+    if (rollbackTimer.current !== null) clearTimeout(rollbackTimer.current);
+    rollbackTimer.current = null;
+  }, []);
+  const motion = usePanoramaMotion({
+    active,
+    onGestureCommit: (id) => document.getElementById(pivotTabId(id))?.click(),
+  });
+
+  function selectPivot(id: PivotId) {
+    if (pendingPivot.current) obsoletePivots.current.add(pendingPivot.current);
+    pendingPivot.current = id;
+    motion.select(id);
+    setActive(id);
+    if (rollbackTimer.current !== null) clearTimeout(rollbackTimer.current);
+    // A cancelled/failed router transition produces no pathname commit. Fall
+    // back to the real URL instead of leaving an optimistic tab stuck forever.
+    rollbackTimer.current = setTimeout(() => {
+      clearPending();
+      setActive(
+        parsePivot(
+          new URLSearchParams(window.location.search).get("view") ?? undefined,
+        ),
+      );
+    }, 1500);
+  }
+
   useEffect(() => {
+    if (
+      pendingPivot.current &&
+      initialPivot !== pendingPivot.current &&
+      obsoletePivots.current.has(initialPivot)
+    )
+      return;
+    clearPending();
     setActive(initialPivot);
-  }, [initialPivot]);
+  }, [initialPivot, clearPending]);
+
+  useEffect(() => {
+    const traverse = () => {
+      clearPending();
+      setActive(
+        parsePivot(
+          new URLSearchParams(window.location.search).get("view") ?? undefined,
+        ),
+      );
+    };
+    window.addEventListener("popstate", traverse);
+    return () => {
+      window.removeEventListener("popstate", traverse);
+      clearPending();
+    };
+  }, [clearPending]);
 
   const syncContact = useCallback(() => {
     const open = contactIsOpen();
@@ -166,14 +230,21 @@ export function PortfolioPanorama({
      */
     <main
       className={styles.shell}
+      ref={motion.shellRef}
       data-active-pivot={active}
       style={shellStyle}
     >
       <StatusBar label={APP_IDENTITY} />
       <Panorama
         active={active}
+        motion={motion}
         navigation={
-          <PanoramaNav active={active} onSelect={setActive} options={PIVOTS} />
+          <PanoramaNav
+            active={active}
+            onSelect={selectPivot}
+            options={PIVOTS}
+            motion={motion}
+          />
         }
       >
         <section data-pivot="me">

@@ -56,15 +56,14 @@
   inset: 0;
   pointer-events: none;
   /*
-   * The shared ground shifts a little with the panorama's own position: 1.5vw
-   * per pivot, against patterns whose cells are 88px and a quarter of the
-   * viewport. It is parallax by a hair -- enough that moving between pivots
-   * moves the world behind them, far too little to read as a second slide
-   * competing with the plane's.
+   * The controller gives the ground the same continuous position as the
+   * content, travelling at 10vw per section. Only this background moves; the
+   * main shell remains a stable ancestor of the fixed commands and overlay.
    */
-  background-position: calc(var(--panorama-index, 0) * -1.5vw) 0;
-  transition: background-position var(--metro-duration-base)
-    var(--metro-ease-standard);
+  background-position: calc(
+      var(--panorama-position, var(--panorama-index, 0)) * -10vw
+    )
+    0;
 }
 
 /*

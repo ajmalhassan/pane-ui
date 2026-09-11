@@ -22,14 +22,19 @@
   /* The fallback is parity with `PortfolioPanorama.module.css`'s own
      `var(--panorama-index, 0)`: an unset custom property makes the whole
      `calc()` invalid at computed-value time, which drops the transform. */
-  transform: translate3d(calc(var(--panorama-index, 0) * -100%), 0, 0);
-  transition: transform var(--metro-duration-base) var(--metro-ease-standard);
+  transform: translate3d(
+    calc(var(--panorama-position, var(--panorama-index, 0)) * -100%),
+    0,
+    0
+  );
+  touch-action: pan-y pinch-zoom;
   will-change: transform;
 }
 
 .panel {
   flex: 0 0 100%;
   min-width: 0;
+  align-self: flex-start;
   visibility: hidden;
   pointer-events: none;
 }
@@ -86,4 +91,28 @@
   .panel {
     grid-area: 1 / 1;
   }
+}
+
+/* Painting is independent of semantics; outgoing panels stay inert. */
+.panel[data-painted="true"] {
+  visibility: visible;
+}
+
+@media print {
+  .plane {
+    display: grid;
+    transform: none;
+    min-height: 0 !important;
+  }
+  .panel {
+    grid-area: 1 / 1;
+  }
+  .panel[data-active="false"] {
+    display: none;
+  }
+}
+
+.panorama[data-motion-state="dragging"] .plane {
+  user-select: none;
+  -webkit-user-select: none;
 }

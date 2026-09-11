@@ -94,3 +94,19 @@ it("leaves the page heading to the navigation it renders", () => {
     screen.getByRole("navigation", { name: "Portfolio sections" }),
   ).toBeInTheDocument();
 });
+
+it("exposes an idle motion lifecycle for direct and server renders", () => {
+  const { container } = render(
+    <Panorama active="me">
+      <section data-pivot="me">Bio</section>
+      <section data-pivot="projects">Projects</section>
+      <section data-pivot="blog">Blog</section>
+      <section data-pivot="photography">Photography</section>
+    </Panorama>,
+  );
+  expect(container.firstElementChild).toHaveAttribute(
+    "data-motion-state",
+    "idle",
+  );
+  expect(screen.getByText("Bio")).toHaveAttribute("data-painted", "true");
+});

@@ -15,6 +15,7 @@ import {
   pivotTabId,
   type PivotId,
 } from "@/lib/content/pivots";
+import type { PanoramaMotion } from "./usePanoramaMotion";
 import styles from "./PanoramaNav.module.css";
 
 export type PivotOption = {
@@ -26,18 +27,21 @@ type Props = {
   active: PivotId;
   options: readonly PivotOption[];
   onSelect: (id: PivotId) => void;
+  motion?: PanoramaMotion;
 };
 
-export function PanoramaNav({ active, options, onSelect }: Props) {
-  const trackRef = useRef<HTMLSpanElement>(null);
+export function PanoramaNav({ active, options, onSelect, motion }: Props) {
+  const localTrackRef = useRef<HTMLSpanElement>(null);
+  const trackRef = motion?.headingTrackRef ?? localTrackRef;
   const activeIndex = Math.max(
-    options.findIndex((option) => option.id === active),
+    options.findIndex(
+      (option) => option.id === (motion?.headingPivot ?? active),
+    ),
     0,
   );
-  // The selected heading leads and the rest follow cyclically, the way a
-  // Windows Phone pivot header wraps. Ordering in the markup rather than with
-  // a measured transform keeps the server response, the no-JavaScript page,
-  // and the sequential tab order all showing the same thing.
+  // At rest the selected heading leads in the actual markup, including SSR.
+  // During motion the controller positions these same links from measured
+  // geometry and defers this reorder until its final frame.
   const ordered = [
     ...options.slice(activeIndex),
     ...options.slice(0, activeIndex),
@@ -46,8 +50,9 @@ export function PanoramaNav({ active, options, onSelect }: Props) {
   // A keyboard walk scrolls the track sideways to reach the clipped headings,
   // so the selected one leads again as soon as the selection moves on.
   useEffect(() => {
+    if (motion && motion.phase !== "idle") return;
     if (trackRef.current) trackRef.current.scrollLeft = 0;
-  }, [active]);
+  }, [active, motion, trackRef]);
 
   // ...and as soon as focus leaves the headings behind.
   function restoreTrack(event: FocusEvent<HTMLElement>) {
@@ -58,6 +63,7 @@ export function PanoramaNav({ active, options, onSelect }: Props) {
   // Chrome declines to scroll a focused element into view inside a clipped
   // track, so a keyboard walk past the visible headings asks for it directly.
   function revealTab(event: FocusEvent<HTMLAnchorElement>) {
+    if (motion && motion.phase !== "idle") return;
     event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
@@ -119,8 +125,8 @@ export function PanoramaNav({ active, options, onSelect }: Props) {
                 aria-controls={pivotPanelId(option.id)}
                 aria-selected={option.id === active}
                 className={styles.tab}
-                // The heading immediately after the selected one is the peek
-                // beyond the right edge; Phase 3 hangs its motion off this hook.
+                // Keep the next heading as the visible navigation hint.
+                data-heading-pivot={option.id}
                 data-peek={position === 1 ? "true" : undefined}
                 href={pivotHref(option.id)}
                 id={pivotTabId(option.id)}

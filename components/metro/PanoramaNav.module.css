@@ -36,7 +36,7 @@
   /* A real scroll container rather than `clip`, so the component can bring a
      focused heading into view instead of leaving a keyboard user pointed at
      something they cannot read. */
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .tab {
@@ -82,5 +82,11 @@
   .tab,
   .tab[aria-selected="true"] {
     color: #000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .tab {
+    transform: none !important;
   }
 }
