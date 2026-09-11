@@ -98,9 +98,10 @@ npm run typecheck
 **Interfaces:**
 - Consumes canonical project hrefs and Task 1's idle/selected DOM markers.
 - Produces persistent context with `openProject(href: string, source: HTMLElement): void` and `returnToProjects(): void`, plus `idle|exiting|navigating|entering` state.
-- `MetroTile` navigation role accepts an optional typed `onNavigate` callback compatible with installed Next `Link`; unchanged callers need no provider.
+- `MetroTile` navigation role accepts optional `onNavigate(event: { preventDefault(): void }, source: HTMLAnchorElement): void`; its NavigationShell supplies its own anchor ref because Next's event has no `currentTarget`. Unchanged callers need no provider. Preserve direct MetroTile children of TileGrid.
 - Add a serializable optional project-return intent to `AppAction`, used only by project DetailSurface. Do not send client callbacks from server components.
 - Root layout remains a server component wrapping children in the provider. Route server files remain unchanged.
+- Mark the existing project detail column with `data-project-reading`, through serializable project-only DetailSurface metadata; never animate generic main or the provider wrapper.
 
 - [ ] Write tests for normal project interception versus modified/middle clicks, missing-provider fallback, direct-entry return, cancellation and reduced motion. Use the real component boundary and a controlled animation adapter; mock routing only at Next's boundary.
 
@@ -118,6 +119,8 @@ npm run typecheck
 - [ ] Animate project tiles with 220ms turnstile exit, 20ms stagger capped at 100ms, selected tile last; animate incoming reading column for 260ms. Use independent wrappers/channels so hover tilt and tile entrance do not override route motion. Keep app-bar geometry fixed.
 - [ ] Opt project tiles into the coordinator through a real Next Link navigation callback. Preserve native href, prefetch, keyboard activation, no-JavaScript and modified-click paths. Missing WAAPI/reduced motion must navigate immediately.
 - [ ] Implement project-only back intent in existing AppBar/DetailSurface. Save actual origin URL, project href, scroll and focus. Use router.back only for a known immediate origin; use the real fallback otherwise. Observe native traversal without reversing it. Restore source scroll and focus after the panorama is idle; do not mutate Next private history state.
+- [ ] Keep immediate-origin eligibility separate from the snapshot. Establish eligibility only after the coordinator's own push commits, invalidate on native traversal, unrelated navigation, query/hash changes and reload. Preserve snapshot for native Back restoration. Cancel pending exits upon unrelated link activation without preventing that navigation. Observe query changes through a small Suspense-wrapped observer if using useSearchParams.
+- [ ] Implement app-command return as detail-column exit followed by Projects tile entrance. Native Back skips the exit and animates only arrival. Restore scroll before entrance and focus after panorama idle. Add cases for query/hash interruption, stale completion after unrelated navigation, and browser Forward followed by Projects command fallback.
 - [ ] Run focused unit tests, then the full unit suite once and typecheck:
 
 ```bash
@@ -140,7 +143,7 @@ npm run typecheck
 await expect(page.locator("[data-panorama]")).toHaveAttribute("data-motion-state", "idle");
 ```
 
-- [ ] Replace only the panorama's obsolete `touch-action:auto` assertion with `pan-y pinch-zoom`; retain root `auto`, actual vertical scrolling, no cancelling wheel/touch listeners, and existing reduced-motion semantics.
+- [ ] Check `pan-y pinch-zoom` on `[data-panorama-surface]`, the actual gesture surface; retain `auto` on html/body/main and the outer panorama, actual vertical scrolling, no cancelling wheel/touch listeners, and existing reduced-motion semantics.
 - [ ] Add independent browser cases for committed swipe (+1 history entry), short drag (no entry), drag-origin link suppression, vertical movement, finite edges, interruption by a second navigation, cancel/lost capture, resize, reduced-motion toggle, project ordinary/keyboard activation, return with scroll/focus, direct-entry fallback and browser Back/Forward.
 
 ```ts
@@ -150,10 +153,12 @@ test("a short horizontal drag settles without navigating", async ({ page }) => {
   await expect(surface).toHaveAttribute("data-motion-state", "idle");
   const before = await page.evaluate(() => history.length);
   const box = await surface.boundingBox();
-  if (!box) throw new Error("Panorama has no geometry");
-  await page.mouse.move(box.x + box.width / 2, box.y + 20);
+  const panel = await page.locator('[data-pivot="projects"]').boundingBox();
+  if (!box || !panel) throw new Error("Panorama has no geometry");
+  const y = panel.y + 20;
+  await page.mouse.move(box.x + box.width / 2, y);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 - 18, box.y + 20, { steps: 5 });
+  await page.mouse.move(box.x + box.width / 2 - 18, y, { steps: 5 });
   await page.mouse.up();
   await expect(surface).toHaveAttribute("data-motion-state", "idle");
   await expect(page).toHaveURL(/view=projects/);

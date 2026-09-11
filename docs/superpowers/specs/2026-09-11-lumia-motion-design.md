@@ -45,6 +45,10 @@ The coordinator states are `idle → exiting → navigating → entering → idl
 
 Capture the actual origin URL, selected project href, and scroll position. An opted-in project back command traverses to a known immediate origin; a direct-entry detail falls back to its real `/?view=projects` link. Browser Back/Forward may trigger an entrance after navigation; do not block or undo native traversal. Restore the source scroll and tile focus on return after panorama layout is stable. Normal opening focuses the detail H1 without an additional scroll jump. Direct loads/reloads require no source snapshot and are readable immediately.
 
+Immediate-origin eligibility is distinct from a restoration snapshot. Establish it only after the coordinator's own push commits without intervening navigation; invalidate it on native traversal, unrelated navigation, query/hash change, or reload. Preserve the snapshot for focus restoration after native Back. On app-command return, animate the project reading column out, then Projects tiles in; native Back skips outgoing exit and may animate only the arriving surface. Restore scroll before the return entrance and focus after settlement.
+
+Use a project-only `data-project-reading` marker on the existing detail column. Keep direct MetroTile children of TileGrid. Next Link's navigation event supplies no source element: the optional callback receives the anchor via its own ref as a separate argument. Observe query/hash changes for cancellation without adding an unsuspended root `useSearchParams` dependency; unrelated ordinary links must remain native to their existing navigation system.
+
 ## Validation and visual judgement
 
 Run targeted controller/component tests before the full gates. Browser assertions must wait for motion state and actual completion, not guessed sleeps. Prove an interrupted transition, accepted/cancelled drag, drag beginning on a link, native vertical scrolling, finite edges, URL history, project opening/return, reduced motion, and direct routes.
