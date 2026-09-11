@@ -295,6 +295,16 @@ export function ProjectTransitionProvider({
       }
     }
 
+    if (
+      stateRef.current !== "idle" ||
+      activeMotion.current ||
+      layoutWait.current
+    ) {
+      cancelTransition();
+      immediateOrigin.current = null;
+      return;
+    }
+
     const adjacency = immediateOrigin.current;
     if (adjacency && !sameUrl(url, adjacency.detailUrl))
       immediateOrigin.current = null;
@@ -432,6 +442,12 @@ export function ProjectTransitionProvider({
       return;
     }
 
+    if (stateRef.current === "navigating") {
+      clearWatchdog();
+      clearMotion(false);
+      return;
+    }
+
     if (stateRef.current !== "entering") return;
     const destination = entering.current;
     const runId = ++generation.current;
@@ -504,7 +520,13 @@ export function ProjectTransitionProvider({
       const expected = pending.current?.destination;
       if (expected && sameUrl(anchor.href, expected)) return;
       immediateOrigin.current = null;
-      if (pending.current) cancelTransition();
+      if (
+        pending.current ||
+        stateRef.current !== "idle" ||
+        activeMotion.current ||
+        layoutWait.current
+      )
+        cancelTransition();
     };
 
     window.addEventListener("popstate", traverse);

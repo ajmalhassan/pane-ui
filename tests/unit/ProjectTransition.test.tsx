@@ -18,6 +18,7 @@ import { projects } from "@/lib/content/projects";
 const navigation = vi.hoisted(() => ({
   pathname: "/",
   search: "view=projects",
+  panoramaReady: true,
   back: vi.fn(),
   push: vi.fn(),
 }));
@@ -136,7 +137,10 @@ function setReducedMotion(reduced: boolean) {
 function Home() {
   return (
     <div data-panorama data-motion-state="idle">
-      <div data-motion-ready="true" data-panorama-surface>
+      <div
+        data-motion-ready={navigation.panoramaReady ? "true" : "false"}
+        data-panorama-surface
+      >
         <section data-active="true" data-pivot="projects">
           <ProjectsPanel projects={projects} />
         </section>
@@ -196,6 +200,7 @@ async function finish(runs: readonly Run[]) {
 beforeEach(() => {
   navigation.pathname = "/";
   navigation.search = "view=projects";
+  navigation.panoramaReady = true;
   navigation.back.mockReset();
   navigation.push.mockReset();
   setReducedMotion(false);
@@ -383,6 +388,48 @@ it("cancels spatial motion and navigates when reduced motion turns on mid-exit",
   expect(navigation.push).toHaveBeenCalledWith(`/projects/${projects[0].slug}`);
 });
 
+it("disposes a completed exit when reduced motion turns on while navigation is pending", async () => {
+  let reduced = false;
+  let changed: (() => void) | undefined;
+  vi.mocked(window.matchMedia).mockImplementation(
+    (query: string) =>
+      ({
+        get matches() {
+          return reduced && query.includes("prefers-reduced-motion");
+        },
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: (_event: string, listener: EventListener) => {
+          changed = listener as () => void;
+        },
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }) as unknown as MediaQueryList,
+  );
+  const motion = controlledAnimations();
+  const view = render(<Boundary adapter={motion.adapter} />);
+  fireEvent.click(screen.getAllByRole("link")[0]);
+  const exit = motion.runs.slice();
+  await finish(exit);
+  expect(navigation.push).toHaveBeenCalledOnce();
+  expect(exit.every((run) => !run.disposed)).toBe(true);
+
+  reduced = true;
+  act(() => changed?.());
+
+  expect(exit.every((run) => run.disposed)).toBe(true);
+  expect(navigation.push).toHaveBeenCalledOnce();
+
+  navigation.pathname = `/projects/${projects[0].slug}`;
+  navigation.search = "";
+  window.history.replaceState(null, "", navigation.pathname);
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await waitFor(() => expect(screen.getByRole("heading")).toHaveFocus());
+  expect(navigation.push).toHaveBeenCalledOnce();
+});
+
 it("restores faded tiles after the slow-navigation watchdog without discarding the pending commit", async () => {
   vi.useFakeTimers();
   const motion = controlledAnimations();
@@ -452,6 +499,35 @@ it("cancels a pending exit when an unrelated ordinary link activates", async () 
     "idle",
   );
   unrelated.remove();
+});
+
+it("cancels a committed detail entrance when an unrelated link activates", async () => {
+  const motion = controlledAnimations();
+  const view = render(<Boundary adapter={motion.adapter} />);
+  fireEvent.click(screen.getAllByRole("link")[0]);
+  await finish(motion.runs);
+
+  navigation.pathname = `/projects/${projects[0].slug}`;
+  navigation.search = "";
+  window.history.replaceState(null, "", navigation.pathname);
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await waitFor(() => expect(motion.runs).toHaveLength(projects.length + 1));
+  const entrance = motion.runs.at(-1)!;
+
+  const unrelated = document.createElement("a");
+  unrelated.href = "/resume";
+  unrelated.addEventListener("click", (event) => event.preventDefault());
+  document.body.append(unrelated);
+  fireEvent.click(unrelated);
+  unrelated.remove();
+
+  expect(entrance.cancelled).toBe(true);
+  await finish([entrance]);
+  expect(screen.getByRole("heading")).not.toHaveFocus();
+  expect(document.querySelector("[data-project-motion]")).toHaveAttribute(
+    "data-project-motion",
+    "idle",
+  );
 });
 
 it("uses the fallback on direct entry and known history adjacency only after its own committed push", async () => {
@@ -554,4 +630,45 @@ it("preserves the restoration snapshot across native Back and makes Forward inel
 
   expect(navigation.back).not.toHaveBeenCalled();
   expect(navigation.push).toHaveBeenLastCalledWith("/?view=projects");
+});
+
+it("cancels a committed return readiness wait when a later homepage query wins", async () => {
+  const motion = controlledAnimations();
+  const view = render(<Boundary adapter={motion.adapter} />);
+  const projectHref = `/projects/${projects[0].slug}`;
+  fireEvent.click(screen.getAllByRole("link")[0]);
+  await finish(motion.runs);
+  navigation.pathname = projectHref;
+  navigation.search = "";
+  window.history.replaceState(null, "", projectHref);
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await waitFor(() => expect(motion.runs).toHaveLength(projects.length + 1));
+  await finish(motion.runs.slice(projects.length));
+
+  fireEvent.click(screen.getByRole("link", { name: "Projects" }));
+  const detailExit = motion.runs.slice(projects.length + 1);
+  await finish(detailExit);
+  navigation.panoramaReady = false;
+  navigation.pathname = "/";
+  navigation.search = "view=projects";
+  window.history.replaceState(null, "", "/?view=projects");
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await act(async () => Promise.resolve());
+  const runsBeforeInterruption = motion.runs.length;
+  expect(window.scrollTo).not.toHaveBeenCalled();
+
+  navigation.search = "view=me";
+  window.history.replaceState(null, "", "/?view=me");
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await act(async () => Promise.resolve());
+  navigation.panoramaReady = true;
+  view.rerender(<Boundary adapter={motion.adapter} />);
+  await act(async () => Promise.resolve());
+
+  expect(motion.runs).toHaveLength(runsBeforeInterruption);
+  expect(window.scrollTo).not.toHaveBeenCalled();
+  expect(document.querySelector("[data-project-motion]")).toHaveAttribute(
+    "data-project-motion",
+    "idle",
+  );
 });
