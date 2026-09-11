@@ -1,5 +1,13 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import { usePanoramaMotion } from "@/components/metro/usePanoramaMotion";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PanoramaNav, type PivotOption } from "@/components/metro/PanoramaNav";
 import {
@@ -241,4 +249,64 @@ describe("PanoramaNav", () => {
     fireEvent.click(projects);
     expect(onSelect).toHaveBeenCalledWith("projects");
   });
+});
+
+it("reveals a heading focused during settlement after the selected-first reorder", () => {
+  let frame: FrameRequestCallback | undefined;
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    frame = callback;
+    return 1;
+  });
+  vi.stubGlobal("cancelAnimationFrame", () => {});
+  const geometry = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      width: 400,
+      height: 600,
+      right: 400,
+      bottom: 600,
+      toJSON: () => ({}),
+    });
+  function MovingNav() {
+    const [active, setActive] = useState<PivotId>("projects");
+    const motion = usePanoramaMotion({ active, onGestureCommit: setActive });
+    return (
+      <>
+        <PanoramaNav
+          active={active}
+          options={options}
+          motion={motion}
+          onSelect={(id) => {
+            motion.select(id);
+            setActive(id);
+          }}
+        />
+        <div ref={motion.surfaceRef} />
+      </>
+    );
+  }
+  try {
+    render(<MovingNav />);
+    const blog = screen.getByRole("tab", { name: HEADINGS.blog });
+    const projects = screen.getByRole("tab", { name: HEADINGS.projects });
+    const reveal = vi.spyOn(projects, "scrollIntoView");
+    fireEvent.click(blog);
+    act(() => projects.focus());
+    expect(reveal).not.toHaveBeenCalled();
+    act(() => frame!(performance.now() + 500));
+    expect(screen.getAllByRole("tab")[0]).toBe(blog);
+    expect(projects).toHaveFocus();
+    expect(reveal).toHaveBeenCalledWith({
+      block: "nearest",
+      inline: "nearest",
+    });
+  } finally {
+    cleanup();
+    geometry.mockRestore();
+    vi.unstubAllGlobals();
+  }
 });

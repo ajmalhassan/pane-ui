@@ -16,6 +16,12 @@
   overflow: hidden;
 }
 
+/* The stationary hit target remains under inert outgoing panels during motion. */
+.surface {
+  width: 100%;
+  touch-action: pan-y pinch-zoom;
+}
+
 .plane {
   display: flex;
   width: 100%;
@@ -27,7 +33,6 @@
     0,
     0
   );
-  touch-action: pan-y pinch-zoom;
   will-change: transform;
 }
 
@@ -99,10 +104,12 @@
 }
 
 @media print {
+  .surface {
+    min-height: 0 !important;
+  }
   .plane {
     display: grid;
     transform: none;
-    min-height: 0 !important;
   }
   .panel {
     grid-area: 1 / 1;
@@ -112,7 +119,7 @@
   }
 }
 
-.panorama[data-motion-state="dragging"] .plane {
+.panorama[data-motion-state="dragging"] .surface {
   user-select: none;
   -webkit-user-select: none;
 }

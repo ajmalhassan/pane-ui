@@ -65,39 +65,41 @@ export function Panorama({ active, navigation, children, motion }: Props) {
     >
       {navigation}
       <div
-        className={styles.plane}
+        className={styles.surface}
         data-panorama-surface
         data-motion-ready={motion?.ready ?? false}
         ref={motion?.surfaceRef}
         {...motion?.handlers}
       >
-        {Children.map(children, (child) => {
-          if (!isValidElement<PanelProps>(child) || child.type !== "section")
-            return child;
+        <div className={styles.plane}>
+          {Children.map(children, (child) => {
+            if (!isValidElement<PanelProps>(child) || child.type !== "section")
+              return child;
 
-          const pivot = child.props["data-pivot"];
-          const isActive = pivot === active;
-          const isPainted =
-            isActive || (motion?.visualPivots.includes(pivot) ?? false);
-          const className = [styles.panel, child.props.className]
-            .filter(Boolean)
-            .join(" ");
-          const panelStyle = isPainted
-            ? child.props.style
-            : { ...child.props.style, height: 0, overflow: "hidden" };
+            const pivot = child.props["data-pivot"];
+            const isActive = pivot === active;
+            const isPainted =
+              isActive || (motion?.visualPivots.includes(pivot) ?? false);
+            const className = [styles.panel, child.props.className]
+              .filter(Boolean)
+              .join(" ");
+            const panelStyle = isPainted
+              ? child.props.style
+              : { ...child.props.style, height: 0, overflow: "hidden" };
 
-          return cloneElement(child, {
-            "aria-hidden": !isActive,
-            "aria-labelledby": pivotTabId(pivot),
-            "data-active": isActive ? "true" : "false",
-            "data-painted": isPainted ? "true" : "false",
-            className,
-            id: pivotPanelId(pivot),
-            inert: !isActive,
-            role: "tabpanel",
-            style: panelStyle,
-          });
-        })}
+            return cloneElement(child, {
+              "aria-hidden": !isActive,
+              "aria-labelledby": pivotTabId(pivot),
+              "data-active": isActive ? "true" : "false",
+              "data-painted": isPainted ? "true" : "false",
+              className,
+              id: pivotPanelId(pivot),
+              inert: !isActive,
+              role: "tabpanel",
+              style: panelStyle,
+            });
+          })}
+        </div>
       </div>
     </div>
   );

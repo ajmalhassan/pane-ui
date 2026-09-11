@@ -47,12 +47,22 @@ export function PanoramaNav({ active, options, onSelect, motion }: Props) {
     ...options.slice(0, activeIndex),
   ];
 
-  // A keyboard walk scrolls the track sideways to reach the clipped headings,
-  // so the selected one leads again as soon as the selection moves on.
+  // The controller clears transforms and reorders in its layout effect.
+  // Afterwards keep whichever real link still has focus visible, including a
+  // Shift+Tab that happened while geometry was moving. Otherwise lead with the
+  // selected heading as usual.
+  const motionPhase = motion?.phase;
+  const headingPivot = motion?.headingPivot;
   useEffect(() => {
-    if (motion && motion.phase !== "idle") return;
-    if (trackRef.current) trackRef.current.scrollLeft = 0;
-  }, [active, motion, trackRef]);
+    if (motionPhase && motionPhase !== "idle") return;
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollLeft = 0;
+    const focused = track.ownerDocument.activeElement;
+    if (focused instanceof HTMLElement && track.contains(focused)) {
+      focused.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [active, motionPhase, headingPivot, trackRef]);
 
   // ...and as soon as focus leaves the headings behind.
   function restoreTrack(event: FocusEvent<HTMLElement>) {

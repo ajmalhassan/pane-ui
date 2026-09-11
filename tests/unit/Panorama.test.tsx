@@ -110,3 +110,20 @@ it("exposes an idle motion lifecycle for direct and server renders", () => {
   );
   expect(screen.getByText("Bio")).toHaveAttribute("data-painted", "true");
 });
+
+it("keeps the gesture surface outside the translated panel plane so inert outgoing space stays grabbable", () => {
+  const { container } = render(
+    <Panorama active="projects">
+      <section data-pivot="me">Bio</section>
+      <section data-pivot="projects">Projects</section>
+      <section data-pivot="blog">Blog</section>
+      <section data-pivot="photography">Photography</section>
+    </Panorama>,
+  );
+  const surface = container.querySelector("[data-panorama-surface]")!;
+  const plane = screen.getByText("Projects").parentElement!;
+  expect(surface).not.toBe(plane);
+  expect(surface).toContainElement(plane);
+  expect(surface).not.toHaveAttribute("inert");
+  expect(screen.getByText("Blog")).toHaveAttribute("inert");
+});
