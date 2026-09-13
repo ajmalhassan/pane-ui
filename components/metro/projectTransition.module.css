@@ -8,7 +8,10 @@
 
 .root :global([data-project-tile]),
 .root :global([data-project-reading]) {
-  transform-origin: left center;
   transform-style: preserve-3d;
   backface-visibility: hidden;
+}
+
+.root :global([data-project-reading]) {
+  transform-origin: left center;
 }

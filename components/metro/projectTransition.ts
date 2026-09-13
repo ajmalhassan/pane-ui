@@ -98,8 +98,8 @@ export function animateProjectExit(
     ordered.map((tile, index) => ({
       element: tile,
       keyframes: [
-        { opacity: 1, rotate: "y 0deg" },
-        { opacity: 0, rotate: "y -82deg" },
+        { opacity: 1, rotate: "y 0deg", transformOrigin: "left center" },
+        { opacity: 0, rotate: "y -82deg", transformOrigin: "left center" },
       ],
       options: {
         delay: Math.min(index * 20, 100),
@@ -129,8 +129,8 @@ export function animateProjectEntrance(
     ordered.map((tile, index) => ({
       element: tile,
       keyframes: [
-        { opacity: 0, rotate: "y 82deg" },
-        { opacity: 1, rotate: "y 0deg" },
+        { opacity: 0, rotate: "y 82deg", transformOrigin: "left center" },
+        { opacity: 1, rotate: "y 0deg", transformOrigin: "left center" },
       ],
       options: {
         delay: Math.min(index * 20, 100),
