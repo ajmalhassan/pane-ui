@@ -40,7 +40,9 @@ export default defineConfig({
   webServer: external
     ? undefined
     : {
-        command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
+        command: process.env.LIBRARY_PRODUCTION
+          ? "npm run start -- --hostname 127.0.0.1 --port 3100"
+          : "npm run dev -- --hostname 127.0.0.1 --port 3100",
         gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
         reuseExistingServer: false,
         timeout: 120_000,
@@ -53,5 +55,19 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 5"] } },
+    ...(process.env.LIBRARY_CROSS_BROWSER
+      ? [
+          {
+            name: "firefox",
+            testMatch: /library.*\.spec\.ts/,
+            use: { ...devices["Desktop Firefox"] },
+          },
+          {
+            name: "webkit",
+            testMatch: /library.*\.spec\.ts/,
+            use: { ...devices["Desktop Safari"] },
+          },
+        ]
+      : []),
   ],
 });

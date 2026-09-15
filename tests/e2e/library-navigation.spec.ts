@@ -87,7 +87,12 @@ test("navigation examples remain accessible at 320px with reduced motion", async
 test("Panorama accepts native touch swipes and leaves vertical page scrolling alone", async ({
   page,
   context,
+  browserName,
 }) => {
+  test.skip(
+    browserName !== "chromium",
+    "Trusted touch injection uses Chromium CDP; physical Firefox/Safari touch remains a manual gate.",
+  );
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.setViewportSize({ width: 393, height: 851 });
   await page.goto("/library#navigation");
@@ -221,8 +226,8 @@ test("discovery exit and return layer a tile wave inside group motion", async ({
       await group.evaluate((el) => {
         const bounds = el.getBoundingClientRect();
         return (
-          bounds.width <= el.offsetWidth + 1 &&
-          bounds.height <= el.offsetHeight + 1
+          bounds.width <= (el as HTMLElement).offsetWidth + 1 &&
+          bounds.height <= (el as HTMLElement).offsetHeight + 1
         );
       }),
     ).toBe(true);

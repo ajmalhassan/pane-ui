@@ -1,3 +1,4 @@
+import { pressTab } from "./keyboard";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 test("menu navigation skips disabled items, supports typeahead and hands focus to dialogs", async ({
@@ -47,6 +48,12 @@ test("popover applies form values, returns focus and allows Tab or outside dismi
 }) => {
   await page.goto("/library#floating");
   const section = page.locator("#floating");
+  const reset = section.getByRole("button", { name: "Reset filters" });
+  // Establish this platform's native pointer-focus behavior with no overlay.
+  await reset.click();
+  const pointerFocusesButton = await reset.evaluate(
+    (el) => el === document.activeElement,
+  );
   const trigger = section.getByRole("button", {
     name: "Filter collection",
     exact: true,
@@ -55,7 +62,7 @@ test("popover applies form values, returns focus and allows Tab or outside dismi
   const panel = page.getByRole("dialog", { name: "your view" });
   await expect(panel.getByRole("combobox")).toBeFocused();
   await panel.getByRole("combobox").selectOption("oldest");
-  await page.keyboard.press("Tab");
+  await pressTab(page);
   await expect(panel.getByRole("switch")).toBeFocused();
   await page.keyboard.press("Space");
   await panel.getByRole("button", { name: "Apply filters" }).click();
@@ -64,7 +71,7 @@ test("popover applies form values, returns focus and allows Tab or outside dismi
   await expect(section).toContainText("Oldest first · favorites only");
   await trigger.click();
   await panel.getByRole("button", { name: "Cancel filters" }).focus();
-  await page.keyboard.press("Tab");
+  await pressTab(page);
   await expect(
     section.getByRole("button", { name: "Reset filters" }),
   ).toBeFocused();
@@ -72,9 +79,14 @@ test("popover applies form values, returns focus and allows Tab or outside dismi
   await trigger.click();
   await section.getByRole("button", { name: "Reset filters" }).click();
   await expect(panel).not.toBeVisible();
-  await expect(
-    section.getByRole("button", { name: "Reset filters" }),
-  ).toBeFocused();
+  // Outside dismissal must not steal focus back. Safari does not focus clicked buttons.
+  if (!pointerFocusesButton) {
+    await expect(page.locator("body")).toBeFocused();
+  } else {
+    await expect(
+      section.getByRole("button", { name: "Reset filters" }),
+    ).toBeFocused();
+  }
 });
 test("panels flip at the viewport edge, escape clipping and retain light dark RTL themes", async ({
   page,

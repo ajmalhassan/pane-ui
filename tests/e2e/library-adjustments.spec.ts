@@ -1,3 +1,4 @@
+import { pressTab } from "./keyboard";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 test.use({ hasTouch: true });
@@ -74,7 +75,7 @@ test("invalid slider retains a distinct keyboard focus indicator", async ({
     element.setAttribute("aria-invalid", "true"),
   );
   await expect(slider).toHaveCSS("outline-style", "dashed");
-  await page.keyboard.press("Tab");
+  await pressTab(page);
   await slider.focus();
   await expect(slider).toHaveCSS("outline-style", "solid");
   await expect(slider).toHaveCSS("outline-offset", "4px");

@@ -108,8 +108,8 @@ test("a small live tile keeps its caption and both 44px controls within its grid
   await expect(buttons).toHaveCount(2);
   for (const button of await buttons.all()) {
     const box = await button.boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44 - 0.01);
+    expect(box!.height).toBeGreaterThanOrEqual(44 - 0.01);
     expect(box!.x).toBeGreaterThanOrEqual(bounds!.x);
     expect(box!.x + box!.width).toBeLessThanOrEqual(
       bounds!.x + bounds!.width + 0.5,

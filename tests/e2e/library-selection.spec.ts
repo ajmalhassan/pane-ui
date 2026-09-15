@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("native selection keyboard behavior, submission and reset", async ({
   page,
+  browserName,
 }) => {
   await page.goto("/library#selection");
   const form = page.getByRole("form", { name: "Preference preview" });
@@ -25,7 +26,17 @@ test("native selection keyboard behavior, submission and reset", async ({
   await expect(
     form.getByRole("radio", { name: "Monthly", exact: true }),
   ).toBeChecked();
-  await page.keyboard.press("ArrowDown");
+  // WebKit native radio navigation stops at the last enabled item.
+  if (browserName === "webkit") {
+    await page.keyboard.press("ArrowDown");
+    await expect(
+      form.getByRole("radio", { name: "Monthly", exact: true }),
+    ).toBeChecked();
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("ArrowUp");
+  } else {
+    await page.keyboard.press("ArrowDown");
+  }
   await expect(
     form.getByRole("radio", { name: "Daily", exact: true }),
   ).toBeChecked();

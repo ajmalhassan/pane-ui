@@ -20,12 +20,15 @@ jobs:
       - run: npm run lint:library
       - run: npm test
       - run: npm run test:package
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:library:browser
       - run: npm run build
+      - run: npm run test:bundle
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:library:cross-browser
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: browser-test-results
-          path: test-results/
+          name: library-quality-evidence
+          path: |
+            test-results/
+            quality-results/
           if-no-files-found: ignore

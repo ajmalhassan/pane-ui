@@ -41,7 +41,8 @@
 .wp-pivot-panel {
   padding-block: 1rem;
 }
-.wp-pivot-panel[hidden] {
+.wp-pivot-panel[hidden],
+.wp-pivot-list[hidden] {
   display: none;
 }
 @media (forced-colors: active) {

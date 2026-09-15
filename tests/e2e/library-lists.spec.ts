@@ -1,3 +1,4 @@
+import { pressTab } from "./keyboard";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 test("collection rows open independently of their menus and restore focus", async ({
@@ -132,7 +133,7 @@ test("lists retain native semantics, readable narrow themes and reduced motion",
     exact: true,
   });
   await primary.focus();
-  await page.keyboard.press("Tab");
+  await pressTab(page);
   await expect(secondary).toBeFocused();
   for (const control of [primary, secondary]) {
     const box = await control.boundingBox();

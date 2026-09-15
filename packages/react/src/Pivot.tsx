@@ -328,8 +328,8 @@ export const PivotPanel = forwardRef<HTMLDivElement, PivotPanelProps>(
         id={panelId(context.id, value)}
         aria-labelledby={tabId(context.id, value)}
         tabIndex={props.tabIndex ?? 0}
-        hidden={!active}
-        inert={!active}
+        hidden={!active || props.hidden}
+        inert={!active || props.inert}
         className={`wp-pivot-panel ${className}`}
       />
     );

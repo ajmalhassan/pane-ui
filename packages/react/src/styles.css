@@ -338,3 +338,11 @@
     outline-color: Highlight;
   }
 }
+
+/* Component display rules must not override native hidden semantics. */
+.wp-tile[hidden],
+.wp-tile-grid[hidden],
+.wp-app-bar[hidden],
+.wp-app-bar-action[hidden] {
+  display: none;
+}

@@ -1,0 +1,30 @@
+{
+  "button": {
+    "bytes": 3300,
+    "gzip": 1300
+  },
+  "fields": {
+    "bytes": 5200,
+    "gzip": 1850
+  },
+  "motion": {
+    "bytes": 6900,
+    "gzip": 2750
+  },
+  "floating": {
+    "bytes": 72000,
+    "gzip": 26500
+  },
+  "full": {
+    "bytes": 113000,
+    "gzip": 39000
+  },
+  "styles": {
+    "bytes": 29000,
+    "gzip": 6400
+  },
+  "motion-css": {
+    "bytes": 800,
+    "gzip": 400
+  }
+}

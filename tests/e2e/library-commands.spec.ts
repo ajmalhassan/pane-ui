@@ -1,3 +1,4 @@
+import { pressTab } from "./keyboard";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -35,18 +36,19 @@ test("app-bar overflow supports Escape and command focus restoration", async ({
 }) => {
   await page.goto("/library#commands");
   const more = page.getByRole("button", { name: "More commands", exact: true });
-  await more.click();
-  await page.keyboard.press("Tab");
+  await more.focus();
+  await page.keyboard.press("Enter");
+  await pressTab(page);
   await expect(
     page.getByRole("button", { name: "Archive collection", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(more).toBeFocused();
   await expect(more).toHaveAttribute("aria-expanded", "false");
-  await more.click();
-  await page
-    .getByRole("button", { name: "Archive collection", exact: true })
-    .click();
+  await more.focus();
+  await page.keyboard.press("Enter");
+  await pressTab(page);
+  await page.keyboard.press("Enter");
   await expect(more).toBeFocused();
   await expect(more).toHaveAttribute("aria-expanded", "false");
   const link = page.getByRole("link", { name: "get started", exact: true });

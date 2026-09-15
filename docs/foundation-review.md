@@ -36,3 +36,7 @@ Review found overwritten consumer trigger handlers, loading triggers opening thr
 ## Collection composition follow-up
 
 The list primitives retain native ul/li structure and separate the primary link/button from secondary controls. They add no selection state, virtualization, filter engine or dependency. Entrance motion reuses the existing stagger keyframes. The collection demo exercises the established Menu, Popover, Dialog, AlertDialog, Field and Tile APIs together. A real focus bug appeared when filtering removed a renamed row; a failing browser regression led to an explicit surviving return target. This integration evidence is useful, but does not replace the broader browser/assistive-technology release matrix above.
+
+## Release-hardening follow-up
+
+The [support contract](library-support.md) supersedes earlier cross-engine coverage limitations in this historical review. It records browser evidence, bundle costs and outstanding manual gates. Native hidden/inert forwarding regressions were corrected for tiles, app-bar primitives and selected Pivot panels. Dialog examples now use explicit return-focus refs for pointer-opened Safari flows. No legacy-browser, shadow-root or nested-overlay contract was added.

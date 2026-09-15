@@ -280,10 +280,12 @@ To dismiss, supply both `onDismiss` and a descriptive `dismissLabel`. The callba
 ```tsx
 const [open, setOpen] = useState(false);
 const nameInput = useRef<HTMLInputElement>(null);
+const trigger = useRef<HTMLButtonElement>(null);
 
-<Button onClick={() => setOpen(true)}>Edit collection</Button>
+<Button ref={trigger} onClick={() => setOpen(true)}>Edit collection</Button>
 <Dialog open={open} onOpenChange={setOpen} title="edit collection"
-  description="Give these moments a name." initialFocusRef={nameInput}>
+  description="Give these moments a name." initialFocusRef={nameInput}
+  finalFocusRef={trigger}>
   <Field label="Name"><TextField ref={nameInput} /></Field>
   <Button onClick={() => setOpen(false)}>Cancel</Button>
 </Dialog>
@@ -297,7 +299,7 @@ Native `showModal()` owns top-layer placement and background inertness. The dial
 
 Continuum entrance/exit reuses Transition's cancellation and reduced-motion handling. The modal and document scroll lock remain until exit completes. Reopening interrupts exit without closing the native modal and renews initial focus. `duration` defaults to 220ms; zero removes motion. Closed server markup stays non-modal until hydration. Native dialog support is required; no legacy polyfill is bundled.
 
-Closing restores the opener; `finalFocusRef` supplies an explicit surviving destination when the opener will disappear. Restoration also applies to native closure and unmount, without moving focus away from another active control/modal. Keep the component mounted while changing `open` to animate exit; conditional unmount closes immediately. Document scroll ownership is reference-counted across instances and restores the previous inline overflow value after the last modal closes. Long content scrolls inside the panel.
+Closing restores the previously focused element; `finalFocusRef` supplies an explicit destination. Use it for pointer-opened dialogs, because Safari does not normally focus a clicked button. If the opener will disappear, choose a surviving destination. Restoration also applies to native closure and unmount, without moving focus away from another active control/modal. Keep the component mounted while changing `open` to animate exit; conditional unmount closes immediately. Document scroll ownership is reference-counted across instances and restores the previous inline overflow value after the last modal closes. Long content scrolls inside the panel.
 
 ## Menu and Popover
 
@@ -344,3 +346,7 @@ Title, description, meta and leading slots compose row content. Keep these slots
 `animate` is opt-in and reuses the shared stagger keyframes on direct list items, with 30ms spacing capped at 240ms. It runs when rows mount, not on every data update; stable React keys preserve identity. Reduced motion removes the animation. No virtualization, selection model, sorting, filtering or live announcement policy is built into these structural components.
 
 SectionHeader supports heading levels 2–4 and optional metadata. EmptyState is a named section with a required title, optional description, decorative icon and recovery actions. It has no automatic live-region behavior; the application should announce meaningful results appropriately. Its heading level defaults to 3 and can be 2–4. Distinguish a first-use empty library from a filter with no matches, as the workshop demonstrates. When mutations remove a focused row, choose a surviving focus destination such as the search input.
+
+## Release quality
+
+The repository [support and quality contract](../../docs/library-support.md) records browser coverage, API conventions, bundle budgets and outstanding manual accessibility/release checks. The package is a private alpha; automated tests do not constitute WCAG certification.

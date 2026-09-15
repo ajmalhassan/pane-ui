@@ -308,3 +308,25 @@ describe("Pivot", () => {
     expect(html).not.toContain('hidden=""');
   });
 });
+
+it("preserves caller hidden and inert on the selected panel", () => {
+  const { container, rerender } = render(
+    <Pivot value="a">
+      <PivotPanel value="a" hidden inert>
+        Private
+      </PivotPanel>
+    </Pivot>,
+  );
+  const panel = container.querySelector('[role="tabpanel"]')!;
+  expect(panel).toHaveAttribute("hidden");
+  expect(panel).toHaveAttribute("inert");
+  rerender(
+    <Pivot value="b">
+      <PivotPanel value="a" hidden={false} inert={false}>
+        Private
+      </PivotPanel>
+    </Pivot>,
+  );
+  expect(panel).toHaveAttribute("hidden");
+  expect(panel).toHaveAttribute("inert");
+});

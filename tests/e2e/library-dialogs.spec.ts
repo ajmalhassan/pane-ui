@@ -1,3 +1,4 @@
+import { pressTab } from "./keyboard";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -18,11 +19,11 @@ test("edit modal contains focus, submits and restores the opener", async ({
   expect(await dialog.evaluate((el) => el.matches(":modal"))).toBe(true);
   const input = dialog.getByRole("textbox", { name: "Collection name" });
   await expect(input).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
+  await pressTab(page, true);
   await expect(
     dialog.getByRole("button", { name: "Cancel editing" }),
   ).toBeFocused();
-  await page.keyboard.press("Tab");
+  await pressTab(page);
   await expect(input).toBeFocused();
   await input.fill("Evening walks");
   await dialog.getByRole("button", { name: "Save changes" }).click();

@@ -18,6 +18,8 @@ export function DialogsWorkshop() {
     "Your collection is ready to explore.",
   );
   const input = useRef<HTMLInputElement>(null);
+  const editTrigger = useRef<HTMLButtonElement>(null);
+  const deleteTrigger = useRef<HTMLButtonElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
   return (
     <section
@@ -53,6 +55,7 @@ export function DialogsWorkshop() {
           <div className={styles.actions}>
             <Button
               variant="accent"
+              ref={editTrigger}
               onClick={() => {
                 setDraft(name);
                 setEdit(true);
@@ -60,7 +63,9 @@ export function DialogsWorkshop() {
             >
               Edit collection
             </Button>
-            <Button onClick={() => setRemove(true)}>Delete collection</Button>
+            <Button ref={deleteTrigger} onClick={() => setRemove(true)}>
+              Delete collection
+            </Button>
           </div>
         </div>
         <div className={styles.form}>
@@ -80,6 +85,7 @@ export function DialogsWorkshop() {
         title="edit collection"
         description="Give these moments a name of their own."
         initialFocusRef={input}
+        finalFocusRef={editTrigger}
       >
         <form
           onSubmit={(event) => {
@@ -114,6 +120,7 @@ export function DialogsWorkshop() {
         title="delete collection?"
         description={`This would remove “${name}” from your collections. Your original photos would stay on your device.`}
         initialFocusRef={cancel}
+        finalFocusRef={deleteTrigger}
       >
         <div className={styles.actions}>
           <Button ref={cancel} onClick={() => setRemove(false)}>

@@ -76,3 +76,5 @@ npm run build
 An independent project; not affiliated with Microsoft. No proprietary font files or Windows Phone assets are distributed.
 
 A focused [foundation review](docs/foundation-review.md) records the package boundaries, a verified hidden-state fix, and remaining release checks.
+
+See [support and release quality](docs/library-support.md) for browser evidence, bundle measurements and the remaining manual release gates.

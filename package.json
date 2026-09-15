@@ -23,16 +23,18 @@
     "test:library": "vitest run tests/unit/Library*.test.tsx",
     "test:library:browser": "playwright test tests/e2e/library*.spec.ts",
     "test:package": "npm run build:library && node scripts/verify-package.mjs",
-    "lint:library": "eslint packages/react/src --ext .ts,.tsx --max-warnings 0"
+    "lint:library": "eslint packages/react/src --ext .ts,.tsx --max-warnings 0",
+    "test:library:cross-browser": "LIBRARY_CROSS_BROWSER=1 LIBRARY_PRODUCTION=1 playwright test tests/e2e/library*.spec.ts",
+    "test:bundle": "npm run build:library && node scripts/measure-library.mjs"
   },
   "dependencies": {
+    "@windows-phone/react": "file:packages/react",
     "gray-matter": "^4.0.3",
     "next": "15.5.24",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remark": "^15.0.1",
-    "remark-html": "^16.0.1",
-    "@windows-phone/react": "file:packages/react"
+    "remark-html": "^16.0.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -45,6 +47,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.0.1",
+    "esbuild": "0.28.2",
     "eslint": "^8.55.0",
     "eslint-config-next": "^15.5.24",
     "eslint-config-prettier": "^9.1.0",

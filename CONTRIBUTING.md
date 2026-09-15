@@ -29,15 +29,19 @@ Keep React as a peer dependency. Core components must not import Next.js, applic
 npm run build:library
 npm run typecheck
 npm run lint
+npm run lint:library
 npm test
 npm run test:package
-npm run test:library:browser
 npm run build
+npm run test:bundle
+npm run test:library:cross-browser
 ```
 
-Install Chromium once with `npx playwright install chromium`. Package verification creates a temporary consumer and installs the packed tarball plus the repository's React versions from npm's cache. Run `npm ci` first to populate that cache.
+Install the pinned browser engines with `npx playwright install --with-deps chromium firefox webkit`. The cross-browser command runs the already-built production app on port 3100, then shuts it down. Set `ARTIFACT_BASE_URL` to reuse a running production preview. Package verification creates a temporary consumer and installs the packed tarball plus the repository's React versions from npm's cache. Run `npm ci` first to populate that cache.
 
 For visual review, run a preview on port 3101 and `node scripts/capture-library.mjs`; screenshots go to ignored `.superpowers/library-review`. Set `ARTIFACT_BASE_URL` to capture another running server. The capture includes desktop, light, phone widths, and a paused midpoint from the actual browser animation.
+
+See the [support and quality contract](docs/library-support.md) for platform assumptions, explicit automation gaps and manual release gates. Bundle budgets include runtime dependencies, with React externalized; reports go to `quality-results/library-bundles.json`. Inspect growth before changing `scripts/library-budgets.json`.
 
 ## Component quality
 
