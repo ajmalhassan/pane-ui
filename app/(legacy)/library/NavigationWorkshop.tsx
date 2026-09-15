@@ -12,7 +12,7 @@ import {
   Pressable,
   TileSequence,
   Transition,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./navigationWorkshop.module.css";
 
 const discoveries = [

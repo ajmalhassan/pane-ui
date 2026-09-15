@@ -1,4 +1,4 @@
-# Windows Phone React
+# Pane UI
 
 An independent React component library inspired by Windows Phone: typography, tiles, and purposeful transitions. Local alpha; not published to npm. Requires React 19 and an ESM-capable application toolchain. No Next.js or Tailwind dependency.
 
@@ -15,8 +15,8 @@ npm pack ./packages/react
 In another React 19 project, install the resulting tarball. Import styles once and wrap your components in a theme:
 
 ```tsx
-import { Theme, TileGrid, TileLink, Tile } from "@windows-phone/react";
-import "@windows-phone/react/styles.css";
+import { Theme, TileGrid, TileLink, Tile } from "@pane-ui/react";
+import "@pane-ui/react/styles.css";
 
 export function Start() {
   return (
@@ -104,7 +104,7 @@ import {
   PivotList,
   PivotTrigger,
   PivotPanel,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 
 <Pivot defaultValue="recent">
   <PivotList aria-label="Messages">

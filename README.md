@@ -1,4 +1,4 @@
-# Windows Phone React
+# Pane UI
 
 A React component library inspired by Windows Phone: bold typography, living tiles, and purposeful transitions.
 
@@ -62,14 +62,14 @@ npm pack ./packages/react
 Install the resulting `.tgz` in a separate React 19 application using its actual filesystem path:
 
 ```sh
-npm install /absolute/path/to/windows-phone-react-0.1.0-alpha.0.tgz
+npm install /absolute/path/to/pane-ui-react-0.1.0-alpha.0.tgz
 ```
 
 Replace the placeholder path and use the filename printed by `npm pack` if the version changes. Packing does not publish anything. No Next.js or Tailwind dependency is required by the library.
 
 ```tsx
-import { Theme, TileLink, Transition } from "@windows-phone/react";
-import "@windows-phone/react/styles.css";
+import { Theme, TileLink, Transition } from "@pane-ui/react";
+import "@pane-ui/react/styles.css";
 
 <Theme mode="dark" accent="blue">
   <Transition show={true} preset="turnstile">

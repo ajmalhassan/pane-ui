@@ -8,7 +8,7 @@ import {
   Button,
   IconButton,
   ProgressDots,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./commandsWorkshop.module.css";
 
 function Glyph({ kind }: { kind: "add" | "save" | "help" }) {

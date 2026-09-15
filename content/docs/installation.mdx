@@ -21,12 +21,12 @@ npm run build:library
 npm pack ./packages/react
 ```
 
-For version `0.1.0-alpha.0`, npm writes `windows-phone-react-0.1.0-alpha.0.tgz` into the current directory. Use the filename printed by `npm pack` if the version changes.
+For version `0.1.0-alpha.0`, npm writes `pane-ui-react-0.1.0-alpha.0.tgz` into the current directory. Use the filename printed by `npm pack` if the version changes.
 
 In your separate React 19 project, install that file using its actual path:
 
 ```sh
-npm install /absolute/path/to/windows-phone-react-0.1.0-alpha.0.tgz
+npm install /absolute/path/to/pane-ui-react-0.1.0-alpha.0.tgz
 ```
 
 The `/absolute/path/to/` prefix is a placeholder for your checkout location. `npm pack` creates an archive; it does not publish anything.
@@ -34,8 +34,8 @@ The `/absolute/path/to/` prefix is a placeholder for your checkout location. `np
 ## Render your first screen
 
 ```tsx
-import { Theme, TileGrid, Tile, TileLink } from "@windows-phone/react";
-import "@windows-phone/react/styles.css";
+import { Theme, TileGrid, Tile, TileLink } from "@pane-ui/react";
+import "@pane-ui/react/styles.css";
 
 export function Start() {
   return (
@@ -54,13 +54,13 @@ export function Start() {
 }
 ```
 
-Create an `/inbox` destination in your application, or replace that href. Import the full stylesheet once from your application entry or root layout. It includes motion styles and applies no global reset. The separately exported `@windows-phone/react/motion.css` is available for motion-only usage; do not import it in addition to the full stylesheet.
+Create an `/inbox` destination in your application, or replace that href. Import the full stylesheet once from your application entry or root layout. It includes motion styles and applies no global reset. The separately exported `@pane-ui/react/motion.css` is available for motion-only usage; do not import it in addition to the full stylesheet.
 
 ## Server rendering
 
 The built JavaScript preserves client directives. In a Next.js App Router application, import styles in a layout and place event handlers/state in client components. Initial visible Transition content is readable in server markup. Interactive controls require hydration; native dialogs and popovers enter the top layer on the client.
 
-The package exports TypeScript prop types alongside components. Import a type with `import type { ButtonProps } from "@windows-phone/react"` when building application wrappers.
+The package exports TypeScript prop types alongside components. Import a type with `import type { ButtonProps } from "@pane-ui/react"` when building application wrappers.
 
 ## When something looks wrong
 

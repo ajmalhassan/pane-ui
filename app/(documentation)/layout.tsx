@@ -5,16 +5,16 @@ import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style-prefixed.css";
-import "@windows-phone/react/styles.css";
+import "@pane-ui/react/styles.css";
 import "./docs.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Documentation — Windows Phone React",
-    template: "%s — Windows Phone React",
+    default: "Documentation — Pane UI",
+    template: "%s — Pane UI",
   },
   description:
-    "Learn to build with Windows Phone React. Live component examples, API references, native accessibility and purposeful motion.",
+    "Learn to build with Pane UI. Live component examples, API references, native accessibility and purposeful motion.",
 };
 export default async function DocumentationLayout({
   children,
@@ -31,7 +31,7 @@ export default async function DocumentationLayout({
             <Navbar
               logo={
                 <span className="docs-wordmark">
-                  <Mark /> windows phone <small>react</small>
+                  <Mark /> pane <small>ui</small>
                 </span>
               }
               logoLink="/"
@@ -45,7 +45,7 @@ export default async function DocumentationLayout({
             </Navbar>
           }
           footer={
-            <Footer>Windows Phone React · An independent, local alpha.</Footer>
+            <Footer>Pane UI · An independent, local alpha.</Footer>
           }
           copyPageButton={false}
           editLink={null}

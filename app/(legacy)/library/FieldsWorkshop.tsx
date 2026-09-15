@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState, useLayoutEffect } from "react";
-import { Button, Field, TextField, TextArea } from "@windows-phone/react";
+import { Button, Field, TextField, TextArea } from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 export function FieldsWorkshop() {
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});

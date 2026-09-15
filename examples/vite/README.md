@@ -1,6 +1,6 @@
 # Plain React starter
 
-A private React 19 + Vite application that consumes the built `@windows-phone/react` package. This package is a local alpha, not a public npm installation. Use Node 22.22.2 (the repository's supported Node version).
+A private React 19 + Vite application that consumes the built `@pane-ui/react` package. This package is a local alpha, not a public npm installation. Use Node 22.22.2 (the repository's supported Node version).
 
 From the repository root:
 

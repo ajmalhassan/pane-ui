@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import "@windows-phone/react/styles.css";
+import "@pane-ui/react/styles.css";
 import "./site.css";
 export const metadata: Metadata = {
   title: {
-    default: "Windows Phone React — Software that feels alive",
-    template: "%s — Windows Phone React",
+    default: "Pane UI — Software that feels alive",
+    template: "%s — Pane UI",
   },
   description:
     "Living tiles, expressive typography, purposeful motion. A React component library inspired by Windows Phone. Explore the docs, examples and an interactive phone replica.",

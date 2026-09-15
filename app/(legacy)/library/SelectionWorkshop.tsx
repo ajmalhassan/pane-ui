@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button, Checkbox, Switch, RadioGroup } from "@windows-phone/react";
+import { Button, Checkbox, Switch, RadioGroup } from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 export function SelectionWorkshop() {
   const [summary, setSummary] = useState("Your preferences, your pace.");

@@ -11,7 +11,7 @@ import {
   TextField,
   Theme,
   type ThemeProps,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import { validateForm } from "./formValidation";
 import styles from "./Examples.module.css";
 

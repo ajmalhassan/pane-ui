@@ -11,7 +11,7 @@ import {
   Dialog,
   AlertDialog,
   MessageBanner,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 export function FloatingWorkshop() {
   const [name, setName] = useState("City after dark");

@@ -15,7 +15,7 @@ import {
   AlertDialog,
   Tile,
   TileGrid,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 import collectionStyles from "./listsWorkshop.module.css";
 type Collection = {

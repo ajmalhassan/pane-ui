@@ -19,8 +19,8 @@ const rows = [];
 for (const [name, exports] of Object.entries(scenarios)) {
   // Re-exporting retains the selected public API without bringing in an app or React.
   const contents = exports
-    ? `export { ${exports.join(", ")} } from "@windows-phone/react";`
-    : 'export * from "@windows-phone/react";';
+    ? `export { ${exports.join(", ")} } from "@pane-ui/react";`
+    : 'export * from "@pane-ui/react";';
   const result = await build({
     stdin: { contents, resolveDir: root, sourcefile: `${name}.js` },
     bundle: true,

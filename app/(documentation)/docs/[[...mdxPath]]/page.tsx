@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props) {
     ? metadata
     : {
         ...metadata,
-        title: { absolute: "Documentation — Windows Phone React" },
+        title: { absolute: "Documentation — Pane UI" },
       };
 }
 const Wrapper = getMDXComponents().wrapper;

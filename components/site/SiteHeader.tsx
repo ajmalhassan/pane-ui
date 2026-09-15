@@ -7,11 +7,11 @@ export function SiteHeader() {
       <Link
         className={styles.brand}
         href="/"
-        aria-label="Windows Phone React home"
+        aria-label="Pane UI home"
       >
         <Mark />
         <span>
-          windows phone<small>react</small>
+          pane<small>ui</small>
         </span>
       </Link>
       <nav aria-label="Project navigation">
@@ -30,7 +30,7 @@ export function SiteFooter() {
     <footer className={styles.footer}>
       <Link href="/" className={styles.brand}>
         <Mark />
-        windows phone react
+        Pane UI
       </Link>
       <p>An independent tribute to a different way of thinking.</p>
       <div>

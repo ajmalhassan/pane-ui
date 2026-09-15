@@ -9,7 +9,7 @@ import {
   RadioGroup,
   TextArea,
   TextField,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import { Landscape, PhoneIcon, Portrait, type IconName } from "./PhoneIcons";
 import { createMessage, type Screen } from "./state";
 import s from "./phone.module.css";

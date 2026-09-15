@@ -27,8 +27,7 @@ export default function PhonePage() {
               with a tile.
             </h2>
             <p>
-              This is an interactive web recreation built with Windows Phone
-              React. Explore the familiar gestures and details that inspired the
+              This is an interactive web recreation built with Pane UI. Explore the familiar gestures and details that inspired the
               library.
             </p>
             <dl>

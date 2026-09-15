@@ -1,5 +1,6 @@
 "use client";
 
+import { Mark } from "@/components/site/Mark";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AppBar,
@@ -15,7 +16,7 @@ import {
   Transition,
   type ThemeProps,
   type TransitionPreset,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./library.module.css";
 import { ListsWorkshop } from "./ListsWorkshop";
 import { FloatingWorkshop } from "./FloatingWorkshop";
@@ -159,16 +160,11 @@ export function Workshop() {
           <a
             href="#"
             className={styles.wordmark}
-            aria-label="Windows Phone React workshop home"
+            aria-label="Pane UI workshop home"
           >
-            <span className={styles.mark} aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
+            <Mark />
             <span>
-              windows phone
+              pane ui
               <span className={styles.wordmarkSub}>
                 REACT COMPONENT LIBRARY
               </span>
@@ -769,13 +765,13 @@ export function Workshop() {
                 <Icon name="code" />
               </div>
               <pre>
-                <code>{`import { Theme, TileLink } from\n  "@windows-phone/react";\nimport "@windows-phone/react/styles.css";\n\nexport function Start() {\n  return (\n    <Theme mode="dark" accent="blue">\n      <TileLink href="/hello" label="say hello">\n        hello, world.\n      </TileLink>\n    </Theme>\n  );\n}`}</code>
+                <code>{`import { Theme, TileLink } from\n  "@pane-ui/react";\nimport "@pane-ui/react/styles.css";\n\nexport function Start() {\n  return (\n    <Theme mode="dark" accent="blue">\n      <TileLink href="/hello" label="say hello">\n        hello, world.\n      </TileLink>\n    </Theme>\n  );\n}`}</code>
               </pre>
             </div>
           </section>
         </main>
         <footer className={styles.footer}>
-          <span>windows phone / react</span>
+          <span>pane ui / react</span>
           <p>
             An independent tribute to a distinctive design language.
             <br />

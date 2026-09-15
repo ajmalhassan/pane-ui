@@ -6,7 +6,7 @@ import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const root = resolve(import.meta.dirname, "..");
-const temp = mkdtempSync(join(tmpdir(), "windows-phone-package-"));
+const temp = mkdtempSync(join(tmpdir(), "pane-ui-package-"));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const result = JSON.parse(
   execFileSync(
@@ -100,7 +100,7 @@ writeFileSync(
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
-import { Theme, TileLink, RevealTile, LiveTile, Transition, Stagger, Pivot, PivotList, PivotTrigger, PivotPanel, Panorama, TileSequence, Button, IconButton, AppBarLink, AppBarOverflow, ProgressDots, Field, TextField, TextArea, Checkbox, Switch, RadioGroup, Select, Slider, Progress, ProgressRing, MessageBanner, Dialog, AlertDialog, Menu, Popover, List, ListItem, SectionHeader, EmptyState } from '@windows-phone/react';
+import { Theme, TileLink, RevealTile, LiveTile, Transition, Stagger, Pivot, PivotList, PivotTrigger, PivotPanel, Panorama, TileSequence, Button, IconButton, AppBarLink, AppBarOverflow, ProgressDots, Field, TextField, TextArea, Checkbox, Switch, RadioGroup, Select, Slider, Progress, ProgressRing, MessageBanner, Dialog, AlertDialog, Menu, Popover, List, ListItem, SectionHeader, EmptyState } from '@pane-ui/react';
 const html = renderToString(h(Theme, {mode:'light'},
   h(TileLink, {href:'/hello',label:'hello'}, 'world'),
   h(RevealTile, {label:'details',front:'front',back:'back'}),
@@ -160,7 +160,7 @@ assert(html.includes('href="/weekend"'));
 assert(html.includes('No collections'));
 assert(html.includes('aria-haspopup="menu"'));
 assert(!/<dialog[^>]* open/.test(html));
-assert(import.meta.resolve('@windows-phone/react/styles.css').endsWith('/dist/styles.css'));
+assert(import.meta.resolve('@pane-ui/react/styles.css').endsWith('/dist/styles.css'));
 console.log('Packed package renders in a clean plain React consumer without browser globals.');
 `,
 );
@@ -172,7 +172,7 @@ writeFileSync(
   join(temp, "consumer.tsx"),
   `
 import { createRef } from 'react';
-import { Theme, TileLink, RevealTile, Transition, Panorama, TileSequence, Button, IconButton, AppBarLink, AppBarOverflow, ProgressDots, Field, TextField, TextArea, Checkbox, Switch, RadioGroup, Select, Slider, Progress, ProgressRing, MessageBanner, Dialog, AlertDialog, Menu, Popover, List, ListItem, SectionHeader, EmptyState } from '@windows-phone/react';
+import { Theme, TileLink, RevealTile, Transition, Panorama, TileSequence, Button, IconButton, AppBarLink, AppBarOverflow, ProgressDots, Field, TextField, TextArea, Checkbox, Switch, RadioGroup, Select, Slider, Progress, ProgressRing, MessageBanner, Dialog, AlertDialog, Menu, Popover, List, ListItem, SectionHeader, EmptyState } from '@pane-ui/react';
 const link = createRef<HTMLAnchorElement>();
 const valid = <Theme mode="light"><Transition show preset="turnstile"><TileLink ref={link} href="/hello" label="hello">world</TileLink><RevealTile label="details" front="front" back="back" /></Transition></Theme>;
 // @ts-expect-error Unsupported appearance must fail at the consumer boundary.
@@ -199,7 +199,7 @@ const unnamedRing = <ProgressRing />;
 // @ts-expect-error Dismiss commands require a label.
 const unnamedDismiss = <MessageBanner onDismiss={() => {}}>Saved</MessageBanner>;
 // @ts-expect-error Value semantics belong to the normalized value prop.
-const conflictingValue: import('@windows-phone/react').ProgressProps = { label: 'Download', 'aria-valuenow': 12 };
+const conflictingValue: import('@pane-ui/react').ProgressProps = { label: 'Download', 'aria-valuenow': 12 };
 const dialog = <Dialog ref={createRef<HTMLDialogElement>()} open={false} title="Edit" onOpenChange={() => {}}><button>Cancel</button></Dialog>;
 const alert = <AlertDialog open title="Delete?" description="Remove the collection" onOpenChange={() => {}} />;
 // @ts-expect-error Controlled modal needs an owner callback.

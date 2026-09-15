@@ -1,4 +1,4 @@
-# Windows Phone React library — proposed direction
+# Pane UI library — proposed direction
 
 Status: direction approved on 2026-09-15. The user prioritized tiles and transitions and authorized autonomous implementation. This source audit records the starting point; see `library-verification.md` for implementation evidence and `component-roadmap.md` for the remaining release work.
 

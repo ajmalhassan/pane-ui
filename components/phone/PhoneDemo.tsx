@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Pressable, Theme, Transition } from "@windows-phone/react";
+import { Pressable, Theme, Transition } from "@pane-ui/react";
 import { AppScreens, type Accent, type Message } from "./AppScreens";
 import { StartScreen } from "./StartScreen";
 import { PhoneIcon } from "./PhoneIcons";

@@ -1,7 +1,7 @@
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Button, Theme } from "@windows-phone/react";
-import "@windows-phone/react/styles.css";
+import { Button, Theme } from "@pane-ui/react";
+import "@pane-ui/react/styles.css";
 import { SettingsExample } from "../../shared/SettingsExample";
 import { InboxExample } from "../../shared/InboxExample";
 import styles from "./Starter.module.css";
@@ -12,7 +12,7 @@ function App() {
     <Theme mode="dark" className={styles.shell}>
       <main className={styles.main}>
         <header className={styles.header}>
-          <p>WINDOWS PHONE REACT</p>
+          <p>PANE UI</p>
           <h1>Everyday, reimagined.</h1>
           <p>Two small applications. One independent React library.</p>
         </header>

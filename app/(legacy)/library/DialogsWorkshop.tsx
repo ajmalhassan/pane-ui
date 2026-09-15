@@ -7,7 +7,7 @@ import {
   Field,
   TextField,
   MessageBanner,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 export function DialogsWorkshop() {
   const [edit, setEdit] = useState(false);

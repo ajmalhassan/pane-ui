@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button, Field, Select, Slider } from "@windows-phone/react";
+import { Button, Field, Select, Slider } from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 export function AdjustmentsWorkshop() {
   const [brightness, setBrightness] = useState(60);

@@ -12,7 +12,7 @@ import {
   TextArea,
   TextField,
   Theme,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import { validateForm } from "./formValidation";
 import styles from "./Examples.module.css";
 

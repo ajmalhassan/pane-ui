@@ -46,7 +46,7 @@ import {
   ListItem,
   SectionHeader,
   EmptyState,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./ComponentPreview.module.css";
 
 function PlusIcon() {

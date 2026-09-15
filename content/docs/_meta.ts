@@ -1,5 +1,5 @@
 export default {
-  index: "Windows Phone React",
+  index: "Pane UI",
   installation: "Installation",
   theme: "Theme and tokens",
   motion: "Motion principles",

@@ -5,7 +5,7 @@ import {
   Progress,
   ProgressRing,
   MessageBanner,
-} from "@windows-phone/react";
+} from "@pane-ui/react";
 import styles from "./fieldsWorkshop.module.css";
 import feedback from "./feedbackWorkshop.module.css";
 

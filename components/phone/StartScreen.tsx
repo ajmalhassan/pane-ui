@@ -1,4 +1,4 @@
-import { LiveTile, Pressable, Tile, TileSequence } from "@windows-phone/react";
+import { LiveTile, Pressable, Tile, TileSequence } from "@pane-ui/react";
 import { Landscape, PhoneIcon, Portrait, type IconName } from "./PhoneIcons";
 import type { Screen } from "./state";
 import { FlipArtwork } from "../tiles/TileArtwork";

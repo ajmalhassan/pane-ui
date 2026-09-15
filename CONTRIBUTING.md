@@ -1,6 +1,6 @@
 # Contributing
 
-This repository is preparing an independent Windows Phone inspired React library for open-source release. The package is a local alpha; its public name and license must be finalized before publication.
+This repository is preparing an independent Windows Phone inspired React library for open-source release. The package is a local alpha; npm scope ownership and the license must be finalized before publication.
 
 ## Development
 

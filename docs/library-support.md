@@ -1,6 +1,6 @@
 # Alpha support and quality contract
 
-`@windows-phone/react` is a private local alpha. This document distinguishes intended contracts, automated evidence, and checks still required before a public release. It does not certify WCAG conformance or parity with an established system.
+`@pane-ui/react` is a private local alpha. This document distinguishes intended contracts, automated evidence, and checks still required before a public release. It does not certify WCAG conformance or parity with an established system.
 
 ## Intended platform
 
@@ -20,7 +20,7 @@
 | Events | Consumer handlers run before internal behavior; cancellation is supported where documented. Callbacks request a state change; they do not perform application navigation or network mutation. |
 | Forms | Native browser constraint validation is the default. There is no required form-validation library. Consumers can use a form library through native props and refs; no third-party adapter is certified yet. |
 | Visibility | `hidden` removes layout and interaction. Inactive PivotPanel additionally enforces hidden/inert; caller restrictions on an active panel remain intact. |
-| Styling | Import `@windows-phone/react/styles.css` once and wrap a subtree in Theme. No global reset. Consumer className and style are extension points. |
+| Styling | Import `@pane-ui/react/styles.css` once and wrap a subtree in Theme. No global reset. Consumer className and style are extension points. |
 | Motion | Reduced motion, interruption, reversal, unmount and stale-completion prevention are contractual. Visual regression review still matters for timing and spatial character. |
 
 Some native behavior differs by platform. Safari does not normally focus clicked buttons. Supply Dialog `finalFocusRef` when a pointer-opened dialog must return to a particular trigger. The fallback returns to the previously focused element, which may not be the clicked trigger. If deleting a row removes its trigger, select a surviving destination. Safari radio arrow navigation stops at the last enabled option; Chromium/Firefox wrap. We retain native radio behavior rather than substitute a custom keyboard model.

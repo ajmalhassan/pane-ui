@@ -1,5 +1,5 @@
 "use client";
-import { Theme, TileGrid, TileLink, RevealTile } from "@windows-phone/react";
+import { Theme, TileGrid, TileLink, RevealTile } from "@pane-ui/react";
 import { FlipArtwork, TileMotion } from "../tiles/TileArtwork";
 import { Portrait, Landscape } from "../phone/PhoneIcons";
 import { Glyph } from "./Glyph";
