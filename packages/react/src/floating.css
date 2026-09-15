@@ -1,0 +1,103 @@
+.wp-floating {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--wp-border, #696c75);
+  border-block-start: 3px solid var(--wp-accent-text, #52b5ff);
+  background: var(--wp-surface, #25272c);
+  color: var(--wp-foreground, #f7f7f8);
+  font: inherit;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.wp-floating::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+.wp-floating-content {
+  animation: wp-popup-enter 140ms cubic-bezier(0.15, 0.7, 0.25, 1);
+}
+.wp-menu {
+  width: 240px;
+}
+.wp-menu-item {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 12px 20px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.wp-menu-item:hover:not(:disabled),
+.wp-menu-item:focus {
+  outline: none;
+  background: var(--wp-accent, #0063b1);
+  color: var(--wp-on-accent, white);
+}
+.wp-menu-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
+}
+.wp-menu-item[data-destructive] {
+  color: var(--wp-error-text, #ff9d9d);
+}
+.wp-menu-item[data-destructive]:hover,
+.wp-menu-item[data-destructive]:focus {
+  color: var(--wp-on-accent, white);
+}
+.wp-menu-item:disabled {
+  color: var(--wp-muted, #b5b7bd);
+  cursor: not-allowed;
+}
+.wp-popover {
+  width: 320px;
+}
+.wp-popover-content {
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+.wp-popover-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 300;
+  letter-spacing: -0.6px;
+  overflow-wrap: anywhere;
+}
+@keyframes wp-popup-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-floating-content {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .wp-floating {
+    border-color: CanvasText;
+  }
+  .wp-menu-item:focus {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+  .wp-menu-item:disabled {
+    color: GrayText;
+  }
+}

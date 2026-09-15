@@ -1,0 +1,35 @@
+{
+  "name": "@windows-phone/react",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Windows Phone inspired React tiles, themes, commands, and motion.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./motion.css": "./dist/motion.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0 <20",
+    "react-dom": ">=19.0.0 <20"
+  },
+  "dependencies": {
+    "@floating-ui/react": "^0.27.20"
+  }
+}

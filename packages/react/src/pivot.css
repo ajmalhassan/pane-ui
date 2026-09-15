@@ -1,0 +1,54 @@
+.wp-pivot {
+  min-width: 0;
+}
+.wp-pivot-list {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.wp-pivot[data-orientation="vertical"] > .wp-pivot-list {
+  flex-direction: column;
+}
+.wp-pivot-trigger {
+  flex: 0 0 auto;
+  padding: 0.25rem 0 0.5rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 300;
+  text-align: start;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.wp-pivot-trigger[aria-selected="true"] {
+  opacity: 1;
+  border-color: var(--wp-accent, #0078d4);
+}
+.wp-pivot-trigger:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.wp-pivot-trigger:focus-visible,
+.wp-pivot-panel:focus-visible {
+  outline: 2px solid var(--wp-accent, #0078d4);
+  outline-offset: -2px;
+}
+.wp-pivot-panel {
+  padding-block: 1rem;
+}
+.wp-pivot-panel[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .wp-pivot-trigger[aria-selected="true"] {
+    border-color: Highlight;
+  }
+  .wp-pivot-trigger:disabled {
+    color: GrayText;
+  }
+}

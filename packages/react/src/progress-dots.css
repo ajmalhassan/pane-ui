@@ -1,0 +1,59 @@
+.wp-progress-dots {
+  --wp-dot-size: 4px;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  color: var(--wp-accent-text, currentColor);
+  pointer-events: none;
+}
+.wp-progress-dot {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-10%);
+  animation: wp-stream-dots 2.6s linear infinite;
+  animation-delay: calc(var(--wp-dot-index) * 160ms);
+}
+.wp-progress-dot::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - var(--wp-dot-size) / 2);
+  left: 0;
+  width: var(--wp-dot-size);
+  height: var(--wp-dot-size);
+  border-radius: 50%;
+  background: currentColor;
+}
+@keyframes wp-stream-dots {
+  0% {
+    transform: translateX(-10%);
+    animation-timing-function: cubic-bezier(0.1, 0.7, 0.3, 1);
+  }
+  20% {
+    transform: translateX(35%);
+    animation-timing-function: linear;
+  }
+  75% {
+    transform: translateX(65%);
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3);
+  }
+  95%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+.wp-progress-dots:dir(rtl) {
+  transform: scaleX(-1);
+}
+.wp-progress-dots[hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-progress-dot {
+    animation: none;
+    transform: translateX(
+      calc(50% + (var(--wp-dot-index) - 2) * (var(--wp-dot-size) + 4px))
+    );
+  }
+}

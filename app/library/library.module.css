@@ -1,0 +1,1052 @@
+.workshop {
+  min-height: 100vh;
+  background: var(--wp-background);
+  color: var(--wp-foreground);
+  font-family: var(--wp-font);
+}
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 64px;
+}
+.workshop a {
+  text-decoration: none;
+}
+.workshop button,
+.workshop input {
+  font: inherit;
+}
+.workshop button,
+.workshop a,
+.workshop input {
+  -webkit-tap-highlight-color: transparent;
+}
+.workshop button:focus-visible,
+.workshop a:focus-visible,
+.workshop input:focus-visible,
+.workshop h3:focus-visible {
+  outline: 3px solid var(--wp-foreground);
+  outline-offset: 5px;
+}
+.skip {
+  position: fixed;
+  z-index: 10;
+  top: 8px;
+  left: 8px;
+  padding: 12px 20px;
+  background: var(--wp-background);
+  transform: translateY(-150%);
+  clip-path: inset(50%);
+}
+.skip:focus {
+  transform: none;
+  clip-path: none;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px 0 29px;
+  border-bottom: 1px solid var(--wp-border);
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 22px;
+  font-weight: 350;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.wordmarkSub {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--wp-muted);
+  margin-top: 7px;
+}
+.mark {
+  display: grid;
+  grid-template-columns: repeat(2, 12px);
+  gap: 3px;
+  transform: perspective(80px) rotateY(-12deg);
+}
+.mark i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: var(--wp-accent);
+}
+.alpha {
+  font-size: 11px;
+  color: var(--wp-muted);
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.alpha > span {
+  width: 5px;
+  height: 5px;
+  background: var(--wp-accent);
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  padding: 24px 0;
+}
+.nav a {
+  font-size: 16px;
+  color: var(--wp-muted);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  transition: color 140ms;
+}
+.nav a:first-child,
+.nav a:hover {
+  color: var(--wp-foreground);
+}
+.nav a span {
+  font-size: 9px;
+  color: var(--wp-muted);
+}
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+  padding: 60px 0 76px;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  color: var(--wp-muted);
+  margin: 0 0 24px;
+}
+.hero h1 {
+  font-size: clamp(70px, 8.2vw, 116px);
+  font-weight: 250;
+  line-height: 0.98;
+  letter-spacing: -6px;
+  margin: 0;
+}
+.hero h1 span {
+  color: var(--wp-accent-text, var(--wp-accent));
+}
+.intro {
+  margin: 30px 0;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--wp-muted);
+  font-weight: 350;
+}
+.heroLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 14px;
+  padding: 9px 0;
+}
+.heroLink svg {
+  width: 27px;
+  height: 27px;
+  color: var(--wp-accent-text, var(--wp-accent));
+}
+.heroPreview {
+  min-width: 0;
+  padding-top: 8px;
+}
+.previewCaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--wp-muted);
+  margin-bottom: 12px;
+}
+.heroGrid {
+  --wp-tile-gap: 9px;
+}
+.helloTile {
+  justify-content: center !important;
+}
+.hello {
+  display: block;
+  font-size: clamp(38px, 5vw, 74px);
+  font-weight: 250;
+  letter-spacing: -3px;
+  line-height: 1;
+  margin-top: 18px;
+}
+.tileAside {
+  display: block;
+  font-size: 11px;
+  margin-top: 15px;
+}
+.heroIcon {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+}
+.heroIcon svg {
+  width: 100%;
+  height: 100%;
+}
+.count {
+  display: block;
+  font-size: clamp(22px, 3vw, 40px);
+  font-weight: 300;
+  line-height: 1.2;
+}
+.music {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  height: 100%;
+}
+.music svg {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.music > span {
+  font-size: 21px;
+  font-weight: 300;
+  line-height: 1.1;
+}
+.exploreTile {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  font-size: 26px;
+  font-weight: 300;
+}
+.exploreTile svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.manifesto {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--wp-border);
+  border-bottom: 1px solid var(--wp-border);
+  padding: 20px 0;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--wp-muted);
+}
+.section {
+  padding: 92px 0 0;
+  scroll-margin-top: 24px;
+}
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 60px;
+  align-items: flex-end;
+  margin-bottom: 40px;
+}
+.sectionHeading .eyebrow {
+  margin-bottom: 18px;
+}
+.section h2 {
+  font-size: clamp(38px, 4.3vw, 58px);
+  font-weight: 300;
+  letter-spacing: -2px;
+  line-height: 1.08;
+  margin: 0;
+}
+.sectionHeading > p {
+  max-width: 300px;
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--wp-muted);
+}
+.specimens {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+.specimen {
+  min-width: 0;
+}
+.specimenCanvas {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: flex-start;
+}
+.specimenCanvas > * {
+  width: 100%;
+  height: 100%;
+}
+
+.specimen h3 {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin: 22px 0 10px;
+}
+.specimen p {
+  font-size: 12px;
+  color: var(--wp-muted);
+  line-height: 1.65;
+  margin: 0 0 12px;
+  min-height: 40px;
+}
+.specimen code {
+  font-size: 9px;
+  color: var(--wp-muted);
+  overflow-wrap: anywhere;
+}
+.bigNumber {
+  font-size: 68px;
+  font-weight: 250;
+  letter-spacing: -3px;
+  display: block;
+  line-height: 1.3;
+}
+.destination {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  font-size: 32px;
+  font-weight: 300;
+}
+.destination svg {
+  width: 48px;
+  height: 48px;
+}
+.revealCopy {
+  display: block;
+  font-size: clamp(23px, 2.6vw, 34px);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+.hint {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+  margin-top: 20px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.motionLab {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 56px;
+}
+.workshop fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.workshop legend {
+  padding: 0;
+  font-size: 10px;
+  color: var(--wp-muted);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.presetList {
+  display: grid;
+}
+.presetList button {
+  border: 0;
+  border-bottom: 1px solid var(--wp-border);
+  padding: 15px 8px;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 24px 1fr 20px;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--wp-muted);
+  font-size: 24px;
+  font-weight: 300;
+}
+.presetList button span {
+  font-size: 10px;
+}
+.presetList button[aria-pressed="true"] {
+  color: var(--wp-accent-text, var(--wp-accent));
+  border-bottom-color: var(--wp-accent-text, var(--wp-accent));
+}
+.presetDescription {
+  font-size: 12px;
+  color: var(--wp-muted);
+  line-height: 1.7;
+  min-height: 84px;
+  margin: 18px 0 26px;
+}
+.segment {
+  display: flex;
+  gap: 6px;
+}
+.segment button {
+  padding: 9px 13px;
+  background: transparent;
+  border: 1px solid var(--wp-border);
+  color: var(--wp-muted);
+  cursor: pointer;
+  font-size: 12px;
+  min-height: 44px;
+}
+.segment button[aria-pressed="true"] {
+  color: var(--wp-foreground);
+  border-color: var(--wp-foreground);
+}
+.rangeLabel {
+  font-size: 10px;
+  color: var(--wp-muted);
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0 10px;
+}
+.rangeLabel output {
+  color: var(--wp-foreground);
+}
+.range {
+  display: block;
+  width: 100%;
+  accent-color: var(--wp-accent-text, var(--wp-accent));
+  height: 30px;
+}
+.motionPreference {
+  font-size: 10px;
+  color: var(--wp-muted);
+  margin: 14px 0 0;
+}
+.stageOuter {
+  background: var(--wp-surface);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stageMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--wp-muted);
+  padding: 20px 24px;
+}
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 365px;
+  display: grid;
+  place-items: center;
+  padding: 30px 65px;
+  overflow: hidden;
+  perspective: 1200px;
+}
+.stageEmpty {
+  color: var(--wp-muted);
+  font-size: 28px;
+  font-weight: 300;
+  position: absolute;
+}
+.motionSurface {
+  width: 100%;
+  max-width: 480px;
+  min-height: 295px;
+  background: var(--wp-accent);
+  color: var(--wp-on-accent);
+  position: relative;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.motionSurface[data-state="exited"] {
+  min-height: 0;
+  padding: 0;
+}
+.surfaceEyebrow {
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.surfaceTitle {
+  display: block;
+  font-size: clamp(40px, 4.8vw, 65px);
+  font-weight: 250;
+  line-height: 1;
+  letter-spacing: -2.5px;
+  margin: 25px 0;
+}
+.surfaceFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  gap: 16px;
+}
+.surfaceFoot svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.stageBar {
+  justify-content: center;
+  border: 0 !important;
+  background: transparent !important;
+  padding-bottom: 20px !important;
+}
+.motionNotes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--wp-border);
+}
+.motionNotes p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--wp-muted);
+}
+.motionNotes strong {
+  display: block;
+  color: var(--wp-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.journey {
+  padding: 44px;
+  background: var(--wp-surface);
+  min-height: 360px;
+  overflow: hidden;
+}
+.journeyOverview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.journey h3 {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 300;
+  letter-spacing: -1.5px;
+  margin: 0;
+}
+.journey p:not(.eyebrow) {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--wp-muted);
+  max-width: 480px;
+}
+.openIdea {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid var(--wp-foreground);
+  background: transparent;
+  color: var(--wp-foreground);
+  padding: 12px 18px;
+  font-size: 13px;
+}
+.openIdea svg {
+  width: 20px;
+  height: 20px;
+}
+.miniTiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.miniTiles svg {
+  width: 48px;
+  height: 48px;
+  margin: 16px 0;
+}
+.miniTiles span {
+  font-size: 48px;
+  font-weight: 300;
+}
+.miniTiles :global(.wp-tile-label) {
+  font-size: 10px;
+}
+.journeyDetail {
+  min-height: 280px;
+}
+.journeyDetail > p {
+  margin: 20px 0;
+}
+.journeyDetail > p:first-child {
+  margin-top: 0;
+}
+.journeyDetail :global(.wp-app-bar) {
+  margin-top: 25px;
+  justify-content: flex-start;
+}
+.foundations {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr;
+  gap: 40px;
+  border-top: 1px solid var(--wp-border);
+  border-bottom: 1px solid var(--wp-border);
+  padding: 32px 0;
+  align-items: center;
+}
+.swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.swatch {
+  width: 40px;
+  height: 44px;
+  border: 2px solid transparent;
+  padding: 4px;
+  cursor: pointer;
+  background: none;
+}
+.swatch[aria-pressed="true"] {
+  border-color: var(--wp-foreground);
+}
+.swatch > span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  color: white;
+}
+.swatch[data-color="blue"] > span {
+  background: #0078d4;
+}
+.swatch[data-color="violet"] > span {
+  background: #7446bd;
+}
+.swatch[data-color="magenta"] > span {
+  background: #ad1769;
+}
+.swatch[data-color="orange"] > span {
+  background: #b64a00;
+}
+.swatch[data-color="green"] > span {
+  background: #147b42;
+}
+.typeSample {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.typeSample > span {
+  font-size: 64px;
+  font-weight: 250;
+  letter-spacing: -4px;
+}
+.typeSample p {
+  color: var(--wp-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.getStarted {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  padding-bottom: 88px;
+}
+.getStarted p:not(.eyebrow) {
+  max-width: 350px;
+  color: var(--wp-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 24px 0;
+}
+.install {
+  display: block;
+  font-size: 12px;
+  line-height: 2;
+  color: var(--wp-foreground);
+}
+.codePanel {
+  background: var(--wp-surface);
+  min-width: 0;
+}
+.codePanel > div {
+  border-bottom: 1px solid var(--wp-border);
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--wp-muted);
+}
+.codePanel svg {
+  width: 18px;
+  height: 18px;
+}
+.codePanel pre {
+  margin: 0;
+  padding: 24px;
+  font-size: 11px;
+  line-height: 1.9;
+  overflow-x: auto;
+}
+.footer {
+  border-top: 1px solid var(--wp-border);
+  padding: 28px 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  color: var(--wp-muted);
+  font-size: 10px;
+}
+.footer > span {
+  font-size: 15px;
+  color: var(--wp-foreground);
+  font-weight: 300;
+}
+.footer p {
+  line-height: 1.7;
+}
+@media (min-width: 1440px) {
+  .heroGrid {
+    --wp-tile-gap: 10px;
+  }
+}
+@media (max-width: 1100px) {
+  .container {
+    padding: 0 36px;
+  }
+  .hero {
+    gap: 35px;
+  }
+  .specimens {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 24px;
+  }
+  .revealCopy {
+    font-size: 36px;
+  }
+  .motionLab {
+    gap: 30px;
+    grid-template-columns: 230px 1fr;
+  }
+  .stage {
+    padding: 25px;
+  }
+  .foundations {
+    grid-template-columns: 1fr 1fr;
+  }
+  .typeSample {
+    grid-column: 1 / -1;
+  }
+  .journey {
+    padding: 30px;
+  }
+  .miniTiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .miniTiles > :last-child {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .container {
+    padding: 0 22px;
+  }
+  .header {
+    padding: 25px 0;
+    align-items: flex-start;
+  }
+  .wordmark {
+    font-size: 18px;
+    gap: 10px;
+  }
+  .wordmarkSub {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .alpha {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    max-width: 70px;
+    line-height: 1.7;
+    white-space: normal;
+    gap: 5px;
+  }
+  .alpha > span {
+    flex-shrink: 0;
+  }
+  .nav {
+    gap: 18px;
+    padding: 20px 0;
+  }
+  .nav a {
+    font-size: 13px;
+    gap: 5px;
+  }
+  .nav a span {
+    font-size: 8px;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 32px 0 40px;
+    gap: 36px;
+  }
+  .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+  .hero h1 {
+    font-size: clamp(72px, 14vw, 100px);
+    letter-spacing: -4px;
+  }
+  .intro {
+    font-size: 15px;
+    margin: 24px 0 18px;
+  }
+  .hello {
+    font-size: 64px;
+  }
+  .heroPreview {
+    max-width: 480px;
+    width: 100%;
+  }
+  .count {
+    font-size: 32px;
+  }
+  .manifesto {
+    font-size: 7px;
+    letter-spacing: 1px;
+    gap: 12px;
+  }
+  .section {
+    padding-top: 58px;
+  }
+  .sectionHeading {
+    display: block;
+    margin-bottom: 26px;
+  }
+  .sectionHeading > p {
+    max-width: 400px;
+    font-size: 13px;
+    margin: 20px 0 0;
+  }
+  .section h2 {
+    font-size: 42px;
+    letter-spacing: -1.7px;
+  }
+  .specimens {
+    gap: 30px 12px;
+  }
+
+  .bigNumber {
+    font-size: 48px;
+  }
+  .destination {
+    font-size: 24px;
+    gap: 18px;
+  }
+  .destination svg {
+    width: 34px;
+    height: 34px;
+  }
+  .revealCopy {
+    font-size: 24px;
+    letter-spacing: -0.6px;
+  }
+  .hint {
+    font-size: 8px;
+    margin-top: 14px;
+  }
+  .specimen h3 {
+    font-size: 11px;
+    margin: 16px 0 8px;
+  }
+  .specimen p {
+    font-size: 11px;
+  }
+  .specimen code {
+    font-size: 8px;
+  }
+  .motionLab {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .presetList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 12px;
+  }
+  .presetList button {
+    font-size: 20px;
+    padding: 13px 4px;
+    grid-template-columns: 16px 1fr 12px;
+  }
+  .presetDescription {
+    min-height: 0;
+    margin: 16px 0 20px;
+  }
+  .stage {
+    min-height: 330px;
+    padding: 25px;
+  }
+  .stageMeta {
+    font-size: 8px;
+    padding: 18px;
+  }
+  .motionSurface {
+    min-height: 275px;
+    padding: 23px;
+  }
+  .surfaceTitle {
+    font-size: 49px;
+  }
+  .surfaceFoot {
+    font-size: 10px;
+  }
+  .motionNotes {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .journey {
+    padding: 24px;
+    min-height: 0;
+  }
+  .journeyOverview {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .journey h3 {
+    font-size: 36px;
+  }
+  .miniTiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .miniTiles > :last-child {
+    display: block;
+  }
+  .miniTiles span {
+    font-size: 30px;
+  }
+  .miniTiles svg {
+    width: 30px;
+    height: 30px;
+  }
+  .miniTiles :global(.wp-tile) {
+    min-height: 100px;
+    padding: 10px;
+  }
+  .miniTiles :global(.wp-tile-label) {
+    font-size: 8px;
+  }
+  .foundations {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .getStarted {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-bottom: 48px;
+  }
+  .codePanel pre {
+    font-size: 10px;
+    padding: 18px;
+  }
+  .footer {
+    flex-wrap: wrap;
+    gap: 10px 20px;
+  }
+  .footer > p {
+    order: 3;
+    width: 100%;
+  }
+}
+@media (max-width: 370px) {
+  .container {
+    padding: 0 16px;
+  }
+  .nav {
+    gap: 13px;
+  }
+  .nav a {
+    font-size: 12px;
+  }
+  .heroIcon {
+    width: 25px;
+    height: 25px;
+  }
+  .count {
+    font-size: 24px;
+  }
+  .hello {
+    font-size: 48px;
+  }
+  .music {
+    gap: 12px;
+  }
+  .music > span {
+    font-size: 18px;
+  }
+  .music svg {
+    width: 32px;
+  }
+  .tileAside {
+    font-size: 9px;
+  }
+  .specimens {
+    grid-template-columns: 1fr;
+  }
+
+  .revealCopy {
+    font-size: 34px;
+  }
+  .specimen p {
+    min-height: 0;
+  }
+  .stage {
+    padding: 18px;
+  }
+  .motionSurface {
+    padding: 18px;
+  }
+  .surfaceTitle {
+    font-size: 42px;
+  }
+}
+
+.helloTile :global(.wp-tile-content) {
+  font-size: 14px;
+}
+.specimenCanvas :global(.wp-tile-content) {
+  font-size: 14px;
+}
+.heroGrid :global(.wp-tile-label) {
+  font-size: 11px;
+}
+.heroGrid :global(.wp-tile) {
+  padding: 16px;
+}
+@media (max-width: 700px) {
+  .heroGrid :global(.wp-tile) {
+    padding: 12px;
+  }
+  .heroGrid :global(.wp-tile-label) {
+    font-size: 10px;
+  }
+}

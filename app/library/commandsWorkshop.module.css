@@ -1,0 +1,106 @@
+.section {
+  padding-top: 92px;
+  scroll-margin-top: 24px;
+}
+.heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+.kicker {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  color: var(--wp-muted);
+  margin: 0 0 18px;
+}
+.heading h2 {
+  font-size: clamp(38px, 4.3vw, 58px);
+  font-weight: 300;
+  letter-spacing: -2px;
+  line-height: 1.08;
+  margin: 0;
+}
+.heading > p {
+  max-width: 300px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--wp-muted);
+}
+.examples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.example,
+.barExample {
+  border: 1px solid var(--wp-border);
+  padding: 28px;
+  min-width: 0;
+}
+.example h3 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -1px;
+  margin: 0 0 24px;
+}
+.example p:not(.kicker) {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--wp-muted);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.counter {
+  margin: 28px 0 0;
+}
+.counter strong {
+  display: inline-block;
+  font-size: 52px;
+  font-weight: 300;
+  margin-inline-end: 12px;
+  line-height: 1;
+  color: var(--wp-accent-text);
+}
+.barExample {
+  margin-top: 24px;
+}
+.bar {
+  justify-content: flex-start;
+  padding: 24px;
+}
+.status {
+  min-height: 1.7em;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 22px 0 0;
+  color: var(--wp-muted);
+}
+@media (max-width: 760px) {
+  .heading {
+    display: block;
+  }
+  .heading > p {
+    margin-top: 24px;
+  }
+  .examples {
+    grid-template-columns: 1fr;
+  }
+  .example,
+  .barExample {
+    padding: 20px;
+  }
+  .bar {
+    padding: 16px;
+    gap: 0.5rem;
+  }
+}

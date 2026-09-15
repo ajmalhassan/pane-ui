@@ -1,0 +1,182 @@
+.wp-theme {
+  --wp-error-text: #ff9d9d;
+}
+.wp-theme[data-mode="light"] {
+  --wp-error-text: #9c1424;
+}
+@media (prefers-color-scheme: light) {
+  .wp-theme[data-mode="system"] {
+    --wp-error-text: #9c1424;
+  }
+}
+.wp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.wp-label {
+  display: block;
+  color: var(--wp-foreground, #fff);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.wp-text-field {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 2px solid var(--wp-border, #696c75);
+  border-radius: 0;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--wp-surface, #25272c);
+  color: var(--wp-foreground, #fff);
+  caret-color: var(--wp-accent-text, #52b5ff);
+}
+.wp-text-field::placeholder {
+  color: var(--wp-muted, #b5b7bd);
+  opacity: 1;
+}
+.wp-text-field:focus {
+  outline: 2px solid var(--wp-accent-text, #52b5ff);
+  outline-offset: 2px;
+  border-color: var(--wp-accent-text, #52b5ff);
+}
+.wp-text-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.wp-text-field[readonly] {
+  border-style: dashed;
+}
+.wp-text-area {
+  resize: vertical;
+}
+.wp-field-description,
+.wp-field-error {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.wp-field-description {
+  color: var(--wp-muted, #b5b7bd);
+}
+.wp-field-error {
+  color: var(--wp-error-text, #ff9d9d);
+  padding-inline-start: 10px;
+  border-inline-start: 3px solid currentColor;
+}
+.wp-text-field[aria-invalid="true"] {
+  border-style: dashed;
+  border-color: var(--wp-error-text, #ff9d9d);
+}
+@media (forced-colors: active) {
+  .wp-text-field {
+    border-color: FieldText;
+  }
+  .wp-text-field:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
+  }
+  .wp-text-field:focus {
+    outline-color: Highlight;
+  }
+}
+
+.wp-select {
+  appearance: auto;
+  padding-inline-end: 24px;
+}
+.wp-select[multiple] {
+  min-height: 8rem;
+  padding-inline-end: 12px;
+}
+.wp-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--wp-accent-text, #52b5ff);
+  cursor: pointer;
+  accent-color: var(--wp-accent, #0063b1);
+}
+.wp-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--wp-border, #696c75);
+}
+.wp-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 28px;
+  margin-top: -12px;
+  border: 2px solid var(--wp-accent-text, #52b5ff);
+  border-radius: 0;
+  background: var(--wp-accent, #0063b1);
+}
+.wp-slider::-moz-range-track {
+  height: 4px;
+  background: var(--wp-border, #696c75);
+}
+.wp-slider::-moz-range-thumb {
+  width: 10px;
+  height: 24px;
+  border: 2px solid var(--wp-accent-text, #52b5ff);
+  border-radius: 0;
+  background: var(--wp-accent, #0063b1);
+}
+.wp-slider:focus-visible {
+  outline: 2px solid var(--wp-accent-text, #52b5ff);
+  outline-offset: 2px;
+}
+.wp-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.wp-slider[aria-invalid="true"] {
+  outline: 2px dashed var(--wp-error-text, #ff9d9d);
+  outline-offset: 2px;
+}
+.wp-slider[aria-invalid="true"]:focus-visible {
+  outline: 2px solid var(--wp-accent-text, #52b5ff);
+  outline-offset: 4px;
+  box-shadow: inset 0 0 0 1px var(--wp-error-text, #ff9d9d);
+}
+@media (forced-colors: active) {
+  .wp-slider {
+    appearance: auto;
+  }
+  .wp-slider::-webkit-slider-thumb {
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .wp-slider::-webkit-slider-runnable-track {
+    background: CanvasText;
+  }
+  .wp-slider::-moz-range-thumb {
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .wp-slider::-moz-range-track {
+    background: CanvasText;
+  }
+}
+
+.wp-field[hidden],
+.wp-label[hidden],
+.wp-text-field[hidden],
+.wp-slider[hidden] {
+  display: none;
+}

@@ -1,0 +1,155 @@
+.wp-progress {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: var(--wp-accent-text, currentColor);
+}
+.wp-progress-track {
+  display: block;
+  height: 4px;
+  background: var(--wp-border, #696c75);
+}
+.wp-progress-fill {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  transition: width 180ms ease-out;
+}
+.wp-progress-ring {
+  display: inline-flex;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  color: var(--wp-accent-text, currentColor);
+  vertical-align: middle;
+}
+.wp-progress-ring[data-size="small"] {
+  width: 32px;
+  height: 32px;
+}
+.wp-progress-ring[data-size="large"] {
+  width: 72px;
+  height: 72px;
+}
+.wp-progress-ring svg {
+  width: 100%;
+  height: 100%;
+}
+.wp-ring-track {
+  stroke: var(--wp-border, #696c75);
+}
+.wp-ring-value {
+  stroke: currentColor;
+  transition: stroke-dasharray 180ms ease-out;
+}
+.wp-ring-orbit {
+  transform-origin: 24px 24px;
+  animation: wp-orbit 2.8s infinite;
+  animation-delay: calc(var(--wp-orbit-index) * -140ms);
+}
+@keyframes wp-orbit {
+  0% {
+    transform: rotate(-120deg);
+    animation-timing-function: cubic-bezier(0.1, 0.7, 0.3, 1);
+  }
+  30% {
+    transform: rotate(40deg);
+    animation-timing-function: linear;
+  }
+  65% {
+    transform: rotate(100deg);
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3);
+  }
+  100% {
+    transform: rotate(240deg);
+  }
+}
+.wp-progress[hidden],
+.wp-progress-ring[hidden],
+.wp-message-banner[hidden] {
+  display: none;
+}
+.wp-message-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--wp-border, #696c75);
+  border-inline-start: 4px solid var(--wp-accent-text, currentColor);
+  background: var(--wp-surface, #25272c);
+  color: var(--wp-foreground, #f7f7f8);
+}
+.wp-message-banner[data-tone="error"] {
+  border-inline-start-color: var(--wp-error-text, #ff9d9d);
+}
+.wp-message-symbol {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.wp-message-symbol svg {
+  display: block;
+}
+.wp-message-main {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.wp-message-heading {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.wp-message-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.wp-message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.wp-message-dismiss {
+  flex: none;
+  margin: -10px -10px 0 0;
+}
+.wp-message-banner:dir(rtl) .wp-message-dismiss {
+  margin: -10px 0 0 -10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-progress-fill,
+  .wp-ring-value {
+    transition: none;
+  }
+  .wp-ring-orbit {
+    animation: none;
+    transform: rotate(calc(var(--wp-orbit-index) * 30deg));
+  }
+}
+@media (forced-colors: active) {
+  .wp-progress,
+  .wp-progress-ring {
+    color: Highlight;
+  }
+  .wp-progress-track {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+  .wp-progress-fill {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+  .wp-ring-track {
+    stroke: CanvasText;
+  }
+  .wp-ring-value,
+  .wp-ring-orbit {
+    color: Highlight;
+    stroke: Highlight;
+  }
+  .wp-message-banner {
+    border-color: CanvasText;
+  }
+}

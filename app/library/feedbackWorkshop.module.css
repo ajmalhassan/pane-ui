@@ -1,0 +1,29 @@
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.number {
+  display: block;
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  color: var(--wp-accent-text);
+}
+.rings {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+@media (max-width: 400px) {
+  .readout {
+    gap: 16px;
+  }
+  .number {
+    font-size: 48px;
+  }
+  .rings {
+    gap: 24px;
+  }
+}

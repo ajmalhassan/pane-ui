@@ -1,0 +1,101 @@
+.wp-button.wp-pressable {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  max-width: 100%;
+  border: 2px solid currentColor;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  color: var(--wp-foreground, #fff);
+  line-height: 1.35;
+  font-weight: 500;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.wp-button[data-variant="accent"] {
+  background: var(--wp-accent, #0063b1);
+  color: var(--wp-on-accent, #fff);
+  border-color: transparent;
+}
+.wp-button[data-variant="subtle"] {
+  border-color: transparent;
+}
+.wp-button[data-loading="true"] {
+  cursor: progress;
+}
+.wp-button[data-loading="true"]:active {
+  transform: none;
+}
+.wp-button-progress.wp-progress-dots {
+  --wp-dot-size: 2px;
+  position: absolute;
+  inset-inline: 8px;
+  bottom: 2px;
+  width: auto;
+  height: 5px;
+  color: inherit;
+}
+.wp-icon-button.wp-button {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  padding: 0.6rem;
+  border-radius: 50%;
+}
+.wp-icon-button > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.wp-icon-button svg {
+  width: 100%;
+  height: 100%;
+}
+.wp-app-bar-link {
+  text-decoration: none;
+  text-align: center;
+}
+.wp-app-bar-overflow {
+  flex-basis: 100%;
+  min-width: 0;
+}
+.wp-app-bar-more.wp-button {
+  display: flex;
+  margin-inline-start: auto;
+  gap: 0.65rem;
+  font-size: 0.8rem;
+}
+.wp-app-bar-more > span:first-child {
+  letter-spacing: 0.15em;
+}
+.wp-app-bar-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--wp-border, currentColor);
+  margin-top: 0.5rem;
+}
+.wp-app-bar-extra[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .wp-button.wp-pressable {
+    border-color: ButtonText;
+  }
+  .wp-button:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
+  }
+}
+
+.wp-button.wp-pressable[hidden] {
+  display: none;
+}

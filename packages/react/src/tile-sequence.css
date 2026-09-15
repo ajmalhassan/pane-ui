@@ -1,0 +1,17 @@
+/* Grid spans and row ratios belong to these wrappers, not the inner tiles.
+   This leaves the tile's transform available for independent press tilt. */
+.wp-tile-sequence[hidden] {
+  display: none;
+}
+.wp-tile-sequence-item {
+  min-width: 0;
+  backface-visibility: hidden;
+}
+.wp-tile-sequence-item > .wp-tile {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  padding: clamp(0.5rem, 3cqw, 1.15rem);
+  gap: 0.5rem;
+}

@@ -1,0 +1,52 @@
+.wp-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  color: var(--wp-foreground, #f7f7f8);
+  background: transparent;
+  overflow: visible;
+  font: inherit;
+}
+.wp-dialog:not([open]),
+.wp-dialog[hidden] {
+  display: none;
+}
+.wp-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+.wp-dialog-panel {
+  box-sizing: border-box;
+  padding: 32px;
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--wp-background, #101114);
+  border: 1px solid var(--wp-border, #696c75);
+  border-block-start: 4px solid var(--wp-accent-text, #52b5ff);
+}
+.wp-dialog-title {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  overflow-wrap: anywhere;
+}
+.wp-dialog-description {
+  margin: 0 0 24px;
+  color: var(--wp-muted, #b5b7bd);
+  line-height: 1.6;
+}
+@media (max-width: 480px) {
+  .wp-dialog-panel {
+    padding: 24px;
+  }
+}
+@media (forced-colors: active) {
+  .wp-dialog-panel {
+    border-color: CanvasText;
+  }
+}

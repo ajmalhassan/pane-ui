@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Built library and local package artifacts
+/packages/react/dist/
+*.tgz

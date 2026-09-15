@@ -16,7 +16,14 @@
     "test:a11y": "playwright test tests/e2e/accessibility.spec.ts",
     "test:e2e": "playwright test tests/e2e/portfolio.spec.ts",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:library": "npm --prefix packages/react run build",
+    "predev": "npm run build:library",
+    "prebuild": "npm run build:library",
+    "test:library": "vitest run tests/unit/Library*.test.tsx",
+    "test:library:browser": "playwright test tests/e2e/library*.spec.ts",
+    "test:package": "npm run build:library && node scripts/verify-package.mjs",
+    "lint:library": "eslint packages/react/src --ext .ts,.tsx --max-warnings 0"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -24,7 +31,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remark": "^15.0.1",
-    "remark-html": "^16.0.1"
+    "remark-html": "^16.0.1",
+    "@windows-phone/react": "file:packages/react"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

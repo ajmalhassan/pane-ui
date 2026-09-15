@@ -1,0 +1,71 @@
+.wp-panorama {
+  --wp-panorama-position: 0;
+  --wp-panorama-direction: 1;
+  min-width: 0;
+  overflow: clip;
+  touch-action: pan-y pinch-zoom;
+}
+.wp-panorama[dir="rtl"] {
+  --wp-panorama-direction: -1;
+}
+.wp-panorama-heading-viewport {
+  overflow: hidden;
+  padding-block: 0.35rem 0.8rem;
+}
+.wp-panorama-headings {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+  will-change: transform;
+}
+.wp-panorama-headings [role="tab"] {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--wp-muted, currentColor);
+  font: inherit;
+  font-size: clamp(2.4rem, 8vw, 4.5rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+  padding: 0.12em 0.04em;
+  cursor: pointer;
+}
+.wp-panorama-headings [role="tab"][aria-selected="true"] {
+  color: inherit;
+}
+.wp-panorama-headings [role="tab"]:focus-visible,
+.wp-panorama-panel:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+.wp-panorama-surface {
+  display: grid;
+  position: relative;
+  min-width: 0;
+}
+.wp-panorama-panel {
+  grid-area: 1 / 1;
+  min-width: 0;
+  align-self: start;
+  transform: translate3d(
+    calc(
+      (var(--wp-panorama-index) - var(--wp-panorama-position)) * 100% *
+        var(--wp-panorama-direction)
+    ),
+    0,
+    0
+  );
+}
+.wp-panorama-panel[hidden] {
+  display: none;
+}
+.wp-panorama[data-motion-state="dragging"] {
+  user-select: none;
+  cursor: grabbing;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-panorama-headings {
+    will-change: auto;
+  }
+}

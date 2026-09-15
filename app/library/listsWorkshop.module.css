@@ -1,0 +1,58 @@
+.panel {
+  border: 1px solid var(--wp-border);
+  padding: 28px;
+}
+.toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.toolbar > :first-child {
+  flex: 1;
+  min-width: 180px;
+}
+.rowMenu {
+  font-size: 0 !important;
+  width: 48px;
+  min-width: 48px;
+  padding: 0 !important;
+  border-color: transparent !important;
+}
+.rowMenu::after {
+  content: "";
+  width: 18px;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    currentColor 0 4px,
+    transparent 4px 7px,
+    currentColor 7px 11px,
+    transparent 11px 14px,
+    currentColor 14px 18px
+  );
+}
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.form {
+  display: grid;
+  gap: 24px;
+}
+.close {
+  margin-top: 24px;
+}
+@media (max-width: 480px) {
+  .panel {
+    padding: 16px;
+  }
+  .toolbar > :first-child {
+    width: 100%;
+  }
+}
