@@ -1,6 +1,7 @@
 import { LiveTile, Pressable, Tile, TileSequence } from "@windows-phone/react";
 import { Landscape, PhoneIcon, Portrait, type IconName } from "./PhoneIcons";
 import type { Screen } from "./state";
+import { FlipArtwork } from "../tiles/TileArtwork";
 import s from "./phone.module.css";
 export function StartScreen({
   show,
@@ -31,9 +32,25 @@ export function StartScreen({
         aria-label={`Open ${label}`}
         onClick={() => open(id, `tile-${id}`)}
       >
-        <Tile label={label} size={size} className={s.tile}>
-          {children ?? <PhoneIcon name={icon} />}
-        </Tile>
+        {id === "photos" ? (
+          <FlipArtwork
+            delay={0.8}
+            front={
+              <Tile label="Photos" size={size} className={s.tile}>
+                <Landscape />
+              </Tile>
+            }
+            back={
+              <Tile label="Weekend memories" size={size} className={s.tile}>
+                <Landscape variant={2} />
+              </Tile>
+            }
+          />
+        ) : (
+          <Tile label={label} size={size} className={s.tile}>
+            {children ?? <PhoneIcon name={icon} />}
+          </Tile>
+        )}
       </Pressable>
     ),
   });
@@ -68,7 +85,13 @@ export function StartScreen({
             "small",
             <div className={s.faces}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <Portrait key={i} index={i} />
+                <FlipArtwork
+                  key={i}
+                  delay={[0.2, 2.1, 0.9, 3.6, 1.4, 4.2][i]}
+                  duration={10 + (i % 3)}
+                  front={<Portrait index={i} />}
+                  back={<Portrait index={(i + 3) % 6} />}
+                />
               ))}
             </div>,
           ),

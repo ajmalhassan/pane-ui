@@ -1206,3 +1206,25 @@
     transition: none;
   }
 }
+
+.wholeFlip {
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.wholeFlip :global(.wp-tile-content) {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+.wholeFlip > :global(.wp-tile-label) {
+  display: none;
+}
+.flipCaption {
+  position: absolute;
+  inset: auto auto 10px 12px;
+  font-size: 12px;
+  background: #10222bd9;
+  color: white;
+  padding: 2px 4px;
+}

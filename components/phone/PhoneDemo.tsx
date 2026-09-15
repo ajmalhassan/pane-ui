@@ -5,6 +5,7 @@ import { AppScreens, type Accent, type Message } from "./AppScreens";
 import { StartScreen } from "./StartScreen";
 import { PhoneIcon } from "./PhoneIcons";
 import { initialNavigation, navigationReducer, type Screen } from "./state";
+import { TileMotion } from "../tiles/TileArtwork";
 import s from "./phone.module.css";
 export function PhoneDemo() {
   const [nav, dispatch] = useReducer(navigationReducer, initialNavigation);
@@ -53,7 +54,7 @@ export function PhoneDemo() {
     dispatch({ type: "back" });
   };
   return (
-    <div className={s.presentation}>
+    <TileMotion className={s.presentation}>
       <div
         className={s.device}
         ref={root}
@@ -155,7 +156,7 @@ export function PhoneDemo() {
         A little familiar. Still a little different.
         <span>Tap a tile to explore · Esc goes back</span>
       </p>
-    </div>
+    </TileMotion>
   );
 }
 export default PhoneDemo;

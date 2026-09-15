@@ -1,10 +1,12 @@
 "use client";
 import { Theme, TileGrid, TileLink, RevealTile } from "@windows-phone/react";
+import { FlipArtwork, TileMotion } from "../tiles/TileArtwork";
+import { Portrait, Landscape } from "../phone/PhoneIcons";
 import { Glyph } from "./Glyph";
 import styles from "./site.module.css";
 export function HeroTiles() {
   return (
-    <div className={styles.heroDisplay}>
+    <TileMotion className={styles.heroDisplay}>
       <div className={styles.displayCaption}>
         <span>START SOMETHING DIFFERENT</span>
         <span>09:41</span>
@@ -18,33 +20,14 @@ export function HeroTiles() {
             className={styles.peopleTile}
           >
             <div className={styles.peopleMosaic} aria-hidden="true">
-              {[
-                "#007ca8",
-                "#0099b3",
-                "#014b77",
-                "#355d96",
-                "#008995",
-                "#2456a2",
-                "#007091",
-                "#399aa6",
-                "#114073",
-              ].map((color, i) => (
-                <span key={color} style={{ background: color }}>
-                  <svg viewBox="0 0 60 60">
-                    <circle
-                      cx={30 + (i % 3) * 2}
-                      cy="22"
-                      r="10"
-                      fill="white"
-                      opacity=".6"
-                    />
-                    <path
-                      d="M10 60V48c0-18 40-18 40 0v12"
-                      fill="white"
-                      opacity=".6"
-                    />
-                  </svg>
-                </span>
+              {Array.from({ length: 9 }, (_, i) => (
+                <FlipArtwork
+                  key={i}
+                  delay={[0.4, 2.1, 4.4, 1.2, 3.3, 0.8, 4.9, 2.6, 1.8][i]}
+                  duration={11 + (i % 3)}
+                  front={<Portrait index={i} />}
+                  back={<Portrait index={(i + 3) % 6} />}
+                />
               ))}
             </div>
           </TileLink>
@@ -84,13 +67,24 @@ export function HeroTiles() {
             size="wide"
             href="/docs/tiles"
             label="photos"
-            className={styles.photoTile}
+            aria-label="Photos — explore tiles"
+            className={`${styles.photoTile} ${styles.wholeFlip}`}
           >
-            <div className={styles.landscape} aria-hidden="true">
-              <i />
-              <b />
-              <span />
-            </div>
+            <FlipArtwork
+              delay={0.8}
+              front={
+                <>
+                  <Landscape variant={1} />
+                  <span className={styles.flipCaption}>photos</span>
+                </>
+              }
+              back={
+                <>
+                  <Landscape variant={2} />
+                  <span className={styles.flipCaption}>weekend memories</span>
+                </>
+              }
+            />
           </TileLink>
           <TileLink
             size="wide"
@@ -139,6 +133,6 @@ export function HeroTiles() {
         <span>REAL COMPONENTS. TRY A TILE.</span>
         <span>REACT 19</span>
       </div>
-    </div>
+    </TileMotion>
   );
 }

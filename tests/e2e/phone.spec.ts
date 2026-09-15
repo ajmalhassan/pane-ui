@@ -68,3 +68,60 @@ test("phone app search, narrow layout and reduced motion work", async ({
     ),
   ).toBe(true);
 });
+
+test("whole tile and contact flips have independent motion and a persistent pause", async ({
+  page,
+}) => {
+  await page.goto("/phone");
+  const phone = page.getByRole("region", {
+    name: "Interactive Windows Phone demo",
+  });
+  const people = phone.getByRole("button", {
+    name: "Open People",
+    exact: true,
+  });
+  const photos = phone.getByRole("button", {
+    name: "Open Photos",
+    exact: true,
+  });
+  await expect(people.locator("[data-flip-artwork]")).toHaveCount(6);
+  await expect(photos.locator("[data-flip-artwork]")).toHaveCount(1);
+  const delays = await people
+    .locator("[data-flip-artwork] > div")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => getComputedStyle(node).animationDelay),
+    );
+  expect(new Set(delays).size).toBe(6);
+  // Sample the actual CSS half-turn rather than waiting through a long idle hold.
+  const poses = await photos.evaluate((tile) => {
+    const animation = tile
+      .getAnimations({ subtree: true })
+      .find(
+        (a) => "animationName" in a && String(a.animationName).includes("flip"),
+      )!;
+    animation.pause();
+    const target = (animation.effect as KeyframeEffect).target as HTMLElement;
+    const delay = Number(animation.effect!.getTiming().delay);
+    animation.currentTime = delay + 4200;
+    const edge = getComputedStyle(target).transform;
+    animation.currentTime = delay + 5000;
+    return { edge, back: getComputedStyle(target).transform };
+  });
+  expect(poses.edge).not.toBe("none");
+  expect(poses.edge).not.toBe(poses.back);
+  await page.getByRole("button", { name: "Pause tile flips" }).click();
+  await expect(people.locator("[data-flip-artwork] > div").first()).toHaveCSS(
+    "animation-play-state",
+    "paused",
+  );
+  await people.click();
+  await phone.getByRole("button", { name: "Phone back", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Resume tile flips" }),
+  ).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(photos.locator("[data-flip-artwork] > div")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+});
