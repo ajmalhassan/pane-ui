@@ -1,0 +1,36 @@
+---
+title: "Windows Phone React"
+description: "Tiles, typography and purposeful motion for React 19."
+---
+
+# Windows Phone React
+
+Windows Phone React brings large typography, square tiles and coordinated motion to ordinary React applications. It is an independent, framework-independent library inspired by Windows Phone. It has no affiliation with Microsoft and includes no Microsoft font or image assets.
+
+This is a **private local alpha**, version `0.1.0-alpha.0`. The package is not published to npm. The site is a working reference for the current implementation; APIs and the final project identity can change before release.
+
+## Start with a real application
+
+[Install the local tarball](/docs/installation), import the stylesheet, and put your interface inside a [Theme](/docs/theme). Use [TileLink](/docs/tiles) for destinations, [Button](/docs/buttons) for commands, and native [fields](/docs/fields) for input. Then add [motion](/docs/motion) where it explains the change of context.
+
+- [Explore the phone](/phone): a web recreation with local sample content, working navigation and settings.
+- [Open the examples](/examples): settings and inbox flows you can adapt.
+- [Visit the workshop](/library): component combinations and edge cases.
+
+## What belongs to the library
+
+Themes, visual surfaces, native controls, accessible relationships, focus behavior for supported overlays, and interruptible motion live in the package. Your application owns data, validation policy, navigation/history, permissions and network operations. A callback asks you to update state; it never silently saves data or changes routes.
+
+## Find a component
+
+| Need                          | Start here                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| A start screen or dashboard   | [Tiles](/docs/tiles), [RevealTile](/docs/reveal-tile), [LiveTile](/docs/live-tile)                      |
+| Commands and navigation       | [Buttons](/docs/buttons), [AppBar](/docs/app-bar), [Pivot](/docs/pivot), [Panorama](/docs/panorama)     |
+| Entering and leaving content  | [Transition and Stagger](/docs/transition), [TileSequence](/docs/tile-sequence)                         |
+| User input                    | [Fields](/docs/fields), [Select and Slider](/docs/select-slider), [Selection controls](/docs/selection) |
+| Status and feedback           | [ProgressDots](/docs/progress-dots), [Progress](/docs/progress), [MessageBanner](/docs/message-banner)  |
+| Temporary surfaces            | [Dialog](/docs/dialog), [Menu and Popover](/docs/floating)                                              |
+| Collections and empty results | [Lists](/docs/list)                                                                                     |
+
+Read the [support contract](/docs/accessibility-support) before adopting the alpha. Automated coverage is useful evidence, but manual assistive-technology and real-device release checks remain outstanding.

@@ -1,0 +1,44 @@
+---
+title: "LiveTile"
+description: "Cycle decorative frames while keeping meaningful information available without animation."
+---
+
+# LiveTile
+
+Cycle decorative frames while keeping meaningful information available without animation.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="live-tile" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { LiveTile } from "@windows-phone/react";
+
+<LiveTile
+  label="weekend"
+  accessibleLabel="Weekend plans: a coastal walk and lunch with friends."
+  items={["Coastal walk", "Lunch with friends"]}
+/>;
+```
+
+## API
+
+| Prop / export              | Type / default                                 | Purpose                                                        |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| `items`                    | `readonly ReactNode[]`; required               | Presentational frames, not interactive descendants.            |
+| `label`, `accessibleLabel` | `ReactNode`, `string`; required                | Visible caption and a stable summary of meaningful content.    |
+| `intervalMs`               | `number`; default `5000`                       | Finite values clamp to at least 1000ms; nonfinite uses 5000ms. |
+| `paused`, `defaultPaused`  | Controlled boolean / initial boolean (`false`) | Manual pause preference.                                       |
+| `onPausedChange`           | `(paused: boolean) => void`                    | Requests manual pause/resume.                                  |
+| `size`, `accent`           | Defaults `"wide"`, `"accent"`                  | Shared tile appearance.                                        |
+| Native props / ref         | `div` except children / `HTMLDivElement`       | Ordinary root attributes and events.                           |
+
+## Behavior and composition
+
+Autoplay pauses while hovered, focused, manually paused, backgrounded or under reduced motion. The controlled `paused` prop represents the manual preference; environmental pauses are independent. Pause/Resume and Next are native buttons and remain available for manual use when there are at least two items.
+
+The visual region is named by `accessibleLabel`. Frames are decorative and updates are silent: include important information in the stable summary, not only the current frame. Fewer than two items removes cycling controls. Empty items are accepted, but an empty visual rarely helps a user. Supply meaningful presentational content and avoid using a LiveTile as a live notification log.

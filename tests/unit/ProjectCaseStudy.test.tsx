@@ -12,7 +12,7 @@ const STORY = [
   "Lessons and next questions",
 ];
 
-const BACK = { label: "Projects", href: "/?view=projects" } as const;
+const BACK = { label: "Projects", href: "/portfolio?view=projects" } as const;
 
 it("renders role, constraints, decisions, outcomes, and lessons", () => {
   render(<ProjectCaseStudy project={getProject("metro-revival")!} />);
@@ -115,7 +115,7 @@ it("keeps résumé and contact primary beside the way back", () => {
   const contact = screen.getByRole("link", { name: "Contact" });
 
   expect(resume).toHaveAttribute("href", "/resume");
-  expect(contact).toHaveAttribute("href", "/#contact");
+  expect(contact).toHaveAttribute("href", "/portfolio#contact");
 
   for (const command of [resume, contact]) {
     expect(command.querySelector("svg")).toBeInTheDocument();

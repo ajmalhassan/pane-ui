@@ -1,3 +1,5 @@
+import nextra from "nextra";
+const withNextra = nextra({ search: { codeblocks: false } });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Pin the file-tracing root to this project so a lockfile above it is never inferred as the workspace root.
@@ -10,4 +12,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextra(nextConfig);

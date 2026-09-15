@@ -94,7 +94,7 @@ Scoped light/dark/system modes can coexist. The default font stack uses installe
 
 ## Alpha boundaries
 
-The public API can change before 1.0. This alpha does not include a router, shared-element navigation, dialogs, custom popup controls, or form controls beyond Pressable. The original portfolio still owns its Next-specific navigation. Package identity, license, and a wider browser/assistive-technology support matrix must be finalized before public release. Nothing in this repository claims affiliation with Microsoft.
+The public API can change before 1.0. This alpha includes native form controls, Dialog/AlertDialog, Menu/Popover and structural lists. It does not include a router, shared-element navigation, nested menus, complex comboboxes or date/time pickers. The original portfolio still owns its Next-specific navigation. Package identity, license, and a wider browser/assistive-technology support matrix must be finalized before public release. Nothing in this repository claims affiliation with Microsoft.
 
 ## Pivot: related views
 
@@ -321,9 +321,9 @@ Menu items require unique stable IDs, plain-text labels and `onSelect`; disabled
 
 Popover is a non-modal named dialog for regular controls, not an ARIA menu. It focuses its first control, permits ordinary Tab traversal, and closes when focus leaves. The render function's `close()` supports Apply/Cancel actions. Escape returns focus to the trigger; clicking an outside control preserves that control's focus. Application state owns draft/apply behavior. Menu selection can hand focus to a new modal without returning it prematurely; pass the menu trigger ref as that modal's `finalFocusRef` when appropriate.
 
-The shared foundation uses **@floating-ui/react** for positioning, dismissal, focus and list interactions. Auto-update tracks scrolling, resize and layout shifts; flip/shift/size middleware keeps panels within the viewport and makes long content scrollable. Native **Popover API** support (`showPopover`) is required: manual popovers occupy the browser top layer, escaping ancestor clipping/transforms while retaining theme inheritance in their original DOM position. No body portal or copied theme tokens are used. Only Chromium desktop/mobile emulation is currently verified; do not infer a broader support matrix.
+The shared foundation uses **@floating-ui/react** for positioning, dismissal, focus and list interactions. Auto-update tracks scrolling, resize and layout shifts; flip/shift/size middleware keeps panels within the viewport and makes long content scrollable. Native **Popover API** support (`showPopover`) is required: manual popovers occupy the browser top layer, escaping ancestor clipping/transforms while retaining theme inheritance in their original DOM position. No body portal or copied theme tokens are used. See the repository support and quality contract for Chromium, Firefox and WebKit test evidence and the remaining physical-device and assistive-technology checks; do not infer support beyond that evidence.
 
-Panels have a brief 140ms entrance, disabled under reduced motion, and immediate dismissal so focus and availability change together. Conditional rendering cleans up positioning observers and top-layer elements. Closed SSR renders just the trigger; even default-open panels are not promoted to the top layer until hydration. Nested floating menus/popovers and legacy-browser fallbacks remain future work. Package size reports count this package's emitted files, not the full transitive dependency bundle.
+Panels have a brief 140ms entrance, disabled under reduced motion, and immediate dismissal so focus and availability change together. Conditional rendering cleans up positioning observers and top-layer elements. Closed SSR renders just the trigger; even default-open panels are not promoted to the top layer until hydration. Nested floating menus/popovers and legacy-browser fallbacks remain future work. The repository consumer bundle gate includes Floating UI and its runtime dependencies when retained, with React externalized; emitted package file sizes alone do not describe that cost.
 
 ## Lists, headings and empty states
 

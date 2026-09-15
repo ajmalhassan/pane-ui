@@ -1,0 +1,42 @@
+---
+title: "MessageBanner"
+description: "Persistent feedback with an explicit announcement policy and application-owned dismissal."
+---
+
+# MessageBanner
+
+Persistent feedback with an explicit announcement policy and application-owned dismissal.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="message-banner" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { MessageBanner } from "@windows-phone/react";
+
+<MessageBanner tone="success" heading="Saved" announcement="polite">
+  Your collection is up to date.
+</MessageBanner>;
+```
+
+## API
+
+| Prop / export               | Type / default                               | Purpose                                                                         |
+| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tone`                      | info (default), success, warning, error      | Visual treatment; does not determine urgency.                                   |
+| `heading`, `actions`        | `ReactNode`; optional                        | Heading and separate interactive action area.                                   |
+| `announcement`              | off (default), polite, assertive             | Polite uses status; assertive uses alert.                                       |
+| `onDismiss`, `dismissLabel` | `() => void`, string; supply both or neither | Requests dismissal; label names its icon button.                                |
+| Native props / ref          | div / `HTMLDivElement`                       | Role, aria-live and aria-atomic are managed rather than accepted as root props. |
+
+## Behavior and composition
+
+The banner is persistent and has no visibility state or auto-dismiss timer. Remove it in application state when appropriate. If dismissal removes the focused control, restore focus to a sensible surviving destination, as this preview does.
+
+Announcement urgency is independent of color. Keep an announcing banner mounted and update its content for change announcements; initial server-rendered text is readable but is not guaranteed to be announced. Actions and dismiss controls sit outside the live region. Prefer prose in heading/content, and interactive elements in actions.
+
+Use specific recovery text for errors. The component does not retry a request, clear a validation state or save data on its own. If the feedback requires a decision before continuing, consider [AlertDialog](/docs/dialog).

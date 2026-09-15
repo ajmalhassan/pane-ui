@@ -49,3 +49,7 @@ next-env.d.ts
 *.tgz
 
 /quality-results/
+
+# Documentation search and runnable example output
+/public/_pagefind/
+/examples/vite/dist/

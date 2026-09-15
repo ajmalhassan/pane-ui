@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { expect, it } from "vitest";
-import articleStyles from "@/app/blog/article.module.css";
+import articleStyles from "@/app/(legacy)/blog/article.module.css";
 import appBarStyles from "@/components/metro/AppBar.module.css";
 import dockStyles from "@/components/metro/AppBarDock.module.css";
 import focusRingStyles from "@/components/metro/focusRing.module.css";
@@ -47,7 +47,7 @@ const PANORAMA = "components/portfolio/PortfolioPanorama.module.css";
 
 const EDGES: readonly Edge[] = [
   {
-    consumer: "app/blog/article.module.css",
+    consumer: "app/(legacy)/blog/article.module.css",
     consumerClass: "prose",
     consumerStyles: articleStyles,
     source: "components/portfolio/detailSurface.module.css",

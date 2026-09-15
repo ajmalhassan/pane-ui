@@ -265,7 +265,7 @@ async function tabTo(page: Page, target: Locator, attempts = 24) {
 test("bare and invalid URLs show Me with one page heading", async ({
   page,
 }) => {
-  for (const path of ["/", "/?view=invalid"]) {
+  for (const path of ["/portfolio", "/portfolio?view=invalid"]) {
     await page.goto(path);
     await expect(page.getByRole("tab", { name: HEADINGS.me })).toHaveAttribute(
       "aria-selected",
@@ -281,7 +281,7 @@ test("bare and invalid URLs show Me with one page heading", async ({
 test("Next links update pivot history and back/forward restore selected state", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await expect(
     page.getByRole("tab", { name: HEADINGS.projects }),
   ).toHaveAttribute("aria-selected", "true");
@@ -312,7 +312,7 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
   context,
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/portfolio");
 
   const openerUrl = page.url();
   const newPagePromise = context.waitForEvent("page");
@@ -357,7 +357,7 @@ test("modified pivot clicks open Projects and leave the opener unchanged", async
 test("keyboard reaches pivots, project links, and app-bar actions", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
 
   const tabs = page.getByRole("tab");
   await expect(tabs).toHaveCount(VIEWS.length);
@@ -390,7 +390,7 @@ test("keyboard reaches pivots, project links, and app-bar actions", async ({
 test("contact follows fragment history and close clears it", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await page.getByRole("link", { name: "Contact" }).click();
   await expect(page).toHaveURL(/#contact$/);
   await expect(
@@ -412,7 +412,7 @@ test("contact follows fragment history and close clears it", async ({
 test("direct fragment load opens contact and close keeps the pivot query", async ({
   page,
 }) => {
-  await page.goto("/?view=projects#contact");
+  await page.goto("/portfolio?view=projects#contact");
   await expect(
     page.getByRole("button", { name: "Close contact" }),
   ).toBeVisible();
@@ -421,7 +421,7 @@ test("direct fragment load opens contact and close keeps the pivot query", async
   ).toHaveAttribute("aria-selected", "true");
 
   await page.getByRole("button", { name: "Close contact" }).click();
-  await expect(page).toHaveURL(/\/\?view=projects$/);
+  await expect(page).toHaveURL(/\/portfolio\?view=projects$/);
   await expect(
     page.getByRole("button", { name: "Close contact" }),
   ).toBeHidden();
@@ -431,7 +431,7 @@ test("direct fragment load opens contact and close keeps the pivot query", async
 test("pivot navigation while contact is open follows the fragment-less URL", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await page.getByRole("link", { name: "Contact" }).click();
   await expect(page).toHaveURL(/#contact$/);
   expect(
@@ -439,14 +439,14 @@ test("pivot navigation while contact is open follows the fragment-less URL", asy
   ).toBe(true);
 
   await page.getByRole("tab", { name: HEADINGS.projects }).click();
-  await expect(page).toHaveURL(/\/\?view=projects$/);
+  await expect(page).toHaveURL(/\/portfolio\?view=projects$/);
   await expect(
     page.getByRole("button", { name: "Close contact" }),
   ).toBeHidden();
   await expect(page.getByRole("link", { name: "Contact" })).not.toBeFocused();
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/\?view=me#contact$/);
+  await expect(page).toHaveURL(/\/portfolio\?view=me#contact$/);
   await expect(
     page.getByRole("button", { name: "Close contact" }),
   ).toBeVisible();
@@ -455,7 +455,7 @@ test("pivot navigation while contact is open follows the fragment-less URL", asy
 test("arrow keys navigate pivots through their real links", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/portfolio");
   await page.getByRole("tab", { name: HEADINGS.me }).focus();
   await page.keyboard.press("ArrowRight");
 
@@ -471,7 +471,7 @@ test("arrow keys navigate pivots through their real links", async ({
 test("every valid pivot keeps exactly one persistent page heading", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/portfolio");
   const heading = page.getByRole("heading", { level: 1 });
   const persistentHeading = await heading.elementHandle();
   if (!persistentHeading) throw new Error("Page heading was not rendered");
@@ -492,7 +492,7 @@ test("every valid pivot keeps exactly one persistent page heading", async ({
 
 test("reduced motion removes panorama transforms", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
 
   const plane = page.locator('[role="tabpanel"]').first().locator("..");
   await expect(plane).toHaveCSS("transform", "none");
@@ -503,7 +503,7 @@ test("a direct query load leads with that pivot's own heading", async ({
   page,
 }) => {
   for (const view of VIEWS) {
-    await page.goto(`/?view=${view}`);
+    await page.goto(`/portfolio?view=${view}`);
 
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading, view).toHaveCount(1);
@@ -522,7 +522,7 @@ for (const frame of NARROW_FRAMES) {
     await page.setViewportSize(frame);
 
     for (const view of VIEWS) {
-      await page.goto(`/?view=${view}`);
+      await page.goto(`/portfolio?view=${view}`);
       const tabs = page.getByRole("tab");
       const tablist = page.getByRole("tablist");
       const leading = tabs.first();
@@ -587,7 +587,7 @@ for (const frame of [
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=projects");
+    await page.goto("/portfolio?view=projects");
 
     const at = `${frame.width}px`;
     const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
@@ -834,7 +834,7 @@ for (const frame of [
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=projects");
+    await page.goto("/portfolio?view=projects");
 
     const at = `${frame.width}px`;
     const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
@@ -933,7 +933,7 @@ for (const frame of [
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=projects");
+    await page.goto("/portfolio?view=projects");
 
     const panel = page.getByRole("tabpanel", { name: HEADINGS.projects });
     const gap = await panel
@@ -1079,7 +1079,7 @@ for (const frame of HUB_FRAMES) {
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=blog");
+    await page.goto("/portfolio?view=blog");
     await pivotArrived(page);
 
     const at = `${frame.width}px`;
@@ -1302,7 +1302,7 @@ for (const frame of HUB_FRAMES) {
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=photography");
+    await page.goto("/portfolio?view=photography");
 
     const at = `${frame.width}px`;
     const panel = page.getByRole("tabpanel", { name: HEADINGS.photography });
@@ -1625,7 +1625,7 @@ for (const frame of [
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/?view=me");
+    await page.goto("/portfolio?view=me");
 
     const panel = page.getByRole("tabpanel", { name: HEADINGS.me });
     const grid = panel.locator("[data-tile-grid]");
@@ -1766,7 +1766,7 @@ test("Me animates one restrained waveform and stills it for reduced motion", asy
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   const wave = page.locator('[data-pivot="me"] [data-tile-role="live"] svg g');
   await expect(wave).toHaveCount(1);
@@ -1868,7 +1868,7 @@ test("a focused edge tile keeps its whole focus ring inside the panorama", async
   // 3px ring at a 3px outline-offset: the ring's outer edge is 6px out.
   const ringReach = 6;
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
 
   const tile = page
     .getByRole("tabpanel", { name: HEADINGS.projects })
@@ -1916,7 +1916,7 @@ test("a focused edge tile keeps its whole focus ring inside the panorama", async
  */
 function dockedSurfaces() {
   return [
-    { name: "/?view=me", path: "/?view=me", commands: 2 },
+    { name: "/portfolio?view=me", path: "/portfolio?view=me", commands: 2 },
     { name: LEAD_PLATFORM, path: LEAD_PLATFORM, commands: 3 },
     /*
      * Back plus the two primaries, and the widest bar this application draws:
@@ -2044,7 +2044,7 @@ test("a compact phone shows every command label under its ring", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
   await expect(labels).toHaveText(["Résumé", "Contact"]);
@@ -2066,7 +2066,7 @@ test("a wide layout ships labelled commands and collapses only on demand", async
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   const bar = page.locator(APP_BAR);
   const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
@@ -2115,7 +2115,7 @@ test("the phone layout keeps its labels and drops the overflow command", async (
 }) => {
   // Pixel 5's own frame, so the mobile project runs this at its native size.
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   const labels = page.locator(`${APP_BAR} a > span:nth-child(2)`);
   await expect(labels).toHaveText(["Résumé", "Contact"]);
@@ -2152,7 +2152,7 @@ test("the fixed app bar reserves its height instead of covering the page end", a
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await page.evaluate(async () => {
     window.scrollTo(0, document.documentElement.scrollHeight);
     await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
@@ -2196,7 +2196,7 @@ for (const frame of [
     page,
   }) => {
     await page.setViewportSize(frame);
-    await page.goto("/");
+    await page.goto("/portfolio");
     await page.getByRole("link", { name: "Contact" }).click();
     await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
 
@@ -2382,7 +2382,7 @@ function nonInkPrintedBoxes(): string[] {
      *
      * Measured with the tile images forced back onto the sheet: exactly two
      * findings, both spurious, both `::marker`, on `/` and on
-     * `/?view=photography` --
+     * `/portfolio?view=photography` --
      * `img.PortfolioPanorama_portrait__…::marker colour → rgba(0, 0, 0, 0)`
      * and `img.—::marker colour → rgba(0, 0, 0, 0)` -- and none on `/resume`,
      * which has no `<img>` at all. That is the whole of what this suppresses.
@@ -2520,7 +2520,7 @@ test("the panorama prints as a legible black-on-white sheet", async ({
 
     for (const view of ["me", "projects", "blog", "photography"]) {
       const where = `${view} @ ${frame.width}`;
-      await page.goto(`/?view=${view}`);
+      await page.goto(`/portfolio?view=${view}`);
 
       const shell = page.locator("main");
       await expect(shell, where).toHaveCSS(
@@ -2669,15 +2669,15 @@ function detailRoutes() {
     {
       path: LEAD_PLATFORM,
       back: "Projects",
-      href: "/?view=projects",
+      href: "/portfolio?view=projects",
       resume: true,
     },
     { path: newestHref, back: "Field notes", href: "/blog", resume: true },
     // `Blog` and not `Portfolio`: the résumé's way back is `Portfolio` → `/`,
     // and one label cannot name two destinations.
-    { path: "/blog", back: "Blog", href: "/?view=blog", resume: true },
+    { path: "/blog", back: "Blog", href: "/portfolio?view=blog", resume: true },
     // The one surface that drops the Résumé command, because it is the résumé.
-    { path: "/resume", back: "Portfolio", href: "/", resume: false },
+    { path: "/resume", back: "Portfolio", href: "/portfolio", resume: false },
   ] as const;
 }
 
@@ -2690,7 +2690,7 @@ for (const frame of DETAIL_FRAMES) {
     // The column every surface indents to, taken from the panorama rather than
     // recomputed here: the detail routes have to agree with it, not with an
     // arithmetic copy of it.
-    await page.goto("/");
+    await page.goto("/portfolio");
     const column = (await page.getByText(IDENTITY).boundingBox())?.x ?? -1;
     expect(column, "panorama identity line").toBeGreaterThan(0);
 
@@ -2734,7 +2734,7 @@ for (const frame of DETAIL_FRAMES) {
        * outside is one command from either -- which is what the panorama's own
        * bar promises, kept on the routes the panorama links to.
        */
-      const contact = page.locator(`${APP_BAR} a[href="/#contact"]`);
+      const contact = page.locator(`${APP_BAR} a[href="/portfolio#contact"]`);
       await expect(contact, at).toHaveCount(1);
       await expect(contact, at).toHaveAccessibleName("Contact");
 
@@ -2844,11 +2844,11 @@ test("every focusable surface on every route draws the Metro ring", async ({
   await page.setViewportSize({ width: 320, height: 568 });
 
   const routes = [
-    { name: "me", path: "/" },
-    { name: "projects", path: "/?view=projects" },
-    { name: "blog", path: "/?view=blog" },
-    { name: "photography", path: "/?view=photography" },
-    { name: "contact", path: "/", open: true },
+    { name: "me", path: "/portfolio" },
+    { name: "projects", path: "/portfolio?view=projects" },
+    { name: "blog", path: "/portfolio?view=blog" },
+    { name: "photography", path: "/portfolio?view=photography" },
+    { name: "contact", path: "/portfolio", open: true },
     { name: "case study", path: LEAD_PLATFORM },
     { name: "note", path: newestHref },
     { name: "note index", path: "/blog" },
@@ -2950,7 +2950,7 @@ test("every focusable surface on every route draws the Metro ring", async ({
 /*
  * The primary commands are not decoration on a detail route: contact from a
  * case study lands on the panorama with the panel open, which is the whole
- * point of carrying it there. `/#contact` and not `#contact`, because the panel
+ * point of carrying it there. `/portfolio#contact` and not `#contact`, because the panel
  * is a page away.
  */
 test("contact from a case study opens the panorama's own panel", async ({
@@ -2959,7 +2959,7 @@ test("contact from a case study opens the panorama's own panel", async ({
   await page.goto(LEAD_PLATFORM);
   await page.getByRole("link", { name: "Contact" }).click();
 
-  await expect(page).toHaveURL(/\/#contact$/);
+  await expect(page).toHaveURL(/\/portfolio#contact$/);
   await expect(page.locator("#contact")).toHaveAttribute("data-open", "true");
   await expect(
     page.getByRole("button", { name: "Close contact" }),
@@ -2991,7 +2991,7 @@ test.describe("without JavaScript", () => {
   test("core content, destinations, and every pivot remain keyboard reachable", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/portfolio");
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading).toHaveCount(1);
     await expect(heading).toHaveAccessibleName(HEADINGS.me);
@@ -2999,7 +2999,7 @@ test.describe("without JavaScript", () => {
 
     for (const view of VIEWS) {
       const pivot = page.getByRole("tab", { name: HEADINGS[view] });
-      await expect(pivot).toHaveAttribute("href", `/?view=${view}`);
+      await expect(pivot).toHaveAttribute("href", `/portfolio?view=${view}`);
       await page.keyboard.press("Tab");
       await expect(pivot).toBeFocused();
     }
@@ -3018,7 +3018,7 @@ test.describe("without JavaScript", () => {
     page,
   }) => {
     for (const view of VIEWS) {
-      await page.goto(`/?view=${view}`);
+      await page.goto(`/portfolio?view=${view}`);
 
       const heading = page.getByRole("heading", { level: 1 });
       await expect(heading, view).toHaveCount(1);
@@ -3030,7 +3030,7 @@ test.describe("without JavaScript", () => {
 
     // No script means no measurement: the leading heading has to start at the
     // content inset because the markup order already puts it there.
-    await page.goto("/?view=projects");
+    await page.goto("/portfolio?view=projects");
     const width = page.viewportSize()?.width ?? 0;
     const inset = Math.min(Math.max(16, width * 0.04), 72);
     const box = await page.getByRole("tab").first().boundingBox();
@@ -3057,7 +3057,7 @@ test.describe("without JavaScript", () => {
    * accessibility tree and is not one to a browser with no script either.
    */
   test("a project tile and a note row still navigate", async ({ page }) => {
-    await page.goto("/?view=projects");
+    await page.goto("/portfolio?view=projects");
     const tile = page
       .getByRole("tabpanel", { name: HEADINGS.projects })
       .getByRole("link", { name: /lead/i })
@@ -3071,12 +3071,12 @@ test.describe("without JavaScript", () => {
 
     // And back out of the document the same way, through the bar's own command.
     await page.getByRole("link", { name: "projects" }).click();
-    await expect(page).toHaveURL(/\/\?view=projects$/);
+    await expect(page).toHaveURL(/\/portfolio\?view=projects$/);
     await expect(
       page.getByRole("tab", { name: HEADINGS.projects }),
     ).toHaveAttribute("aria-selected", "true");
 
-    await page.goto("/?view=blog");
+    await page.goto("/portfolio?view=blog");
     // A click during the entrance is a click at a moving target, so the
     // entrance is waited OUT rather than waited FOR a fixed number of ms.
     await pivotArrived(page);
@@ -3134,7 +3134,7 @@ test("tiles arrive staggered by their place in the grid, capped", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   const me = page.locator('[data-pivot="me"]');
   const meDelays = await me.evaluate(entranceDelays);
@@ -3301,7 +3301,7 @@ test("the two Me evidence tiles never change in the same second", async ({
 }) => {
   test.slow();
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await page.waitForTimeout(500);
 
   // The second live tile is the phased one, so it is the one to disturb.
@@ -3396,7 +3396,7 @@ test("a focused live tile holds its claim, and a press advances it", async ({
 }) => {
   test.slow();
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await page.waitForTimeout(500);
 
   const live = page.locator('[data-pivot="me"] [data-tile-role="live"]');
@@ -3589,7 +3589,7 @@ for (const frame of [
     const seen = new Map<string, { image: string; position: string }>();
 
     for (const [index, view] of VIEWS.entries()) {
-      await page.goto(`/?view=${view}`);
+      await page.goto(`/portfolio?view=${view}`);
       // The ground's own `background-position` transitions with the plane, and
       // `groundSpread` below reads real pixels, so both want a settled pivot.
       await pivotArrived(page);
@@ -3965,7 +3965,7 @@ test.describe("every line clears 4.5:1, ground and tile alike", () => {
       }) => {
         test.slow();
         await page.setViewportSize(frame);
-        await page.goto(`/?view=${view}`);
+        await page.goto(`/portfolio?view=${view}`);
         await pivotArrived(page);
         await freezeLiveTiles(page);
 
@@ -4038,7 +4038,7 @@ test("reduced motion removes every spatial transform and hides no evidence", asy
   await page.setViewportSize({ width: 1440, height: 900 });
 
   for (const view of VIEWS) {
-    await page.goto(`/?view=${view}`);
+    await page.goto(`/portfolio?view=${view}`);
     await page.waitForTimeout(400);
     const at = `${view} reduced`;
 
@@ -4136,7 +4136,7 @@ test("the page still scrolls natively and traps no gesture", async ({
     } as typeof add;
   });
 
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
 
   /*
    * A POSITIVE CONTROL, before the negative assertion below.
@@ -4211,7 +4211,7 @@ test("a press leans the tile it is on, and the release scale composes with the l
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
 
   const tile = page
     .locator('[data-active="true"] [data-tile-role="navigation"]')
@@ -4337,7 +4337,7 @@ test("reduced motion leaves a pressed tile with no transform at all", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await pivotArrived(page);
 
   const tile = page

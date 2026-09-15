@@ -1,0 +1,173 @@
+.example {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(1.1rem, 4vw, 3rem);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.example *,
+.example *::before,
+.example *::after {
+  box-sizing: border-box;
+}
+.header {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--wp-border);
+  margin-bottom: 1.75rem;
+}
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  color: var(--wp-muted);
+  margin: 0 0 1rem;
+}
+.title {
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -0.05em;
+  margin: 0 0 1rem;
+}
+.intro {
+  max-width: 36rem;
+  color: var(--wp-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.form,
+.stack,
+.compose {
+  display: grid;
+  gap: 1.4rem;
+  min-width: 0;
+}
+.section {
+  padding-bottom: 1.7rem;
+  border-bottom: 1px solid var(--wp-surface);
+  min-width: 0;
+}
+.section h3 {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--wp-accent-text);
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0 0 1.3rem;
+}
+.section h3 span {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--wp-foreground);
+}
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.6rem;
+}
+.columns > *,
+.search > * {
+  min-width: 0;
+}
+.actions,
+.toolbar,
+.topline,
+.folderButtons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.toolbar,
+.topline {
+  justify-content: space-between;
+}
+.topline {
+  margin-bottom: 1.5rem;
+}
+.topline .eyebrow {
+  margin: 0;
+}
+.topline :global(.wp-selection-label) {
+  font-size: 0.8rem;
+}
+.muted,
+.note {
+  color: var(--wp-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.note {
+  margin: 1.5rem 0 0;
+  max-width: 45rem;
+}
+.search {
+  padding: 1.75rem 0 0.75rem;
+  max-width: 34rem;
+}
+.search p {
+  margin: 0.75rem 0;
+}
+.avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  background: var(--wp-surface);
+  color: var(--wp-accent-text);
+  font-size: 0.9rem;
+}
+.messageRow {
+  border-bottom: 1px solid var(--wp-surface);
+}
+.messageRow[data-unread] :global(.wp-list-title) {
+  color: var(--wp-accent-text);
+}
+.messageRow :global(.wp-list-primary) {
+  padding-block: 1.1rem;
+}
+.detail {
+  margin-top: 1.75rem;
+}
+.detail .eyebrow {
+  margin-top: 2rem;
+}
+.detail h3 {
+  margin: 0.6rem 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+.detail h3:focus-visible {
+  outline: 2px solid var(--wp-accent-text);
+  outline-offset: 5px;
+}
+.messageBody {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  margin: 2rem 0 3rem;
+  max-width: 38rem;
+}
+.notice {
+  margin-top: 1.25rem;
+}
+.compose {
+  margin-top: 1.25rem;
+}
+@media (max-width: 400px) {
+  .actions > button {
+    flex: 1 1 auto;
+  }
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+  .toolbar > button {
+    width: 100%;
+  }
+}

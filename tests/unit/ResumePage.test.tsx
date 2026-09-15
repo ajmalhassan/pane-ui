@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
-import Resume, { metadata } from "@/app/resume/page";
+import Resume, { metadata } from "@/app/(legacy)/resume/page";
 import { profile } from "@/content/profile";
 /*
  * The no-invented-copy guard below closes over the whole profile rather than a
@@ -145,11 +145,11 @@ it("docks the résumé's commands in the application bar", () => {
   const back = screen.getByRole("link", { name: "Portfolio" });
   const contact = screen.getByRole("link", { name: "Contact" });
 
-  expect(back).toHaveAttribute("href", "/");
+  expect(back).toHaveAttribute("href", "/portfolio");
   expect(back.querySelector("svg")).toBeInTheDocument();
   expect(back.closest('nav[aria-label="Page actions"]')).not.toBeNull();
 
-  expect(contact).toHaveAttribute("href", "/#contact");
+  expect(contact).toHaveAttribute("href", "/portfolio#contact");
   expect(contact.querySelector("svg")).toBeInTheDocument();
 
   expect(container.querySelector('[class*="reviewNote"]')).not.toBeNull();

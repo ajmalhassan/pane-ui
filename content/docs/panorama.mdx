@@ -1,0 +1,48 @@
+---
+title: "Panorama"
+description: "A finite horizontal canvas with large headings and coordinated gesture-driven panels."
+---
+
+# Panorama
+
+A finite horizontal canvas with large headings and coordinated gesture-driven panels.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="panorama" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Panorama } from "@windows-phone/react";
+
+<Panorama
+  aria-label="Your day"
+  items={[
+    { id: "today", label: "today", children: <p>A clear morning.</p> },
+    { id: "people", label: "people", children: <p>Lunch with friends.</p> },
+    { id: "places", label: "places", children: <p>A walk by the coast.</p> },
+  ]}
+/>;
+```
+
+## API
+
+| Prop / export           | Type / default                           | Purpose                                                   |
+| ----------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `items`                 | `readonly PanoramaItem[]`; required      | Each item has unique id, string label and React children. |
+| `value`, `defaultValue` | `string`; optional                       | Controlled selection or uncontrolled initial item ID.     |
+| `onValueChange`         | `(value: string) => void`                | Requests item selection; does not write browser history.  |
+| `duration`              | `number`; default `420` ms               | Settling duration; zero removes motion.                   |
+| `dir`                   | `"ltr"` (default) or `"rtl"`             | Reading and gesture direction.                            |
+| Native props / ref      | `div` except children / `HTMLDivElement` | Supply aria-label or aria-labelledby to name the tablist. |
+
+## Behavior and composition
+
+Panorama renders real headings/tabs with a shared moving content plane. Adjacent heading fragments provide spatial context and real click targets. Left/Right arrows navigate in reading direction, Home/End reach endpoints, and native button activation selects a heading. Keyboard arrows wrap between endpoints; horizontal dragging has finite boundaries.
+
+Horizontal dragging distinguishes gesture intent from vertical scrolling. Only the selected panel is interactive and exposed to accessibility APIs; other panels remain mounted. Resizing, pointer cancellation, reduced motion and backgrounding settle the accepted selection. Inspect `data-motion-state` for idle, dragging or settling.
+
+The first item is the fallback for missing or invalid selection. Empty and single-item arrays are supported. Give stable IDs when items change. Controlled owners may reject selection; the surface returns to the accepted value. Application routing and history stay outside the component. Touch-device validation remains part of the [manual support gates](/docs/accessibility-support).

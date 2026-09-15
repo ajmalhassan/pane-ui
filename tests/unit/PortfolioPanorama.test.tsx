@@ -78,7 +78,7 @@ it("renders the Me-first portfolio with link-owned navigation", () => {
   ).toBeVisible();
   expect(screen.getByRole("tab", { name: HEADINGS.projects })).toHaveAttribute(
     "href",
-    "/?view=projects",
+    "/portfolio?view=projects",
   );
   expect(screen.getByRole("link", { name: "Résumé" })).toHaveAttribute(
     "href",
@@ -156,7 +156,7 @@ it("updates the selected pivot without taking URL ownership from the link", () =
   fireEvent.click(projectsTab);
 
   expect(projectsTab).toHaveAttribute("aria-selected", "true");
-  expect(projectsTab).toHaveAttribute("href", "/?view=projects");
+  expect(projectsTab).toHaveAttribute("href", "/portfolio?view=projects");
   // The panel is now on screen, which the leading tile's own evidence proves.
   // It asks for the face rather than the caption: those are deliberately
   // different strings, and which one appears is `ProjectsPanel.test.tsx`'s
@@ -261,7 +261,7 @@ it("returns to the previous history entry and refocuses when contact closes", as
 
 it("opens from a direct fragment load and clears only the fragment on close", async () => {
   const user = userEvent.setup();
-  window.history.replaceState(null, "", "/?view=projects#contact");
+  window.history.replaceState(null, "", "/portfolio?view=projects#contact");
   render(
     <PortfolioPanorama
       initialPivot="projects"
@@ -278,7 +278,7 @@ it("opens from a direct fragment load and clears only the fragment on close", as
   await user.click(screen.getByRole("button", { name: "Close contact" }));
 
   expect(window.location.hash).toBe("");
-  expect(window.location.pathname).toBe("/");
+  expect(window.location.pathname).toBe("/portfolio");
   expect(window.location.search).toBe("?view=projects");
   expect(contactSection()).toHaveAttribute("data-open", "false");
   expect(screen.getByRole("link", { name: "Contact" })).toHaveFocus();
@@ -428,7 +428,7 @@ it("synchronizes a cancelled optimistic selection with native Back navigation", 
     "aria-selected",
     "true",
   );
-  window.history.replaceState(null, "", "/?view=blog");
+  window.history.replaceState(null, "", "/portfolio?view=blog");
   fireEvent(window, new PopStateEvent("popstate"));
   expect(screen.getByRole("tab", { name: HEADINGS.blog })).toHaveAttribute(
     "aria-selected",
@@ -522,7 +522,7 @@ it("routes an accepted swipe through exactly one existing Next tab link activati
       fireEvent(surface, event);
     }
     expect(activation).toHaveBeenCalledOnce();
-    expect(tab).toHaveAttribute("href", "/?view=projects");
+    expect(tab).toHaveAttribute("href", "/portfolio?view=projects");
     expect(tab).toHaveAttribute("aria-selected", "true");
   } finally {
     geometry.mockRestore();

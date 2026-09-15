@@ -1,0 +1,65 @@
+---
+title: "Menu and Popover"
+description: "Position temporary commands or ordinary form controls in the browser top layer."
+---
+
+# Menu and Popover
+
+Position temporary commands or ordinary form controls in the browser top layer.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="floating" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Menu, Popover, Checkbox, Button } from "@windows-phone/react";
+
+<>
+  <Menu
+    label="Collection actions"
+    items={[
+      {
+        id: "save",
+        label: "Save for later",
+        onSelect: () => console.log("Save"),
+      },
+      { id: "share", label: "Share", disabled: true, onSelect: () => {} },
+    ]}
+  />
+  <Popover label="Filter collection" title="Your view">
+    {({ close }) => (
+      <>
+        <Checkbox label="Only favorites" />
+        <Button onClick={close}>Done</Button>
+      </>
+    )}
+  </Popover>
+</>;
+```
+
+## API
+
+| Prop / export          | Type / default                                         | Purpose                                                                        |
+| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `label`                | `string`; required on both                             | Text of the native Button trigger.                                             |
+| `open`, `onOpenChange` | Controlled boolean with required callback              | Alternatively omit open and use defaultOpen (false by default).                |
+| `placement`            | Floating UI placement; default `"bottom-start"`        | Position with viewport flip/shift/size correction.                             |
+| `triggerProps`         | Button props excluding children and managed popup ARIA | Disabled/loading, native events, styling and attributes.                       |
+| Menu `items`           | `MenuItem[]`; required                                 | Unique id, plain string label, onSelect(event); optional disabled/destructive. |
+| Popover `title`        | `string`; required                                     | Names the non-modal dialog surface.                                            |
+| Popover `children`     | ReactNode or `({ close }) => ReactNode`                | Ordinary controls; render function can close after Apply/Cancel.               |
+| Refs                   | `HTMLButtonElement` on both                            | Ref targets the trigger, not the floating surface.                             |
+
+## Behavior and composition
+
+Menu uses arrow navigation, Home/End, typeahead and roving focus. Native button activation calls onSelect, then closes unless that event was prevented. Disabled items are skipped. It is a command menu: selectable items, custom renderers and nested submenus are not promised.
+
+Popover is a non-modal dialog with ordinary Tab order. It focuses its first control and closes as focus leaves. Escape returns focus to the trigger; an outside click preserves focus on the outside control. Draft/apply state belongs to your application. Consumer trigger handlers run first and can prevent internal interaction. Disabled/loading triggers cannot open the popup through normal interactions.
+
+The implementation uses Floating UI for positioning, dismissal and focus. It requires the native Popover API; panels occupy the top layer while remaining in their Theme subtree. Scroll/resize/layout changes update positioning and long panels can scroll. Default-open server markup is promoted to the top layer only after hydration.
+
+A menu command may open a Dialog; pass the menu trigger ref as the dialog's finalFocusRef when that is the appropriate return destination. Nested floating surfaces remain outside the alpha support contract.

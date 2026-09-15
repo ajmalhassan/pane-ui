@@ -1,0 +1,39 @@
+---
+title: "RevealTile"
+description: "A native toggle button that reveals a second presentational face."
+---
+
+# RevealTile
+
+A native toggle button that reveals a second presentational face.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="reveal-tile" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { RevealTile } from "@windows-phone/react";
+
+<RevealTile label="forecast" front="24°" back="Clear skies" />;
+```
+
+## API
+
+| Prop / export            | Type / default                                  | Purpose                                                         |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------------------- |
+| `label`, `front`, `back` | `ReactNode`; required                           | Caption and the two presentational faces.                       |
+| `revealed`               | `boolean`; optional                             | Controlled face state.                                          |
+| `defaultRevealed`        | `boolean`; default `false`                      | Initial uncontrolled state.                                     |
+| `onRevealedChange`       | `(revealed: boolean) => void`                   | Requests the next state.                                        |
+| `size`, `accent`         | Tile appearance; defaults `"small"`, `"accent"` | Shared tile geometry and treatment.                             |
+| Native props / ref       | `button` except children / `HTMLButtonElement`  | Default type is button; disabled and form ownership are native. |
+
+## Behavior and composition
+
+Enter and Space toggle the button. The caption provides the accessible name unless you override the name with ARIA; the active face supplies a description. `aria-pressed` reflects the revealed state. The inactive face is hidden from accessibility APIs.
+
+Faces must contain only presentational content. Do not place links, buttons or fields inside them. In controlled mode, the displayed face changes only when you update `revealed`. The consumer `onClick` runs first; `preventDefault()` cancels toggling and the state callback. Use `disabled` when activation is unavailable.

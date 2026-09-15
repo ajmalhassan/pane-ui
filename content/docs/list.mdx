@@ -1,0 +1,66 @@
+---
+title: "Lists and empty states"
+description: "Build readable collections with native list structure and separate primary and secondary actions."
+---
+
+# Lists and empty states
+
+Build readable collections with native list structure and separate primary and secondary actions.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="list" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import {
+  List,
+  ListItem,
+  SectionHeader,
+  EmptyState,
+  Button,
+} from "@windows-phone/react";
+
+<>
+  <SectionHeader id="recent" level={3} meta="1 collection">
+    recent
+  </SectionHeader>
+  <List aria-labelledby="recent" animate>
+    <ListItem
+      title="Coastal walk"
+      description="24 photos"
+      action={{ type: "link", href: "/collections/coast" }}
+      actions={<Button aria-label="Save Coastal walk">Save</Button>}
+    />
+  </List>
+  <EmptyState
+    title="No archived collections"
+    description="Archived collections appear here."
+  />
+</>;
+```
+
+## API
+
+| Prop / export                               | Type / default                                                      | Purpose                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `List.animate`                              | `boolean`; default `false`                                          | Opt-in row entrance with cumulative delay capped at 240ms.                |
+| `ListItem.title`                            | `ReactNode`; required                                               | Main row content, not the native title attribute.                         |
+| `description`, `leading`, `meta`, `actions` | `ReactNode`; optional                                               | Supporting content and separate secondary controls.                       |
+| `action`                                    | `ListItemAction`; optional                                          | Link: type/link href/props; button: type/button props. Omitted is static. |
+| `SectionHeader.level`, `meta`               | 2 (default), 3 or 4; optional ReactNode meta                        | Semantic heading level and supporting metadata.                           |
+| `EmptyState.title`                          | `ReactNode`; required                                               | Names its section.                                                        |
+| EmptyState optional content                 | description/actions/icon: ReactNode                                 | Icon is decorative; actions contain recovery controls.                    |
+| `EmptyState.headingLevel`                   | 2, 3 (default), 4                                                   | Set to match the surrounding document hierarchy.                          |
+| Native props / refs                         | List: ul; ListItem: li; SectionHeader: heading; EmptyState: section | ListItem ref remains li even with an interactive primary action.          |
+
+## Behavior and composition
+
+Place ListItem directly inside List. SectionHeader belongs outside the ul; associate it with aria-labelledby when useful. The list keeps an explicit list role even when bullets are removed. Stable React keys preserve row identity; entrance animation runs when rows mount, not every data update.
+
+A link action needs a real href and retains browser navigation and modifier clicks. A button action defaults to type button; use its props for native handlers, disabled or a concise aria-label. Keep title, description, leading and meta presentational when inside a primary link/button. Put secondary buttons and menus in actions so controls remain siblings rather than nested.
+
+EmptyState is a named section, not a live region. Distinguish first-use emptiness from zero filter results and offer an appropriate next action. Filtering, selection, virtualization and result announcements are application-owned. If a mutation removes the focused row, restore focus to a surviving control such as search.

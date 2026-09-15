@@ -1,5 +1,5 @@
 {
-  "name": "ajmalhassan.com",
+  "name": "windows-phone-react",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -25,12 +25,16 @@
     "test:package": "npm run build:library && node scripts/verify-package.mjs",
     "lint:library": "eslint packages/react/src --ext .ts,.tsx --max-warnings 0",
     "test:library:cross-browser": "LIBRARY_CROSS_BROWSER=1 LIBRARY_PRODUCTION=1 playwright test tests/e2e/library*.spec.ts",
-    "test:bundle": "npm run build:library && node scripts/measure-library.mjs"
+    "test:bundle": "npm run build:library && node scripts/measure-library.mjs",
+    "postbuild": "node scripts/index-docs.mjs",
+    "test:site:browser": "playwright test tests/e2e/project-site.spec.ts tests/e2e/phone.spec.ts"
   },
   "dependencies": {
     "@windows-phone/react": "file:packages/react",
     "gray-matter": "^4.0.3",
     "next": "15.5.24",
+    "nextra": "4.6.1",
+    "nextra-theme-docs": "4.6.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remark": "^15.0.1",
@@ -48,15 +52,30 @@
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.0.1",
     "esbuild": "0.28.2",
-    "eslint": "^8.55.0",
+    "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.24",
     "eslint-config-prettier": "^9.1.0",
     "jsdom": "^30.0.1",
     "lighthouse": "^13.4.1",
+    "pagefind": "1.5.2",
     "postcss": "^8",
     "prettier": "3.2.5",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.6.3",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.28"
+    },
+    "@xmldom/xmldom": "0.9.12",
+    "brace-expansion@^5.0.0": "5.0.12",
+    "brace-expansion@^1.0.0": "1.1.18",
+    "nextra": {
+      "zod": "4.3.6"
+    },
+    "nextra-theme-docs": {
+      "zod": "4.3.6"
+    }
   }
 }

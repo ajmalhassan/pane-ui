@@ -1,0 +1,38 @@
+---
+title: "Pressable"
+description: "Use a native button with position-sensitive press feedback as a low-level building block."
+---
+
+# Pressable
+
+Use a native button with position-sensitive press feedback as a low-level building block.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="pressable" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Pressable } from "@windows-phone/react";
+
+<Pressable onClick={() => console.log("Add requested")}>
+  Add a moment
+</Pressable>;
+```
+
+## API
+
+| Prop / export | Type / default                         | Purpose                                                         |
+| ------------- | -------------------------------------- | --------------------------------------------------------------- |
+| Native props  | `ComponentPropsWithoutRef<"button">`   | Children, events, disabled, form, name and value are forwarded. |
+| `type`        | Native button type; default `"button"` | Explicitly use submit or reset for form actions.                |
+| Ref           | `HTMLButtonElement`                    | Focus the actual button when restoring a command destination.   |
+
+## Behavior and composition
+
+Pressable retains native Enter/Space activation, form ownership and disabled behavior. Pointer interaction adds tilt feedback; reduced-motion styles remove motion. The component does not add loading state, application navigation or async handling.
+
+Use [Button](/docs/buttons) for outlined/accent/subtle command styling and loading behavior. Use an anchor-based export when the user is going somewhere. A disabled native button leaves ordinary Tab navigation; do not use it as the only explanation of why an action is unavailable.

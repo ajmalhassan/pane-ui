@@ -1,0 +1,54 @@
+---
+title: "Pivot"
+description: "Switch related views with a compound tab interface and preserved panel state."
+---
+
+# Pivot
+
+Switch related views with a compound tab interface and preserved panel state.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="pivot" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import {
+  Pivot,
+  PivotList,
+  PivotTrigger,
+  PivotPanel,
+} from "@windows-phone/react";
+
+<Pivot defaultValue="recent">
+  <PivotList aria-label="Messages">
+    <PivotTrigger value="recent">recent</PivotTrigger>
+    <PivotTrigger value="saved">saved</PivotTrigger>
+  </PivotList>
+  <PivotPanel value="recent">Recent messages</PivotPanel>
+  <PivotPanel value="saved">Saved messages</PivotPanel>
+</Pivot>;
+```
+
+## API
+
+| Prop / export                            | Type / default                               | Purpose                                                       |
+| ---------------------------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| `value`, `defaultValue`                  | `string`; optional                           | Controlled selection or initial uncontrolled selection.       |
+| `onValueChange`                          | `(value: string) => void`                    | Requests a selection change.                                  |
+| `activationMode`                         | `"automatic"` (default) or `"manual"`        | Whether arrow focus also selects.                             |
+| `orientation`                            | `"horizontal"` (default) or `"vertical"`     | Sets navigation axis and tablist orientation.                 |
+| `dir`                                    | `"ltr"` (default) or `"rtl"`                 | Horizontal reading/navigation direction.                      |
+| `PivotTrigger.value`, `PivotPanel.value` | `string`; required                           | Matching identity, unique per tab/panel pair.                 |
+| Native props / refs                      | Pivot, List, Panel: `div`; Trigger: `button` | Refs target those elements; Trigger supports native disabled. |
+
+## Behavior and composition
+
+Keep all compound parts inside the same Pivot. Name PivotList with `aria-label` or `aria-labelledby`. Supply unique values, and specify `defaultValue` when custom wrappers conceal triggers during server rendering. The first enabled trigger is the fallback selection.
+
+Arrow keys move among enabled tabs and wrap. Home/End select the endpoints; vertical mode uses Up/Down, horizontal mode Left/Right with RTL reversal. Automatic activation selects on arrow navigation. Manual mode moves focus first and uses Enter/Space to select.
+
+Inactive panels remain mounted but hidden/inert, preserving input state. An active panel still respects caller hidden/inert restrictions. Panels default to `tabIndex={0}`. State-critical roles, IDs and ARIA relationships are component-owned. A controlled owner must accept a requested selection by updating `value`.

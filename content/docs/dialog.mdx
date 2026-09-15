@@ -1,0 +1,69 @@
+---
+title: "Dialog and AlertDialog"
+description: "Controlled native modal surfaces with named content, focus containment and animated presence."
+---
+
+# Dialog and AlertDialog
+
+Controlled native modal surfaces with named content, focus containment and animated presence.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="dialog" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { useRef, useState } from "react";
+import { Button, Dialog, Field, TextField } from "@windows-phone/react";
+
+export function EditCollection() {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <Button ref={trigger} onClick={() => setOpen(true)}>
+        Edit collection
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Edit collection"
+        initialFocusRef={input}
+        finalFocusRef={trigger}
+      >
+        <Field label="Name">
+          <TextField ref={input} />
+        </Field>
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+      </Dialog>
+    </>
+  );
+}
+```
+
+## API
+
+| Prop / export                      | Type / default                                          | Purpose                                                                 |
+| ---------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `open`, `onOpenChange`             | Required boolean, `(open, reason) => void`              | Controlled only; requests dismissal with escape/backdrop/native reason. |
+| `title`                            | `ReactNode`; required                                   | Accessible title rendered with a stable association.                    |
+| `description`                      | `string`; optional for Dialog, required for AlertDialog | Concise context for the decision.                                       |
+| `dismissOnEscape`                  | `boolean`; default `true`                               | Consumer onCancel can prevent a dismissal request.                      |
+| `dismissOnBackdrop`                | `boolean`; Dialog default `true`                        | Unavailable on AlertDialog, which blocks backdrop dismissal.            |
+| `initialFocusRef`, `finalFocusRef` | `RefObject<HTMLElement \| null>`; optional              | Initial control and surviving return destination.                       |
+| `duration`                         | `number`; default `220` ms                              | Continuum presence duration; zero disables animation.                   |
+| Native props / ref                 | dialog / `HTMLDialogElement`                            | Open, role and naming/modal ARIA attributes are component-owned.        |
+
+## Behavior and composition
+
+Keep the component mounted and update open for animated exits. The native dialog remains modal and holds its scroll lock until the exit completes. Reopening interrupts exit and renews initial focus. Closed server markup becomes modal only on hydration. The browser must support showModal; no legacy polyfill is bundled.
+
+Always include a visible close or cancel control. Tab boundaries wrap inside the modal for supported light-DOM controls. Choose initial focus deliberately; for destructive actions, focus the least destructive choice. AlertDialog requires a description and cannot close from a backdrop gesture. Ordinary Dialog backdrop dismissal requires pointer start and end outside the dialog.
+
+Application buttons close by setting state. Escape/backdrop/native close requests arrive through onOpenChange with a `DialogCloseReason` of escape, backdrop or native. Native close methods and form method="dialog" request state reconciliation; setting controlled state provides the animated path.
+
+Use finalFocusRef for pointer-opened dialogs because Safari may not focus a clicked opener. If deleting a row removes its trigger, choose a surviving destination. The library does not claim shadow-root focus management or screen-reader certification; see [support](/docs/accessibility-support).

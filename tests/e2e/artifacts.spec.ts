@@ -82,11 +82,11 @@ type Route = {
  */
 function routes(): readonly Route[] {
   return [
-    { name: "me", path: "/" },
-    { name: "projects", path: "/?view=projects" },
-    { name: "blog", path: "/?view=blog" },
-    { name: "photography", path: "/?view=photography" },
-    { name: "contact-open", path: "/", prepare: openContact },
+    { name: "me", path: "/portfolio" },
+    { name: "projects", path: "/portfolio?view=projects" },
+    { name: "blog", path: "/portfolio?view=blog" },
+    { name: "photography", path: "/portfolio?view=photography" },
+    { name: "contact-open", path: "/portfolio", prepare: openContact },
     { name: "project-lead-platform", path: "/projects/lead-platform" },
     { name: `blog-${newestSlug}`, path: newestHref },
     { name: "resume", path: "/resume" },

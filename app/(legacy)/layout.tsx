@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ProjectTransitionProvider } from "@/components/metro/ProjectTransitionProvider";
 
-import "./globals.css";
+import "../globals.css";
 
 export const metadata: Metadata = {
   title: "Ajmal Hassan — Technical Leader & Builder",

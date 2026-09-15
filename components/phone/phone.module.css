@@ -1,0 +1,776 @@
+.presentation {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+.device {
+  width: min(100%, 364px);
+  padding: 0 12px;
+  background: #151517;
+  border: 1px solid #343439;
+  border-radius: 36px;
+  box-shadow:
+    0 35px 75px #0004,
+    0 1px 0 #fff2 inset,
+    3px 0 0 #090909 inset,
+    -3px 0 0 #090909 inset;
+  overflow: hidden;
+  position: relative;
+}
+.bezel {
+  height: 65px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+.brand {
+  color: #939399;
+  font-size: 9px;
+  letter-spacing: 2.3px;
+  font-weight: 600;
+}
+.speaker {
+  position: absolute;
+  top: 17px;
+  left: calc(50% - 28px);
+  width: 56px;
+  height: 4px;
+  border-radius: 9px;
+  background: #050506;
+  box-shadow: 0 1px 0 #ffffff16;
+}
+.camera {
+  position: absolute;
+  right: 50px;
+  top: 18px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #172533;
+  border: 2px solid #08090a;
+}
+.screen {
+  height: 576px;
+  background: var(--wp-background);
+  color: var(--wp-foreground);
+  overflow: hidden;
+  isolation: isolate;
+  --wp-font: "Segoe UI", Arial, sans-serif;
+  font-family: var(--wp-font);
+  border: 1px solid #050505;
+}
+.status {
+  height: 29px;
+  padding: 5px 13px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  line-height: 1;
+}
+.status > span:last-child {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.signal > svg {
+  width: 15px;
+  height: 12px;
+}
+.signal > svg:first-child {
+  fill: currentColor;
+  stroke-width: 0;
+}
+.battery {
+  height: 9px;
+  width: 18px;
+  border: 1px solid currentColor;
+  position: relative;
+  background: linear-gradient(90deg, currentColor 80%, transparent 80%);
+  box-shadow: inset 0 0 0 1px var(--wp-background);
+}
+.battery:after {
+  content: "";
+  position: absolute;
+  height: 5px;
+  width: 2px;
+  background: currentColor;
+  right: -3px;
+  top: 1px;
+}
+.viewport {
+  height: calc(100% - 29px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #7775 transparent;
+  position: relative;
+  perspective: 1200px;
+}
+.hardware {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.hardware button {
+  color: #eee;
+  background: transparent;
+  border: 0;
+  width: 58px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+.hardware button:disabled {
+  opacity: 0.35;
+}
+.hardware svg {
+  width: 23px;
+  height: 23px;
+}
+.hardware button:nth-child(2) svg {
+  fill: currentColor;
+  stroke-width: 0;
+  width: 27px;
+  height: 27px;
+}
+.device button:focus-visible,
+.device a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
+}
+.device h2:focus {
+  outline: none;
+}
+.caption {
+  font-size: 13px;
+  text-align: center;
+  color: inherit;
+  margin: 25px 0 0;
+}
+.caption span {
+  display: block;
+  font-size: 11px;
+  opacity: 0.85;
+  margin-top: 6px;
+}
+.start {
+  padding: 11px 14px 18px;
+}
+.tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 136px;
+  --wp-tile-gap: 8px;
+  gap: 8px;
+}
+.tiles > div {
+  min-height: 0 !important;
+}
+.tileButton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0 !important;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: white;
+}
+.tile {
+  width: 100%;
+  height: 100%;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  padding: 12px !important;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.tile :global(.wp-tile-label) {
+  font-size: 12px !important;
+  line-height: 1.2;
+  z-index: 2;
+  font-weight: 400;
+}
+.tile :global(.wp-tile-content) {
+  position: static;
+}
+.tileButton .tile :global(.wp-tile-content) > svg {
+  width: 55px;
+  height: 55px;
+  position: absolute;
+  left: 18px;
+  top: 21px;
+}
+.tileCount {
+  position: absolute;
+  right: 19px;
+  top: 21px;
+  font-size: 46px;
+  font-weight: 300;
+  line-height: 1;
+}
+.tileButton:has(.faces) .tile {
+  padding: 10px !important;
+}
+.faces {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.faces svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tileButton:has(.faces) :global(.wp-tile-label) {
+  text-shadow: 0 1px 6px #000;
+  background: #0005;
+  padding: 2px 4px;
+  width: max-content;
+}
+.tileButton .tile :global(.wp-tile-content) > svg[role="img"] {
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+}
+.weather {
+  background: #27586c !important;
+}
+.start .tiles .weather {
+  gap: 2px;
+}
+.weather :global(.wp-live-visual) {
+  min-height: 0;
+}
+.weather :global(.wp-live-frame) {
+  height: 100%;
+}
+.weatherContent {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 3px;
+}
+.weatherContent svg {
+  width: 48px;
+  height: 48px;
+}
+.weatherContent > span {
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1;
+}
+.weatherContent small {
+  display: block;
+  font-size: 13px;
+  margin-top: 7px;
+  font-weight: 400;
+}
+.weather :global(.wp-live-footer) {
+  margin-top: 0;
+  flex: none;
+  flex-wrap: nowrap;
+}
+.weather :global(.wp-live-controls) button {
+  flex: 0 0 26px;
+  height: 26px;
+  font-size: 12px;
+  width: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+}
+.calendar {
+  background: #7a433f !important;
+}
+.calendar :global(.wp-tile-content) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.calendar :global(.wp-tile-content) > span {
+  font-size: 57px;
+  font-weight: 200;
+  line-height: 1;
+}
+.calendar small {
+  font-size: 12px;
+  margin-top: 4px;
+}
+.allApps {
+  margin: 18px 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 5px 0;
+  font-size: 17px;
+}
+.allApps > span {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+.allApps svg {
+  width: 17px;
+  height: 17px;
+}
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.app[hidden] {
+  display: none;
+}
+.appHeader {
+  padding: 14px 17px 8px;
+  flex: none;
+}
+.appHeader > p {
+  font-size: 11px;
+  letter-spacing: 1.1px;
+  margin: 0 0 5px;
+  font-weight: 600;
+}
+.appHeader h2 {
+  font-size: 48px;
+  font-weight: 200;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.appBody {
+  padding: 10px 17px 20px;
+  flex: 1;
+}
+.appBody :global(.wp-input) {
+  font-size: 15px;
+}
+.appList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 24px;
+}
+.appList button {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 24px;
+  font-weight: 300;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+.appList button > span {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+  background: var(--wp-accent);
+  color: white;
+}
+.appList svg {
+  width: 100%;
+  height: 100%;
+}
+.pivotLabel {
+  font-size: 30px;
+  font-weight: 300;
+  margin: 0 0 20px;
+  letter-spacing: -1px;
+}
+.sectionNote {
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.65;
+  margin: 12px 0 18px;
+}
+.panorama {
+  flex: 1;
+  --wp-panorama-panel-width: 88%;
+  padding: 0 0 20px 17px;
+}
+.panorama :global(.wp-panorama-headings) [role="tab"] {
+  font-size: 32px !important;
+  letter-spacing: -1px;
+}
+.peopleList {
+  padding-right: 18px;
+}
+.peopleList > button {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  font-size: 19px;
+  font-weight: 300;
+}
+.peopleList > button svg {
+  width: 51px;
+  height: 51px;
+  flex: none;
+}
+.peopleList small {
+  display: block;
+  font-size: 12px;
+  opacity: 0.55;
+  margin-top: 4px;
+}
+.together {
+  padding: 12px 22px 0 0;
+}
+.groupPortraits {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 210px;
+}
+.groupPortraits svg {
+  width: 100%;
+}
+.together h3,
+.updates h3 {
+  font-weight: 400;
+  font-size: 23px;
+  margin: 17px 0 4px;
+}
+.together p,
+.updates p {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+.together button {
+  margin-top: 14px;
+}
+.updates {
+  padding-right: 20px;
+}
+.updates > svg:first-child {
+  width: 55px;
+  height: 55px;
+  margin-top: 14px;
+}
+.updates > svg[role="img"] {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+.updates small {
+  font-size: 11px;
+  opacity: 0.55;
+}
+.thread {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 0 0 24px;
+  text-align: left;
+}
+.thread > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 23px;
+  letter-spacing: -0.5px;
+  font-weight: 300;
+}
+.thread time {
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--wp-muted);
+}
+.thread p {
+  margin: 5px 0;
+  font-size: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--wp-accent-text);
+}
+.thread small {
+  font-size: 11px;
+  opacity: 0.55;
+}
+.appBar {
+  position: sticky;
+  bottom: 0;
+  background: var(--wp-surface) !important;
+  justify-content: center;
+  gap: 30px !important;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  margin-top: auto;
+}
+.appBar svg {
+  width: 20px;
+  height: 20px;
+}
+.appBar :global(.wp-app-bar-action) {
+  font-size: 11px;
+}
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.conversationDate {
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.55;
+  letter-spacing: 1px;
+  margin: 5px;
+}
+.received,
+.sent {
+  max-width: 91%;
+  padding: 11px 13px;
+  font-size: 16px;
+  line-height: 1.4;
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.received {
+  background: var(--wp-surface);
+  align-self: flex-start;
+}
+.sent {
+  background: var(--wp-accent);
+  color: #fff;
+  align-self: flex-end;
+}
+.received:before,
+.sent:after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  border-top: 7px solid var(--wp-surface);
+  border-right: 8px solid transparent;
+  left: 0;
+}
+.sent:after {
+  left: auto;
+  right: 0;
+  border-top-color: var(--wp-accent);
+  border-left: 8px solid transparent;
+  border-right: 0;
+}
+.received small,
+.sent small {
+  display: block;
+  font-size: 10px;
+  opacity: 0.75;
+  margin-top: 7px;
+}
+.reply {
+  display: flex;
+  gap: 7px;
+  padding: 12px;
+  background: var(--wp-background);
+  position: sticky;
+  bottom: 0;
+}
+.reply input {
+  min-width: 0;
+  width: 100%;
+  font-size: 14px;
+}
+.reply button {
+  padding: 8px;
+  min-width: 40px;
+}
+.reply svg {
+  width: 20px;
+  height: 20px;
+}
+.compose {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.compose button {
+  align-self: flex-start;
+}
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.photoGrid button {
+  background: transparent;
+  padding: 0;
+  border: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+.photoGrid svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.photoDetail {
+  padding-top: 28px;
+  flex: 1;
+}
+.photoDetail svg {
+  display: block;
+  width: 100%;
+  height: 310px;
+}
+.photoDetail p {
+  padding: 0 17px;
+  font-size: 18px;
+  margin: 15px 0;
+}
+.photoDetail small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 5px;
+}
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.settings .pivotLabel {
+  margin-bottom: 0;
+}
+.settings :global(.wp-radio-group) {
+  gap: 9px;
+}
+.settings legend {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+.settings :global(.wp-selection) {
+  font-size: 14px;
+}
+.colorOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.colorOption i {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: #0078d4;
+}
+.colorOption i[data-color="violet"] {
+  background: #7046c5;
+}
+.colorOption i[data-color="magenta"] {
+  background: #c21875;
+}
+.colorOption i[data-color="orange"] {
+  background: #bd4f00;
+}
+.colorOption i[data-color="green"] {
+  background: #218739;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 400px) {
+  .device {
+    padding: 0 9px;
+    border-radius: 28px;
+  }
+  .screen {
+    height: 552px;
+  }
+  .bezel {
+    height: 53px;
+  }
+  .tiles {
+    grid-auto-rows: 124px;
+  }
+  .tileCount {
+    font-size: 36px;
+    right: 15px;
+  }
+  .tileButton .tile :global(.wp-tile-content) > svg {
+    width: 45px;
+    height: 45px;
+  }
+  .appHeader h2 {
+    font-size: 43px;
+  }
+  .start {
+    padding: 10px 11px 16px;
+  }
+  .hardware {
+    height: 58px;
+  }
+  .caption {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .device * {
+    scroll-behavior: auto !important;
+  }
+}
+
+.screen[data-mode="dark"] {
+  --wp-background: #000;
+  --wp-foreground: #fff;
+}
+/* A host may load the public stylesheet after this module. Keep the replica's
+   two-column layout explicit without changing the package's four-column grid. */
+.presentation,
+.presentation * {
+  box-sizing: border-box;
+}
+.start .tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 136px;
+  --wp-tile-gap: 8px;
+  gap: 8px;
+}
+.start .allApps {
+  background: transparent;
+}
+@media (max-width: 400px) {
+  .start .tiles {
+    grid-auto-rows: 124px;
+  }
+}

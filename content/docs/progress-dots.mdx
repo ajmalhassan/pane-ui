@@ -1,0 +1,36 @@
+---
+title: "ProgressDots"
+description: "Show indeterminate activity with a quiet stream of five dots."
+---
+
+# ProgressDots
+
+Show indeterminate activity with a quiet stream of five dots.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="progress-dots" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { ProgressDots } from "@windows-phone/react";
+
+<ProgressDots label="Loading your collection" />;
+```
+
+## API
+
+| Prop / export      | Type / default                               | Purpose                                                                  |
+| ------------------ | -------------------------------------------- | ------------------------------------------------------------------------ |
+| `label`            | `string`; required unless decorative is true | Accessible name for the task.                                            |
+| `decorative`       | `boolean`; default `false`                   | True hides the indicator from accessibility APIs; label is then omitted. |
+| Native props / ref | `span` / `HTMLSpanElement`                   | Role, children and numerical progress attributes are component-owned.    |
+
+## Behavior and composition
+
+ProgressDots represents unknown progress. It supplies a progressbar role and label but never a fictional percentage. It is not a live region or a focus target. The application controls when it appears and supplies completion feedback.
+
+Reduced motion displays static dots; RTL reverses the stream. Do not announce animation loops. Loading Button already uses decorative dots under its own accessible name and busy state. Use `<ProgressDots decorative />` for an additional visualization of an already-named task. For known values, use [Progress](/docs/progress).

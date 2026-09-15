@@ -1,0 +1,51 @@
+---
+title: "Composition patterns"
+description: "Keep native interaction boundaries clear as the interface grows."
+---
+
+# Composition patterns
+
+The library provides components and interaction contracts. Your application supplies state, navigation, persistence and domain decisions. Start with native behavior and add orchestration only where the product needs it.
+
+## Destinations and commands
+
+Use TileLink, AppBarLink or a ListItem link action for a destination. They preserve modified clicks, context menus and browser history. Use Button, Pressable or a ListItem button action for an in-place command. A styled div does not acquire native keyboard behavior by receiving `onClick`.
+
+Keep RevealTile faces and interactive ListItem title/description/leading slots presentational. Put secondary row controls in `actions`, which is a sibling of the primary link/button. Do not nest a button inside another button or anchor.
+
+## Form ownership
+
+Field associates **one** TextField, TextArea, Select or Slider with its label and help/error text. Checkbox, Switch and RadioGroup supply their own labels and associations, so they do not need a Field wrapper. Choose controlled values with change handlers, or native uncontrolled defaults; do not switch between modes while mounted.
+
+```tsx
+import { Field, TextField, Checkbox, Button } from "@windows-phone/react";
+
+<form
+  onSubmit={(event) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    console.log(values.get("name"));
+  }}
+>
+  <Field label="Collection name" required>
+    <TextField name="name" defaultValue="Weekend" />
+  </Field>
+  <Checkbox label="Keep offline" name="offline" defaultChecked />
+  <Button type="submit">Save</Button>
+  <Button type="reset">Reset</Button>
+</form>;
+```
+
+This example reads data locally. In a real app, connect your save operation and its loading/error state. Native uncontrolled inputs reset with the form; controlled values require resetting application state in `onReset`.
+
+## Visibility and focus
+
+Use Transition completion callbacks for sequential screens, and keep it mounted while exiting. Stagger hides immediately; inactive Pivot panels stay mounted but hidden/inert. Neither primitive decides where focus should go. Focus a destination heading or control after navigation and restore a surviving source on return.
+
+Dialogs own modal containment. Give each a visible cancel/close action and a final focus destination. A Menu can open a Dialog, but the application should pass the menu trigger ref as the dialog's final destination when appropriate. AppBarOverflow is an inline disclosure with ordinary Tab order; it is not a popup Menu.
+
+## Feedback without repetition
+
+Set Button `loading` while a command is pending, give unknown Progress a useful label, and update a mounted MessageBanner with `announcement="polite"` for meaningful results. Do not announce every animation loop or percentage increment. A second decorative progress visualization should use `decorative` to avoid duplicate accessibility output.
+
+The [examples](/examples) and [phone](/phone) show application-owned interactions. The [support page](/docs/accessibility-support) describes what still needs manual validation.

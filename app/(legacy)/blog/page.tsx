@@ -20,7 +20,7 @@ export default async function BlogPage() {
       // The hub this index belongs to is the Blog pivot, so that is what the
       // way back is called. "Portfolio" is the résumé's way back, to `/`, and
       // one word cannot name two destinations across the application's bars.
-      back={{ label: "Blog", href: "/?view=blog" }}
+      back={{ label: "Blog", href: "/portfolio?view=blog" }}
     >
       <header className={detail.header}>
         <h1 className={detail.title}>Field notes</h1>

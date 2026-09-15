@@ -83,7 +83,7 @@ it("keeps project return intent as serializable link metadata", () => {
       actions={[
         {
           label: "Projects",
-          href: "/?view=projects",
+          href: "/portfolio?view=projects",
           icon: "back",
           projectReturn: true,
         },
@@ -92,7 +92,7 @@ it("keeps project return intent as serializable link metadata", () => {
   );
 
   const projects = screen.getByRole("link", { name: "Projects" });
-  expect(projects).toHaveAttribute("href", "/?view=projects");
+  expect(projects).toHaveAttribute("href", "/portfolio?view=projects");
   expect(projects).toHaveAttribute("data-project-return", "true");
 });
 

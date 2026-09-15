@@ -1,0 +1,55 @@
+.frame {
+  margin: 1.5rem 0;
+  border: 1px solid #6b728066;
+  min-width: 0;
+}
+.caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 1rem;
+  font-size: 0.75rem;
+}
+.caption span {
+  opacity: 0.7;
+}
+.surface {
+  padding: clamp(1rem, 3vw, 2rem);
+  min-height: 10rem;
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: start;
+}
+.surface *,
+.surface *::before,
+.surface *::after {
+  box-sizing: border-box;
+}
+.surface p {
+  margin: 0;
+}
+.stack {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 0.75rem;
+}
+.nested {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+.tile {
+  max-width: 18rem;
+}
+.note {
+  font-size: 0.875rem;
+  margin-top: 1rem !important;
+}

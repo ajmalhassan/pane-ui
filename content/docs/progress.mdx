@@ -1,0 +1,43 @@
+---
+title: "Progress and ProgressRing"
+description: "Represent known completion accurately, or show unknown activity without inventing a value."
+---
+
+# Progress and ProgressRing
+
+Represent known completion accurately, or show unknown activity without inventing a value.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="progress" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Progress, ProgressRing } from "@windows-phone/react";
+
+<>
+  <Progress label="Downloading photos" value={30} max={100} />
+  <ProgressRing label="Finding photos" size="large" />
+</>;
+```
+
+## API
+
+| Prop / export         | Type / default                             | Purpose                                                              |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------------- |
+| `value`               | `number`; omitted by default               | Finite values are determinate; omitted/nonfinite is indeterminate.   |
+| `max`                 | `number`; default `100`                    | Nonpositive/nonfinite maximum also falls back to 100.                |
+| `label`, `decorative` | Required string unless decorative is true  | Decorative mode omits label and accessibility representation.        |
+| ProgressRing `size`   | `"small"`, `"medium"` (default), `"large"` | 32px, 48px, 72px ring sizes.                                         |
+| Native props / refs   | span / `HTMLSpanElement`                   | Role, children and numerical ARIA values are owned by the component. |
+
+## Behavior and composition
+
+Finite values clamp to zero through the normalized max. `value={0}` is real determinate progress. Visual geometry and ARIA values use the same normalized value. Unknown linear progress uses ProgressDots; an unknown ring orbits five dots.
+
+Indicators are read-only, not focus targets or live regions. Use `aria-valuetext` for a useful unit description and control a related region's `aria-busy` state in your application. Supply separate completion feedback when needed. A second representation of the same task can be decorative to avoid duplicate output.
+
+Reduced motion stops streams/orbits and removes value transitions while preserving readable state. Progress reflects application data; it never starts a request or increments itself.

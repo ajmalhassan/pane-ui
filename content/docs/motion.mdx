@@ -1,0 +1,31 @@
+---
+title: "Motion principles"
+description: "Use motion to preserve context without making interaction depend on animation."
+---
+
+# Motion principles
+
+Motion works best when it tells the user where something came from and where it went. Start screens use [TileSequence](/docs/tile-sequence) to coordinate a grid; a detail surface can use [Transition](/docs/transition). [Panorama](/docs/panorama) moves headings and panels along a shared horizontal position.
+
+## Choose the right owner
+
+| Component    | Owns                                           | Application still owns                  |
+| ------------ | ---------------------------------------------- | --------------------------------------- |
+| Transition   | Presence of one surface; enter/exit completion | Route changes and destination focus     |
+| Stagger      | Cascading entrance; immediate hiding           | Exit coordination                       |
+| TileSequence | Grid wrappers, group and per-tile transforms   | Selected item and destination           |
+| Panorama     | Gesture intent and spatial tab movement        | Accepted selection and application data |
+
+`turnstile` rotates around a leading edge, `slide` translates horizontally, `continuum` combines translation and scale, and `fade` changes opacity. Continuum is not shared-element morphing. These are web interpretations rather than frame-exact reproductions of a historical OS.
+
+## Coordinate completion, not timers
+
+Keep a departing Transition mounted and set `show={false}`. It becomes inert and hidden from assistive technology immediately; children unmount after exit. Change application screens in `onExited`, then focus a meaningful heading or control on the destination. A fixed timeout drifts when duration, reduced motion or interruption changes.
+
+Initial `show={true}` renders an already-entered surface and does not call `onEntered`. Completion callbacks describe a state change, not initial mounting. Reversal starts from the displayed frame, and obsolete runs cannot deliver stale completion callbacks.
+
+## Respect the environment
+
+Transition and TileSequence settle immediately when duration is zero, reduced motion is requested, or supported animation APIs are unavailable. A runtime reduced-motion change also settles an active run. LiveTile pauses cycling under reduced motion and while backgrounded, hovered or focused; users can still advance it manually. Progress indicators retain static readable state.
+
+Motion primitives do not move focus for you. Restore focus to a surviving source control when returning, and avoid placing focus into a subtree that is exiting. See [composition](/docs/composition) for native interaction boundaries.

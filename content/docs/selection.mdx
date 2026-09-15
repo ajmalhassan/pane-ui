@@ -1,0 +1,55 @@
+---
+title: "Checkbox, Switch and RadioGroup"
+description: "Choose independent booleans or one option using native form inputs."
+---
+
+# Checkbox, Switch and RadioGroup
+
+Choose independent booleans or one option using native form inputs.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="selection" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Checkbox, Switch, RadioGroup } from "@windows-phone/react";
+
+<>
+  <Checkbox label="Include photos" name="photos" defaultChecked />
+  <Switch label="Sync collection" name="sync" defaultChecked />
+  <RadioGroup
+    label="Delivery"
+    name="delivery"
+    defaultValue="weekly"
+    options={[
+      { value: "daily", label: "Daily" },
+      { value: "weekly", label: "Weekly" },
+    ]}
+  />
+</>;
+```
+
+## API
+
+| Prop / export                         | Type / default                                     | Purpose                                                    |
+| ------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| Checkbox / Switch `label`             | `ReactNode`; required                              | Each control owns its label.                               |
+| `description`, `error`                | `ReactNode`; optional on all three                 | Associated help/error text; nonempty error marks invalid.  |
+| Checkbox / Switch state               | Native checked/defaultChecked/onChange             | Native input props except type, children and size.         |
+| Checkbox / Switch ref                 | `HTMLInputElement`                                 | Targets checkbox input; Switch sets role switch.           |
+| RadioGroup `label`, `name`, `options` | Required ReactNode, string, readonly RadioOption[] | Fieldset legend and same-name radios.                      |
+| RadioOption                           | value: string; label: ReactNode                    | Optional description and disabled; values must be unique.  |
+| RadioGroup state                      | value/defaultValue: string; onValueChange(value)   | Controlled or native uncontrolled selection.               |
+| RadioGroup native props / ref         | fieldset / `HTMLFieldSetElement`                   | Required also reaches each radio; form forwards to inputs. |
+
+## Behavior and composition
+
+Checkbox and Switch do not need a Field wrapper. They forward native attributes/events to the input, including required, disabled, name, value and form. Space toggles a focused checkbox/switch. `defaultChecked` initializes native state; `checked` requires the owner to accept change events. The visual check is SVG, not a font glyph.
+
+RadioGroup supplies a fieldset/legend and native radios. Tab and arrow handling follows the browser, including disabled-option skipping. Safari stops at the last enabled radio; Chromium/Firefox wrap. Do not substitute a custom tablist model for native radio behavior.
+
+A consumer RadioGroup fieldset `onChange` runs first; preventing it cancels `onValueChange`. Uncontrolled controls participate in native reset. Reset controlled state explicitly in the owning form. Keep option labels presentational and put explanatory text in description.

@@ -19,7 +19,7 @@ function formatStatus(status: Project["status"]) {
 export function ProjectCaseStudy({ project }: Props) {
   return (
     <DetailSurface
-      back={{ label: "Projects", href: "/?view=projects" }}
+      back={{ label: "Projects", href: "/portfolio?view=projects" }}
       projectReading
     >
       <header className={detail.header}>

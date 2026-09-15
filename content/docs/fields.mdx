@@ -1,0 +1,51 @@
+---
+title: "Fields and text input"
+description: "Associate one native control with a label, help text and an application-owned error."
+---
+
+# Fields and text input
+
+Associate one native control with a label, help text and an application-owned error.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="fields" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Field, TextField, TextArea } from "@windows-phone/react";
+
+<>
+  <Field label="Email address" description="Used for your reply." required>
+    <TextField type="email" name="email" autoComplete="email" />
+  </Field>
+  <Field label="Notes" description="Up to 240 characters.">
+    <TextArea name="notes" maxLength={240} />
+  </Field>
+</>;
+```
+
+## API
+
+| Prop / export                    | Type / default                                            | Purpose                                                                |
+| -------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `Field.label`, `children`        | `ReactNode`; required                                     | Label and one native library control.                                  |
+| `description`, `error`           | `ReactNode`; optional                                     | Nonempty error marks the control invalid; both establish descriptions. |
+| `controlId`                      | `string`; generated if omitted                            | Identifies the control, overriding its child id.                       |
+| `required`, `disabled`           | `boolean`; optional                                       | Propagate to the control with Field ownership rules.                   |
+| `TextField.type`                 | text (default), email, password, search, tel, url, number | Restricted native input types.                                         |
+| `TextArea.rows`                  | `number`; default `4`                                     | Other textarea attributes remain native.                               |
+| `Label`                          | Native label props / `HTMLLabelElement` ref               | Standalone label; explicitly connect with htmlFor.                     |
+| `FieldDescription`, `FieldError` | Native p props / `HTMLParagraphElement` refs              | Standalone help/error text, without automatic associations.            |
+| Other native props / refs        | Field: div; TextField: input; TextArea: textarea          | Refs point to wrapper or native control respectively.                  |
+
+## Behavior and composition
+
+Field wraps exactly one TextField, TextArea, Select or Slider. Its stable generated ID keeps label/control associations consistent through SSR. `id` on Field identifies the wrapper; `controlId` identifies the input. Existing `aria-describedby` values merge and deduplicate with help/error IDs.
+
+A Field's explicit required value takes precedence over its control. Field disabled cannot be undone by a child, while a child may add its own disabled restriction. A nonempty error sets invalid state and associated text; it does not run validation or create a live region. Use error text that tells the user how to recover.
+
+Native name, value/defaultValue, onChange, form, reset, readOnly and constraint validation remain available. Refs focus the native inputs. Keyboard editing remains browser-owned. For custom composition, use standalone Label/help/error with explicit htmlFor, id, aria-describedby and aria-invalid rather than adding duplicate labels within Field. Checkbox and Switch already own their labels.

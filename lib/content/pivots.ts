@@ -7,7 +7,7 @@ export function parsePivot(value: string | string[] | undefined): PivotId {
 }
 
 export function pivotHref(pivot: PivotId): string {
-  return `/?view=${pivot}`;
+  return `/portfolio?view=${pivot}`;
 }
 
 /**

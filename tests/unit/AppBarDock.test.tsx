@@ -18,7 +18,7 @@ it("renders the application bar inside the fixed dock", () => {
   render(
     <AppBarDock>
       <AppBar
-        actions={[{ label: "Projects", href: "/?view=projects", icon: "back" }]}
+        actions={[{ label: "Projects", href: "/portfolio?view=projects", icon: "back" }]}
       />
     </AppBarDock>,
   );

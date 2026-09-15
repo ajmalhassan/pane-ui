@@ -59,12 +59,12 @@ export default defineConfig({
       ? [
           {
             name: "firefox",
-            testMatch: /library.*\.spec\.ts/,
+            testMatch: /(library.*|project-site|phone)\.spec\.ts/,
             use: { ...devices["Desktop Firefox"] },
           },
           {
             name: "webkit",
-            testMatch: /library.*\.spec\.ts/,
+            testMatch: /(library.*|project-site|phone)\.spec\.ts/,
             use: { ...devices["Desktop Safari"] },
           },
         ]

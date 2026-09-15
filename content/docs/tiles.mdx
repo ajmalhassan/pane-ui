@@ -1,0 +1,49 @@
+---
+title: "Tiles and grid"
+description: "Build a responsive start surface from presentational tiles and real destinations."
+---
+
+# Tiles and grid
+
+Build a responsive start surface from presentational tiles and real destinations.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="tiles" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { TileGrid, Tile, TileLink } from "@windows-phone/react";
+
+<TileGrid>
+  <Tile label="weather">24°</Tile>
+  <TileLink href="/inbox" label="mail">
+    3 messages
+  </TileLink>
+  <Tile label="today" size="wide" accent="subtle">
+    A clear morning
+  </Tile>
+</TileGrid>;
+```
+
+## API
+
+| Prop / export | Type / default                                              | Purpose                                                        |
+| ------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| `label`       | `ReactNode`; required on Tile / TileLink                    | Visible tile caption.                                          |
+| `size`        | `"small"`, `"wide"`, `"large"`, `"hero"`; default `"small"` | Tile geometry and grid span.                                   |
+| `accent`      | `"accent"`, `"subtle"`, `"strong"`; default `"accent"`      | Semantic surface treatment.                                    |
+| `Tile`        | Native `div` props / `HTMLDivElement` ref                   | A noninteractive content surface.                              |
+| `TileLink`    | Native `a` props / `HTMLAnchorElement` ref                  | Supply `href` for a real destination; includes press feedback. |
+| `TileGrid`    | Native `div` props / `HTMLDivElement` ref                   | Responsive CSS grid; no state or events of its own.            |
+
+## Behavior and composition
+
+Tile is not a button and has no keyboard interaction. TileLink retains native anchor keyboard activation and modified clicks. Use a real destination, meaningful label and ordinary anchor props such as `target` where needed.
+
+TileGrid accepts arbitrary direct layout children. Size information must be on the direct child: a wrapper around a tile needs its own `data-size="wide"` for the correct span. TileSequence creates these wrappers for coordinated journeys.
+
+`TileAppearance` is an exported type shared by tile variants. Color names belong to Theme; tile accents describe contrast treatments. Keep content short enough to work at narrow widths and enlarged text, and avoid nesting interactive controls inside TileLink. For two faces use [RevealTile](/docs/reveal-tile); for cycling presentational items use [LiveTile](/docs/live-tile).

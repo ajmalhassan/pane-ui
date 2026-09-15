@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
-import Resume from "@/app/resume/page";
+import Resume from "@/app/(legacy)/resume/page";
 import { ContactPanel } from "@/components/portfolio/ContactPanel";
 
 it("offers real public contact destinations without inventing an email", () => {

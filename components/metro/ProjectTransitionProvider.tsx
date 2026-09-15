@@ -373,7 +373,7 @@ export function ProjectTransitionProvider({
     clearLayoutWait();
     clearMotion(true);
     const adjacency = immediateOrigin.current;
-    const destination = adjacency?.originUrl ?? "/?view=projects";
+    const destination = adjacency?.originUrl ?? "/portfolio?view=projects";
     const useHistory = Boolean(
       adjacency && sameUrl(currentUrl(), adjacency.detailUrl),
     );

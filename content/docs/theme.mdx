@@ -1,0 +1,59 @@
+---
+title: "Theme and tokens"
+description: "Scope color, typography and native color-scheme to one part of your application."
+---
+
+# Theme and tokens
+
+Scope color, typography and native color-scheme to one part of your application.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="theme" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Theme, Button } from "@windows-phone/react";
+
+<Theme mode="light" accent="violet">
+  <Button variant="accent">Create collection</Button>
+</Theme>;
+```
+
+## API
+
+| Prop / export      | Type / default                                                             | Purpose                                                      |
+| ------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `mode`             | `"dark"`, `"light"`, `"system"`; default `"dark"`                          | System follows the OS color-scheme media query.              |
+| `accent`           | `"blue"`, `"violet"`, `"magenta"`, `"orange"`, `"green"`; default `"blue"` | Sets surface and text accent tokens.                         |
+| Native props / ref | `div` / `HTMLDivElement`                                                   | Use `className`, `style`, `dir` and ordinary div attributes. |
+
+## Behavior and composition
+
+Themes can nest and coexist. Each Theme establishes its own tokens; changing the documentation shell theme does not change these dark preview surfaces. Explicit `mode="system"` follows the operating system, not a site-specific theme switch.
+
+| Token                                | Meaning                               |
+| ------------------------------------ | ------------------------------------- |
+| `--wp-background`, `--wp-foreground` | Page surface and primary text         |
+| `--wp-muted`                         | Secondary text                        |
+| `--wp-surface`, `--wp-border`        | Control surfaces and outlines         |
+| `--wp-accent`                        | Filled accent surfaces                |
+| `--wp-accent-text`                   | Accent text adapted to the theme mode |
+| `--wp-on-accent`                     | Text drawn on an accent surface       |
+| `--wp-font`                          | Installed font stack                  |
+
+The default font stack is Segoe UI, Helvetica Neue, Arial, sans-serif. No font files are bundled. Override tokens on a Theme using CSS custom properties and review the resulting contrast, including focus indicators and disabled/error states. Theme has no keyboard behavior.
+
+```tsx
+import type { CSSProperties } from "react";
+import { Theme } from "@windows-phone/react";
+
+<Theme style={{ "--wp-font": "Arial, sans-serif" } as CSSProperties}>
+  Your application
+</Theme>;
+```
+
+Theme color names and tile `accent` values are different: tiles accept semantic treatments `accent`, `subtle` and `strong`.

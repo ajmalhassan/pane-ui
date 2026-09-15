@@ -1,0 +1,39 @@
+:root {
+  --nextra-primary-hue: 205deg;
+  --nextra-primary-saturation: 100%;
+}
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+.docs-wordmark {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  font-size: 1.05rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.docs-wordmark > svg {
+  color: #52b5ff;
+  font-size: 1.7rem;
+}
+.docs-wordmark small {
+  font-size: 0.7rem;
+  color: #959ba3;
+  font-weight: 400;
+}
+.docs-toplink {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .docs-wordmark small,
+  .docs-toplink {
+    display: none;
+  }
+}
+/* Keep the library's previews independent of prose typography. */
+.wp-theme {
+  font-family: var(--wp-font);
+  line-height: 1.4;
+}

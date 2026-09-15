@@ -1,11 +1,11 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
-import BlogPage from "@/app/blog/page";
+import BlogPage from "@/app/(legacy)/blog/page";
 import ArticlePage, {
   generateMetadata,
   generateStaticParams,
-} from "@/app/blog/[slug]/page";
-import articleStyles from "@/app/blog/article.module.css";
+} from "@/app/(legacy)/blog/[slug]/page";
+import articleStyles from "@/app/(legacy)/blog/article.module.css";
 import detailStyles from "@/components/portfolio/detailSurface.module.css";
 import { getPost, getPostSummaries } from "@/lib/content/posts";
 
@@ -153,7 +153,7 @@ it("opens the note index on the identity line and returns to its pivot", async (
    */
   const back = screen.getByRole("link", { name: "Blog" });
 
-  expect(back).toHaveAttribute("href", "/?view=blog");
+  expect(back).toHaveAttribute("href", "/portfolio?view=blog");
   expect(back.querySelector("svg")).toBeInTheDocument();
   expect(back.closest('nav[aria-label="Page actions"]')).not.toBeNull();
   expect(screen.queryByText(/^back to/i)).toBeNull();
@@ -180,7 +180,7 @@ it.each([
   const contact = screen.getByRole("link", { name: "Contact" });
 
   expect(resume).toHaveAttribute("href", "/resume");
-  expect(contact).toHaveAttribute("href", "/#contact");
+  expect(contact).toHaveAttribute("href", "/portfolio#contact");
   for (const command of [resume, contact]) {
     expect(command.querySelector("svg")).toBeInTheDocument();
     expect(command.closest('nav[aria-label="Page actions"]')).not.toBeNull();

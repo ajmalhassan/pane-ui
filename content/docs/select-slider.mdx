@@ -1,0 +1,49 @@
+---
+title: "Select and Slider"
+description: "Keep platform selection and range behavior while sharing Field associations."
+---
+
+# Select and Slider
+
+Keep platform selection and range behavior while sharing Field associations.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="select-slider" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Field, Select, Slider } from "@windows-phone/react";
+
+<>
+  <Field label="View">
+    <Select name="view" defaultValue="week">
+      <option value="day">Day</option>
+      <option value="week">Week</option>
+    </Select>
+  </Field>
+  <Field label="Volume">
+    <Slider name="volume" min={0} max={100} step={5} defaultValue={50} />
+  </Field>
+</>;
+```
+
+## API
+
+| Prop / export                       | Type / default                                | Purpose                                                                  |
+| ----------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| `Select`                            | Native select props / `HTMLSelectElement` ref | Native options, optgroups, values, multiple and form behavior.           |
+| `Slider`                            | Native input props / `HTMLInputElement` ref   | Input type is range; excludes checked/defaultChecked, type and children. |
+| `min`, `max`, `step`                | Native Slider attributes                      | The library supplies no custom bounds or step default.                   |
+| `value`, `defaultValue`, `onChange` | Native control contracts                      | Choose controlled state or native uncontrolled defaults.                 |
+
+## Behavior and composition
+
+Both controls consume Field label, description, error, required and disabled state. Select uses the browser picker, including its native keyboard and touch interface. It is not a custom combobox and does not promise filtering or arbitrary rendered option content.
+
+Slider uses a native range input for dragging, keyboard steps and form reset. Supply explicit min/max/step for predictable domain values. In controlled code, read `Number(event.target.value)` when your application state is numeric. A visible value helps users understand the selected amount; use `aria-valuetext` when units need a spoken description.
+
+Both preserve native name/form ownership and constraints. Controlled forms must restore their values in the application's reset handler. See [fields](/docs/fields) for association rules.

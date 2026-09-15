@@ -87,15 +87,15 @@ const ROUTES: readonly {
   path: () => string;
   prepare?: (page: Page) => Promise<void>;
 }[] = [
-  { name: "Me", path: () => "/" },
-  { name: "Projects", path: () => "/?view=projects" },
-  { name: "Blog", path: () => "/?view=blog" },
-  { name: "Photography", path: () => "/?view=photography" },
+  { name: "Me", path: () => "/portfolio" },
+  { name: "Projects", path: () => "/portfolio?view=projects" },
+  { name: "Blog", path: () => "/portfolio?view=blog" },
+  { name: "Photography", path: () => "/portfolio?view=photography" },
   { name: "a project detail", path: () => "/projects/lead-platform" },
   { name: "a note", path: () => newestHref },
   { name: "the note index", path: () => "/blog" },
   { name: "the résumé", path: () => "/resume" },
-  { name: "open Contact", path: () => "/", prepare: openContact },
+  { name: "open Contact", path: () => "/portfolio", prepare: openContact },
 ];
 
 for (const frame of FRAMES) {

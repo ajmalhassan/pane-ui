@@ -27,7 +27,7 @@ export default function Resume() {
 
   return (
     <DetailSurface
-      back={{ label: "Portfolio", href: "/" }}
+      back={{ label: "Portfolio", href: "/portfolio" }}
       // Résumé and contact are the portfolio's two primary commands, and this
       // is the résumé: the way back to the portfolio takes the first slot and
       // contact keeps the second, as a real link to the panorama's own panel.

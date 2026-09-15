@@ -158,7 +158,7 @@ function Detail() {
       <AppBar
         actions={[
           {
-            href: "/?view=projects",
+            href: "/portfolio?view=projects",
             icon: "back",
             label: "Projects",
             projectReturn: true,
@@ -204,7 +204,7 @@ beforeEach(() => {
   navigation.back.mockReset();
   navigation.push.mockReset();
   setReducedMotion(false);
-  window.history.replaceState(null, "", "/?view=projects");
+  window.history.replaceState(null, "", "/portfolio?view=projects");
   Object.defineProperties(window, {
     scrollX: { configurable: true, value: 12 },
     scrollY: { configurable: true, value: 345 },
@@ -231,7 +231,7 @@ it("keeps the href while exiting, pushes once after tiles turn away, then enters
     "data-project-motion",
     "exiting",
   );
-  expect(window.location.pathname).toBe("/");
+  expect(window.location.pathname).toBe("/portfolio");
   expect(navigation.push).not.toHaveBeenCalled();
   expect(motion.runs).toHaveLength(projects.length);
   const selectedDelay = Number(
@@ -541,13 +541,13 @@ it("uses the fallback on direct entry and known history adjacency only after its
   expect(directMotion.runs).toHaveLength(1);
   await finish(directMotion.runs);
   expect(navigation.back).not.toHaveBeenCalled();
-  expect(navigation.push).toHaveBeenCalledWith("/?view=projects");
+  expect(navigation.push).toHaveBeenCalledWith("/portfolio?view=projects");
   direct.unmount();
 
   navigation.pathname = "/";
   navigation.search = "view=projects";
   navigation.push.mockReset();
-  window.history.replaceState(null, "", "/?view=projects");
+  window.history.replaceState(null, "", "/portfolio?view=projects");
   const motion = controlledAnimations();
   const view = render(<Boundary adapter={motion.adapter} />);
   fireEvent.click(screen.getAllByRole("link")[0]);
@@ -588,7 +588,7 @@ it("invalidates history adjacency on query changes while retaining the restorati
   await finish(exit);
 
   expect(navigation.back).not.toHaveBeenCalled();
-  expect(navigation.push).toHaveBeenLastCalledWith("/?view=projects");
+  expect(navigation.push).toHaveBeenLastCalledWith("/portfolio?view=projects");
 });
 
 it("preserves the restoration snapshot across native Back and makes Forward ineligible for app-command back", async () => {
@@ -604,7 +604,7 @@ it("preserves the restoration snapshot across native Back and makes Forward inel
   await waitFor(() => expect(motion.runs).toHaveLength(projects.length + 1));
   await finish(motion.runs.slice(projects.length));
 
-  window.history.replaceState(null, "", "/?view=projects");
+  window.history.replaceState(null, "", "/portfolio?view=projects");
   window.dispatchEvent(new PopStateEvent("popstate"));
   navigation.pathname = "/";
   navigation.search = "view=projects";
@@ -629,7 +629,7 @@ it("preserves the restoration snapshot across native Back and makes Forward inel
   await finish(forwardExit);
 
   expect(navigation.back).not.toHaveBeenCalled();
-  expect(navigation.push).toHaveBeenLastCalledWith("/?view=projects");
+  expect(navigation.push).toHaveBeenLastCalledWith("/portfolio?view=projects");
 });
 
 it("cancels a committed return readiness wait when a later homepage query wins", async () => {
@@ -651,14 +651,14 @@ it("cancels a committed return readiness wait when a later homepage query wins",
   navigation.panoramaReady = false;
   navigation.pathname = "/";
   navigation.search = "view=projects";
-  window.history.replaceState(null, "", "/?view=projects");
+  window.history.replaceState(null, "", "/portfolio?view=projects");
   view.rerender(<Boundary adapter={motion.adapter} />);
   await act(async () => Promise.resolve());
   const runsBeforeInterruption = motion.runs.length;
   expect(window.scrollTo).not.toHaveBeenCalled();
 
   navigation.search = "view=me";
-  window.history.replaceState(null, "", "/?view=me");
+  window.history.replaceState(null, "", "/portfolio?view=me");
   view.rerender(<Boundary adapter={motion.adapter} />);
   await act(async () => Promise.resolve());
   navigation.panoramaReady = true;

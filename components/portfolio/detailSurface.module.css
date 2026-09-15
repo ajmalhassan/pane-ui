@@ -223,7 +223,7 @@
   /*
    * ...except where the address is a path. `https://…` is something a reader
    * can type into a browser or copy off a printed résumé; ` (/resume)` and
-   * ` (/#contact)` are noise in the middle of a sentence, addressed to a site
+   * ` (/portfolio#contact)` are noise in the middle of a sentence, addressed to a site
    * the sheet does not name. Same specificity as the rule above, so it has to
    * come after it.
    */

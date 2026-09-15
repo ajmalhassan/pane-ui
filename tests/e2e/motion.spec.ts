@@ -79,7 +79,7 @@ test("native touch capture handover commits one adjacent pivot and one history e
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const before = await page.evaluate(() => history.length);
 
@@ -97,7 +97,7 @@ test("a native short touch drag settles without adding history", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const before = await page.evaluate(() => history.length);
 
@@ -109,7 +109,7 @@ test("a native short touch drag settles without adding history", async ({
 });
 
 test("a short horizontal drag settles without navigating", async ({ page }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const before = await page.evaluate(() => history.length);
 
@@ -123,7 +123,7 @@ test("a short horizontal drag settles without navigating", async ({ page }) => {
 test("an accepted drag beginning on a project link suppresses its trailing click", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const tile = page.locator('[data-project-tile="true"]').first();
   const box = await tile.boundingBox();
@@ -146,7 +146,7 @@ test("native vertical touch scroll stays native and leaves the pivot selected", 
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await panoramaReady(page);
 
   await nativeTouch(page, { x: 180, y: 650 }, { x: 180, y: 350 });
@@ -161,7 +161,7 @@ test("native vertical touch scroll stays native and leaves the pivot selected", 
 test("gesture styles preserve vertical scrolling and do not cancel wheel or touch events", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await panoramaReady(page);
 
   const behavior = await page.evaluate(() => {
@@ -205,7 +205,7 @@ test("outward drags resist both finite panorama edges without adding history", a
     ["me", 240],
     ["photography", -240],
   ] as const) {
-    await page.goto(`/?view=${view}`);
+    await page.goto(`/portfolio?view=${view}`);
     await panoramaReady(page);
     const before = await page.evaluate(() => history.length);
     await horizontalMouseDrag(page, distance);
@@ -218,7 +218,7 @@ test("outward drags resist both finite panorama edges without adding history", a
 test("a second navigation interrupts the displayed panorama run", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await panoramaReady(page);
 
   await page.getByRole("tab", { name: "photography" }).click();
@@ -251,7 +251,7 @@ test("native pointer cancellation settles the accepted gesture without navigatio
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const before = await page.evaluate(() => history.length);
 
@@ -270,7 +270,7 @@ test("native pointer cancellation settles the accepted gesture without navigatio
 test("loss of the surface's own pointer capture cancels the drag", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const surface = page.locator(SURFACE);
   const box = await surface.boundingBox();
@@ -299,7 +299,7 @@ test("loss of the surface's own pointer capture cancels the drag", async ({
 test("resize finishes an interrupted panorama at its canonical destination", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await panoramaReady(page);
   await page.getByRole("tab", { name: "photography" }).click();
   await expect(page.locator(PANORAMA)).toHaveAttribute(
@@ -320,7 +320,7 @@ test("resize finishes an interrupted panorama at its canonical destination", asy
 test("turning reduced motion on during movement removes spatial animation immediately", async ({
   page,
 }) => {
-  await page.goto("/?view=me");
+  await page.goto("/portfolio?view=me");
   await panoramaReady(page);
   await page.getByRole("tab", { name: "projects" }).click();
   await expect(page.locator(PANORAMA)).toHaveAttribute(
@@ -340,7 +340,7 @@ test("a reduced-motion native swipe still commits without spatial frames", async
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 393, height: 851 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   const before = await page.evaluate(() => history.length);
 
@@ -355,7 +355,7 @@ test("a reduced-motion native swipe still commits without spatial frames", async
 test("ordinary project activation completes the turnstile and focuses the article", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   await projectMotionReady(page);
   const tile = page.locator('[data-project-tile="true"]').first();
@@ -372,7 +372,7 @@ test("ordinary project activation completes the turnstile and focuses the articl
 test("keyboard project activation follows the same turnstile path", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   await projectMotionReady(page);
   const tile = page.locator('[data-project-tile="true"]').nth(1);
@@ -391,7 +391,7 @@ test("the Projects return restores source scroll and tile focus", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 568 });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   await projectMotionReady(page);
   const tile = page.locator('[data-project-tile="true"]').last();
@@ -422,7 +422,7 @@ test("a direct-entry project command falls back to the real Projects URL", async
 
   await page.getByRole("link", { name: "Projects" }).click();
 
-  await expect(page).toHaveURL(/\/\?view=projects$/);
+  await expect(page).toHaveURL(/\/portfolio\?view=projects$/);
   await panoramaReady(page);
   await projectMotionReady(page);
 });
@@ -430,7 +430,7 @@ test("a direct-entry project command falls back to the real Projects URL", async
 test("browser Back and Forward preserve project history and readable destinations", async ({
   page,
 }) => {
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   await projectMotionReady(page);
   const tile = page.locator('[data-project-tile="true"]').first();
@@ -456,7 +456,7 @@ test("reduced motion keeps project open and return navigation immediately usable
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?view=projects");
+  await page.goto("/portfolio?view=projects");
   await panoramaReady(page);
   await projectMotionReady(page);
   const tile = page.locator('[data-project-tile="true"]').first();

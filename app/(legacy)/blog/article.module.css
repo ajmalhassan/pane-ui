@@ -112,7 +112,7 @@
   /* The cyan underline every link in the reading copy carries, from the file
      that decides it. Markdown hands over bare `<a>` elements, so the shared
      surface offers the treatment as a container class rather than a link one. */
-  composes: markdownLinks from "../../components/portfolio/detailSurface.module.css";
+  composes: markdownLinks from "../../../components/portfolio/detailSurface.module.css";
 
   padding-top: clamp(1.5rem, 4vw, 2.5rem);
   color: var(--metro-muted);

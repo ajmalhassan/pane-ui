@@ -19,8 +19,8 @@ describe("parsePivot", () => {
 });
 
 it("creates canonical pivot URLs", () => {
-  expect(pivotHref("me")).toBe("/?view=me");
-  expect(pivotHref("projects")).toBe("/?view=projects");
+  expect(pivotHref("me")).toBe("/portfolio?view=me");
+  expect(pivotHref("projects")).toBe("/portfolio?view=projects");
 });
 
 /*

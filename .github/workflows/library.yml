@@ -24,6 +24,10 @@ jobs:
       - run: npm run test:bundle
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:library:cross-browser
+      - run: LIBRARY_PRODUCTION=1 LIBRARY_CROSS_BROWSER=1 npm run test:site:browser
+      - run: npm ci --prefix examples/vite
+      - run: npm --prefix examples/vite run typecheck
+      - run: npm --prefix examples/vite run build
       - uses: actions/upload-artifact@v4
         if: always()
         with:

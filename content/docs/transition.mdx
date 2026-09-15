@@ -1,0 +1,54 @@
+---
+title: "Transition and Stagger"
+description: "Animate presence for one surface, or cascade the entrance of direct children."
+---
+
+# Transition and Stagger
+
+Animate presence for one surface, or cascade the entrance of direct children.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="transition" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Transition, Stagger } from "@windows-phone/react";
+
+export function Details({ visible }: { visible: boolean }) {
+  return (
+    <Transition show={visible} preset="turnstile" duration={260}>
+      <Stagger show>
+        <p>Recent messages</p>
+        <p>Saved collections</p>
+      </Stagger>
+    </Transition>
+  );
+}
+```
+
+## API
+
+| Prop / export           | Type / default                                                           | Purpose                                                    |
+| ----------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `Transition.show`       | `boolean`; required                                                      | Desired visibility.                                        |
+| `preset`                | `"turnstile"`, `"slide"`, `"continuum"`, `"fade"`; default `"turnstile"` | Entrance/exit motion.                                      |
+| `direction`             | `"forward"`, `"backward"`; default `"forward"`                           | Leading edge and movement direction.                       |
+| `duration`              | `number`; default `260` ms                                               | Zero disables motion; finite negative clamps to zero.      |
+| `onEntered`, `onExited` | `() => void`                                                             | Completion of a changed visibility run, not initial mount. |
+| `Stagger.show`          | `boolean`; required                                                      | Entrance when visible; immediate hide when false.          |
+| `Stagger.interval`      | `number`; default `35` ms                                                | Cumulative entrance delay is capped at 240ms.              |
+| Native props / refs     | `div` / `HTMLDivElement` on both                                         | Native restrictions such as hidden/inert remain respected. |
+
+## Behavior and composition
+
+Transition renders initial visible content immediately. On exit, children remain painted but become inert and hidden from accessibility APIs immediately; after completion, children unmount and the hidden wrapper remains. Inspect `data-state` for entering, entered, exiting or exited. Keep the wrapper mounted to allow exit animation.
+
+Reversing a run resumes from the displayed frame. Stale callbacks are ignored. Reduced motion, zero duration and unavailable Web Animations settle the state without an animation. Callbacks observe the committed terminal DOM.
+
+In the example, Transition owns visibility and the nested Stagger stays `show={true}` while mounted. Passing the same false value to both would hide Stagger immediately and suppress the visible exit. Transition unmounts the staggered content after its exit; showing it again mounts a fresh entrance.
+
+Stagger keeps children mounted under its hidden/inert wrapper and does not coordinate exits. It wraps each direct child in a div; do not place it between a ul and li. Use the List `animate` prop for lists. Both components leave navigation and focus restoration to the owner.

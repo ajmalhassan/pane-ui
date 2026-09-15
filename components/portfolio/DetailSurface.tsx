@@ -22,7 +22,7 @@ type BackCommand = {
  * from a search result meets the same two offers a reader who arrived at the
  * front door does, which is what stops a detail route from being a dead end.
  *
- * `/#contact` rather than `#contact`: on a detail route the panel lives one
+ * `/portfolio#contact` rather than `#contact`: on a detail route the panel lives one
  * navigation away, on the panorama, so the fragment needs the page in front of
  * it. The panorama's own Contact command keeps the bare hash it can act on.
  */
@@ -33,7 +33,7 @@ const RESUME: AppAction = {
 };
 const CONTACT: AppAction = {
   label: "Contact",
-  href: "/#contact",
+  href: "/portfolio#contact",
   icon: "mail",
 };
 

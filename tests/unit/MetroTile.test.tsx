@@ -115,7 +115,7 @@ describe("navigation tiles", () => {
       <RouterContext.Provider
         value={
           {
-            asPath: "/?view=projects",
+            asPath: "/portfolio?view=projects",
             back: vi.fn(),
             basePath: "",
             beforePopState: vi.fn(),

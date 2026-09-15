@@ -243,7 +243,7 @@ describe("PanoramaNav", () => {
 
     fireEvent.click(projects, { metaKey: true });
     fireEvent.click(projects, { button: 1 });
-    expect(projects).toHaveAttribute("href", "/?view=projects");
+    expect(projects).toHaveAttribute("href", "/portfolio?view=projects");
     expect(onSelect).not.toHaveBeenCalled();
 
     fireEvent.click(projects);

@@ -1,0 +1,51 @@
+---
+title: "Button and IconButton"
+description: "Native commands with clear variants, focus-preserving loading and accessible icon labels."
+---
+
+# Button and IconButton
+
+Native commands with clear variants, focus-preserving loading and accessible icon labels.
+
+import { ComponentPreview } from "@/components/docs/ComponentPreview";
+
+<ComponentPreview name="buttons" />
+
+## Usage
+
+The example assumes [the stylesheet and a Theme](/docs/installation) are already present.
+
+```tsx
+import { Button, IconButton } from "@windows-phone/react";
+
+<>
+  <Button type="submit" variant="accent">
+    Save collection
+  </Button>
+  <IconButton
+    label="Add note"
+    icon={
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 4v16M4 12h16" stroke="currentColor" strokeWidth="2" />
+      </svg>
+    }
+  />
+</>;
+```
+
+## API
+
+| Prop / export      | Type / default                                             | Purpose                                               |
+| ------------------ | ---------------------------------------------------------- | ----------------------------------------------------- |
+| `variant`          | `"outlined"`, `"accent"`, `"subtle"`; default `"outlined"` | Visual emphasis.                                      |
+| `loading`          | `boolean`; default `false`                                 | Blocks click activation and adds decorative progress. |
+| `type`             | Native type; default `"button"`                            | Opt into submit/reset explicitly.                     |
+| `IconButton.label` | `string`; required                                         | Accessible name and fallback native title.            |
+| `IconButton.icon`  | `ReactNode`; required                                      | Decorative icon hidden from accessibility APIs.       |
+| Native props / ref | `button` / `HTMLButtonElement`                             | IconButton omits children; Button accepts children.   |
+
+## Behavior and composition
+
+Enter and Space activate native buttons. `loading` exposes `aria-busy` and `aria-disabled`, keeps the visible label and keyboard focus, and blocks repeated click activation including submission. Native `disabled` remains a separate mechanism and normally removes the button from Tab order.
+
+The application starts and finishes asynchronous work; Button does not perform it or announce its result. Keep a descriptive label while loading and pair meaningful completion with [MessageBanner](/docs/message-banner). An IconButton `aria-label` overrides its label-derived name; prefer the required label unless you have a clear reason to override it.

@@ -1,0 +1,39 @@
+---
+title: "Accessibility and support"
+description: "The intended contracts, current evidence and remaining alpha release checks."
+---
+
+# Accessibility and support
+
+The package is a private local alpha. It does **not** claim WCAG certification, complete screen-reader coverage, or physical-device verification. The repository's `docs/library-support.md` is the detailed support and quality record.
+
+## Intended platform
+
+React and React DOM 19, ESM, TypeScript and modern Chromium, Firefox and WebKit are the intended targets. Native `dialog.showModal()`, the Popover API, `inert`, ResizeObserver, container queries and modern CSS are required. No legacy polyfill layer is shipped. Web Animations has a settled-state fallback.
+
+The intended contracts include server rendering/hydration, scoped light/dark/system themes, RTL navigation and runtime reduced-motion changes. Prose direction, dates, locale formatting and sorting remain application responsibilities.
+
+## Native semantics first
+
+Buttons are buttons; destinations are anchors; inputs remain native form controls. Keep visible labels descriptive, preserve focus outlines, and avoid nesting interactive elements. Supply names to tablists, progress indicators, icon-only buttons and overlays. Use text alongside color to communicate status.
+
+Refs point to the native root or control documented on each API page. Menu and Popover refs target their triggers; Checkbox and Switch refs target inputs; RadioGroup targets its fieldset; ListItem targets its li. State-critical ARIA attributes belong to the component.
+
+Native form validation is the default. Associate errors with inputs, focus the first invalid field after a failed submission, and use a deliberate announcement strategy. Native refs and props support integration with form libraries; no third-party adapter is certified.
+
+## Automated evidence has boundaries
+
+Repository tests exercise keyboard/focus behavior, form submission/reset, RTL, reduced motion, motion interruption, theme contrast via axe and selected narrow/text-enlargement flows. The cross-browser matrix uses pinned Playwright revisions. Chromium phone emulation is not a physical Android/iOS test.
+
+Native swipe injection is Chromium-only and is skipped in other browser projects. WebKit forced-colors coverage is skipped. Those are coverage gaps. Selected 200% text and spacing tests do not establish full-page zoom conformance. Axe cannot verify spoken announcements, reading order or braille output. Linux CI must itself run successfully before its results are treated as verified.
+
+## Manual work before release
+
+- VoiceOver with Safari on macOS/iOS, and NVDA with Firefox/Chrome on Windows: names, states, reading order, errors, announcements and dialog focus.
+- Physical iOS and Android devices: gestures versus page scrolling, rotation, onscreen keyboards and overlays.
+- Browser zoom to 200%/400%, OS text scaling, Windows high contrast, long translations and mixed-direction text.
+- Fresh consumer installation, realistic third-party form integration, license/notices, package identity and a maintainer-reviewed release candidate.
+
+Safari normally does not focus pointer-clicked buttons. Supply a Dialog `finalFocusRef` for predictable return to an opener, or to a surviving control when a row is deleted. Native radio arrow behavior also differs: Safari stops at the last enabled option while Chromium/Firefox wrap.
+
+Nested floating surfaces, shadow-root focus management, virtualization, date/time pickers, complex comboboxes and localization adapters are not currently promised. Validate the complete consuming application, including any custom colors and content.
