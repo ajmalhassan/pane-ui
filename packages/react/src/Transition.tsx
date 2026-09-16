@@ -43,7 +43,7 @@ function endpoint(
     case "continuum":
       return {
         opacity: 0,
-        transform: `translateY(${sign * 32}px) scale(${entering ? 0.92 : 1.06})`,
+        transform: `translateY(${sign * 32}px) scale(${sign > 0 ? 0.92 : 1.06})`,
       };
     case "fade":
       return { opacity: 0, transform: "none" };
@@ -106,7 +106,8 @@ export const Transition = forwardRef<HTMLDivElement, TransitionProps>(
         if (!current || completed) return;
         completed = true;
         snapshot.current = null;
-        animation?.cancel();
+        // Retain the final frame until the hidden/entered DOM commit.
+        // The layout-effect cleanup then releases fill ownership safely.
         const finalState = {
           target: show,
           phase: entering ? ("entered" as const) : ("exited" as const),
@@ -136,7 +137,9 @@ export const Transition = forwardRef<HTMLDivElement, TransitionProps>(
         // move an interrupted turnstile before its displayed frame is sampled.
         const transformOrigin =
           from.transformOrigin ??
-          (direction === "forward" ? "left center" : "right center");
+          ((direction === "forward") === entering
+            ? "left center"
+            : "right center");
         snapshot.current = null;
         try {
           animation = element.animate(
@@ -149,7 +152,9 @@ export const Transition = forwardRef<HTMLDivElement, TransitionProps>(
             ],
             {
               duration: milliseconds,
-              easing: "cubic-bezier(0.15, 0.7, 0.25, 1)",
+              easing: entering
+                ? "cubic-bezier(0.15, 0.7, 0.25, 1)"
+                : "cubic-bezier(0.75, 0, 0.85, 0.3)",
               fill: "both",
             },
           );

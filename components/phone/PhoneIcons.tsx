@@ -28,7 +28,8 @@ const paths: Record<IconName, string> = {
   phone: "M5 2l5 5-3 3c2 4 3 5 7 7l3-3 5 5c-7 9-24-8-17-17z",
   mail: "M2 5h20v15H2z M2 5l10 8L22 5",
   back: "M10 5l-7 7 7 7 M3 12h12a6 6 0 0 1 6 6",
-  start: "M3 4h8v7H3z M13 4h8v7h-8z M3 13h8v7H3z M13 13h8v7h-8z",
+  start:
+    "M3 5l8-1v7H3z M13 3.75L23 2v9H13z M3 13h8v7l-8-1z M13 13h10v9l-10-1.75z",
   search: "M16 10a6 6 0 1 0-12 0 6 6 0 0 0 12 0 M15 15l7 7",
   arrow: "M3 12h18 M14 5l7 7-7 7",
   add: "M12 3v18 M3 12h18",

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  />
+  <title>Pane UI · launch transition study</title
+  ><link rel="stylesheet" href="study.css" />
+  <main>
+    <header>
+      <p class="eyebrow">PANE UI / MOTION STUDY 01</p>
+      <h1>A shared space. A travelling turn.</h1>
+      <p>
+        Frame-by-frame reference, existing launch equations, and an isolated CSS
+        3D reconstruction. Library behavior is unchanged.
+      </p>
+    </header>
+    <div class="controls">
+      <button id="play">Play</button><button id="reset">Reset</button
+      ><button id="previous" aria-label="Previous captured frame">
+        ← Frame</button
+      ><button id="next" aria-label="Next captured frame">Frame →</button
+      ><label
+        >Speed
+        <select id="speed">
+          <option value="1">1×</option>
+          <option value="0.25" selected>¼×</option>
+          <option value="0.1">⅒×</option>
+        </select></label
+      ><label
+        ><input type="checkbox" id="artwork" checked />Reference tile
+        artwork</label
+      >
+    </div>
+    <label class="timeline"
+      >Recording time <output id="time">4.200 s</output
+      ><input
+        id="scrub"
+        type="range"
+        min="4200"
+        max="5300"
+        step="1"
+        value="4200"
+    /></label>
+    <div class="comparisons">
+      <section>
+        <h2>01 / Recording</h2>
+        <div class="screen reference">
+          <img
+            id="reference"
+            alt="Captured frame from the supplied recording"
+          />
+        </div>
+        <p id="frame"></p>
+      </section>
+      <section>
+        <h2>02 / Existing equations</h2>
+        <div class="screen clip" id="existing">
+          <div class="world"><div class="tiles"></div></div>
+          <div class="app"><div class="app-content"></div></div>
+        </div>
+        <p>
+          Local perspective per tile; positive rotation; a separate 10° group
+          turn. Duration 260 ms / stagger 26 ms, as in the phone demo.
+        </p>
+      </section>
+      <section>
+        <h2>03 / Reconstruction</h2>
+        <div class="screen clip" id="proposed">
+          <div class="world"><div class="tiles"></div></div>
+          <div class="app"><div class="app-content"></div></div>
+        </div>
+        <p>
+          One camera and a shared left hinge. Negative rotation, bottom-right
+          first; a stable app surface with an independent panorama entrance.
+        </p>
+      </section>
+    </div>
+    <aside>
+      <strong id="phase"></strong>
+      <p id="observation"></p>
+    </aside>
+    <details>
+      <summary>
+        What this experiment proves—and what remains approximate
+      </summary>
+      <p>
+        The tile planes are real DOM elements animated with the Web Animations
+        API. Artwork can be disabled to inspect geometry. The middle panel
+        reproduces the current forward-exit equations on the reference layout;
+        it is not a live rendering of the React component.
+      </p>
+      <p>
+        Timings and angles in the reconstruction are estimates from the captured
+        frames, not recovered original animation constants. The source contains
+        motion blur and unevenly spaced frames. CSS transforms do not recreate
+        that recorded blur automatically. The app content here is a schematic
+        reconstruction; the original app is Office, whose panorama entrance is
+        app-specific.
+      </p>
+      <p>
+        No selected tile can be identified confidently in this recording. We
+        should not invent a selected-tile zoom based on this clip. No automatic
+        looping or playback; use the controls to inspect motion.
+      </p>
+      <p>
+        Browser note: Chromium and Firefox are visually closer. WebKit needed
+        projection on each tile instead of an ancestor; some projected extents
+        still differ. The control checks pass, but cross-engine visual parity
+        remains open.
+      </p>
+    </details>
+    <p id="error" role="alert"></p>
+  </main>
+  <script type="module" src="study.js"></script>
+</html>

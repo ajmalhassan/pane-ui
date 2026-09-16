@@ -63,7 +63,6 @@ export function StartScreen({
         show={show}
         mode="layered"
         direction={direction}
-        interval={26}
         onEntered={onEntered}
         onExited={onExited}
         className={s.tiles}

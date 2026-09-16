@@ -52,3 +52,5 @@ Reversing a run resumes from the displayed frame. Stale callbacks are ignored. R
 In the example, Transition owns visibility and the nested Stagger stays `show={true}` while mounted. Passing the same false value to both would hide Stagger immediately and suppress the visible exit. Transition unmounts the staggered content after its exit; showing it again mounts a fresh entrance.
 
 Stagger keeps children mounted under its hidden/inert wrapper and does not coordinate exits. It wraps each direct child in a div; do not place it between a ul and li. Use the List `animate` prop for lists. Both components leave navigation and focus restoration to the owner.
+
+A forward entrance and backward exit retrace the same endpoint and hinge. Exits use the time-reversed entrance easing, and retain their final frame until the hidden DOM commit. Set `direction="backward"` when returning through navigation history.

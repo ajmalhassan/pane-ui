@@ -31,7 +31,7 @@ export default async function DocumentationLayout({
             <Navbar
               logo={
                 <span className="docs-wordmark">
-                  <Mark /> pane <small>ui</small>
+                  <Mark /> <span>Pane UI</span>
                 </span>
               }
               logoLink="/"
@@ -44,9 +44,7 @@ export default async function DocumentationLayout({
               </Link>
             </Navbar>
           }
-          footer={
-            <Footer>Pane UI · An independent, local alpha.</Footer>
-          }
+          footer={<Footer>Pane UI · An independent, local alpha.</Footer>}
           copyPageButton={false}
           editLink={null}
           feedback={{ content: null }}

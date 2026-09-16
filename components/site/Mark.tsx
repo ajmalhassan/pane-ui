@@ -8,7 +8,7 @@ export function Mark({ className }: { className?: string }) {
       fill="currentColor"
       aria-hidden="true"
     >
-      <path d="M0 0h7v25H0zM10 0h15v11H10zM10 14h10v7H10z" />
+      <path fillRule="evenodd" d="M3 0h20v17H9v8H3V0Zm6 6v5h8V6H9Z" />
     </svg>
   );
 }

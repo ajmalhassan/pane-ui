@@ -125,3 +125,47 @@ test("whole tile and contact flips have independent motion and a persistent paus
     "none",
   );
 });
+
+test("app back retraces its entrance around the same hinge", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/phone");
+  await page.evaluate(() => {
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (...args) {
+      const animation = original.apply(this, args);
+      if (this.matches('.wp-transition[data-preset="turnstile"]')) {
+        animation.pause();
+        animation.currentTime = 130;
+      }
+      return animation;
+    };
+  });
+  const phone = page.getByRole("region", {
+    name: "Interactive Windows Phone demo",
+  });
+  await phone
+    .getByRole("button", { name: "Open Settings", exact: true })
+    .click();
+  const app = phone.locator('.wp-transition[data-preset="turnstile"]');
+  await expect(app).toHaveAttribute("data-state", "entering");
+  const entrance = await app.evaluate((el) =>
+    (el.getAnimations()[0].effect as KeyframeEffect).getKeyframes(),
+  );
+  await app.evaluate((el) => el.getAnimations().forEach((a) => a.finish()));
+  await expect(app).toHaveAttribute("data-state", "entered");
+  await phone.getByRole("button", { name: "Phone back", exact: true }).click();
+  await expect(app).toHaveAttribute("data-state", "exiting");
+  const departure = await app.evaluate((el) =>
+    (el.getAnimations()[0].effect as KeyframeEffect).getKeyframes(),
+  );
+  for (const key of ["transform", "transformOrigin", "opacity"] as const) {
+    expect(departure[1][key]).toBe(entrance[0][key]);
+    expect(departure[0][key]).toBe(entrance[1][key]);
+  }
+  await app.evaluate((el) => el.getAnimations().forEach((a) => a.finish()));
+  await expect(
+    phone.getByRole("button", { name: "Open Settings", exact: true }),
+  ).toBeFocused();
+});

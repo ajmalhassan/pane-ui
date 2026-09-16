@@ -1,0 +1,266 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #101114;
+  color: #ededee;
+  font:
+    15px/1.55 system-ui,
+    sans-serif;
+}
+main {
+  max-width: 1120px;
+  margin: auto;
+  padding: 36px 24px;
+}
+h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  font-weight: 350;
+  margin: 10px 0 18px;
+  letter-spacing: -0.04em;
+}
+header > p:last-child {
+  max-width: 760px;
+  color: #aaadb5;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #55bbff;
+}
+h2 {
+  font-size: 14px;
+  font-weight: 500;
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 28px 0 18px;
+}
+button,
+select {
+  font: inherit;
+  background: #22252a;
+  color: #fff;
+  border: 1px solid #626873;
+  padding: 7px 12px;
+}
+button {
+  cursor: pointer;
+}
+button:hover {
+  border-color: #55bbff;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #55bbff;
+  outline-offset: 3px;
+}
+label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timeline {
+  display: flex;
+  flex-wrap: wrap;
+}
+.timeline input {
+  width: 100%;
+  accent-color: #55bbff;
+}
+output {
+  font-variant-numeric: tabular-nums;
+  color: #55bbff;
+}
+.comparisons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  margin-top: 22px;
+}
+.comparisons section > p {
+  color: #a8adb6;
+  font-size: 13px;
+  max-width: 300px;
+}
+.screen {
+  position: relative;
+  width: 274px;
+  height: 457px;
+  background: #000;
+  isolation: isolate;
+}
+.clip {
+  overflow: hidden;
+}
+.reference img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.world,
+.tiles {
+  position: absolute;
+  inset: 0;
+}
+.world {
+  perspective: none;
+  perspective-origin: 0 50%;
+}
+.tiles {
+  transform-style: preserve-3d;
+}
+.tile {
+  position: absolute;
+  background: #278526;
+  backface-visibility: hidden;
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.tile span {
+  position: absolute;
+  left: 8px;
+  bottom: 7px;
+  font-size: 13px;
+}
+.tile i {
+  font-size: 34px;
+  font-style: normal;
+  position: absolute;
+  top: 20px;
+  left: 14px;
+}
+.use-artwork .tile span,
+.use-artwork .tile i {
+  display: none;
+}
+.plain-artwork .tile img {
+  visibility: hidden;
+}
+#existing .world {
+  perspective: none;
+}
+#existing .tiles {
+  transform-style: flat;
+  inset: 52px auto auto 13.5px;
+  width: 204px;
+  height: 404.5px;
+}
+.app {
+  position: absolute;
+  inset: 0;
+  background: #fafcfa;
+  color: #151819;
+  visibility: hidden;
+  overflow: hidden;
+}
+.app-content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 457px;
+  transform-origin: 0 50%;
+}
+.app-content h3 {
+  margin: 4px 0 13px 116px;
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -2px;
+}
+.app-columns {
+  display: flex;
+  gap: 16px;
+}
+.notes {
+  width: 116px;
+  flex: none;
+  padding-top: 59px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  align-content: start;
+}
+.notes span {
+  background: #f77925;
+  color: white;
+  font-size: 11px;
+  padding: 8px 4px;
+  height: 70px;
+}
+.documents {
+  width: 220px;
+  flex: none;
+}
+.documents h4 {
+  color: #e85f1b;
+  font-weight: 300;
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.documents p {
+  font-size: 10px;
+  margin: 0 0 12px;
+}
+.documents li {
+  font-size: 17px;
+  margin: 14px 0;
+  list-style: none;
+}
+.documents ul {
+  padding: 0;
+}
+.documents li:before {
+  content: "▧";
+  color: #3789c4;
+  margin-right: 8px;
+}
+aside {
+  border-left: 2px solid #55bbff;
+  background: #1b1d22;
+  padding: 15px 20px;
+  margin-top: 20px;
+}
+aside p {
+  margin: 6px 0;
+  color: #bdc0c8;
+}
+details {
+  margin-top: 24px;
+  color: #a8adb6;
+}
+summary {
+  cursor: pointer;
+  color: #eee;
+}
+#error {
+  color: #ffad9e;
+}
+@media (max-width: 940px) {
+  .comparisons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  main {
+    padding: 24px 18px;
+  }
+  .comparisons {
+    grid-template-columns: 1fr;
+  }
+  .screen {
+    margin: auto;
+  }
+  .comparisons section > p {
+    max-width: none;
+  }
+}

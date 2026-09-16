@@ -69,9 +69,8 @@ export function PhoneDemo() {
         }}
       >
         <div className={s.bezel}>
-          <span className={s.camera} />
           <span className={s.speaker} />
-          <span className={s.brand}>WINDOWS PHONE</span>
+          <span className={s.brand}>NOKIA</span>
         </div>
         <Theme mode={mode} accent={accent} className={s.screen}>
           <div
@@ -153,7 +152,7 @@ export function PhoneDemo() {
         </nav>
       </div>
       <p className={s.caption}>
-        A little familiar. Still a little different.
+        Nokia Lumia 520 · Cyan
         <span>Tap a tile to explore · Esc goes back</span>
       </p>
     </TileMotion>

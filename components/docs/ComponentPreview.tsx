@@ -302,6 +302,7 @@ function PreviewContent({ name }: { name: PreviewName }) {
           </Button>
           <TileSequence
             show={enabled}
+            direction={enabled ? "backward" : "forward"}
             onEntered={() => setStatus("Tiles returned")}
             onExited={() => setStatus("Departure completed")}
             items={[

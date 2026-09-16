@@ -7,14 +7,26 @@ description: "Use motion to preserve context without making interaction depend o
 
 Motion works best when it tells the user where something came from and where it went. Start screens use [TileSequence](/docs/tile-sequence) to coordinate a grid; a detail surface can use [Transition](/docs/transition). [Panorama](/docs/panorama) moves headings and panels along a shared horizontal position.
 
+## Back retraces the journey
+
+Navigation establishes a spatial relationship. Returning should restore that relationship by retracing the motion that brought the user here.
+
+If home tiles depart through the left edge, they return through that same edge. If an app turns into view around a hinge, Back turns it out around that same hinge. Mirroring the motion to the other side implies a different journey.
+
+For a completed transition, reverse the path, transform endpoints, origin, stagger order and easing over the same duration. The last tile to leave is the first to return. Reverse the full sequence too: the app leaves before home returns. Use `direction="forward"` when moving onward and `direction="backward"` when returning through history in Transition and TileSequence.
+
+For an interrupted transition, reverse from the currently displayed frame without a jump or a replayed delay. Keep the final animation frame until the destination state is committed; never expose the resting surface between screens. Restore focus to the source control when it still exists.
+
+Reduced motion may remove the travel, but must preserve navigation order, completion and focus. Ambient tile flips and loading indicators are independent of this navigation rule.
+
 ## Choose the right owner
 
-| Component    | Owns                                           | Application still owns                  |
-| ------------ | ---------------------------------------------- | --------------------------------------- |
-| Transition   | Presence of one surface; enter/exit completion | Route changes and destination focus     |
-| Stagger      | Cascading entrance; immediate hiding           | Exit coordination                       |
-| TileSequence | Grid wrappers, group and per-tile transforms   | Selected item and destination           |
-| Panorama     | Gesture intent and spatial tab movement        | Accepted selection and application data |
+| Component    | Owns                                            | Application still owns                  |
+| ------------ | ----------------------------------------------- | --------------------------------------- |
+| Transition   | Presence of one surface; enter/exit completion  | Route changes and destination focus     |
+| Stagger      | Cascading entrance; immediate hiding            | Exit coordination                       |
+| TileSequence | Grid wrappers and shared-perspective tile turns | Selected item and destination           |
+| Panorama     | Gesture intent and spatial tab movement         | Accepted selection and application data |
 
 `turnstile` rotates around a leading edge, `slide` translates horizontally, `continuum` combines translation and scale, and `fade` changes opacity. Continuum is not shared-element morphing. These are web interpretations rather than frame-exact reproductions of a historical OS.
 

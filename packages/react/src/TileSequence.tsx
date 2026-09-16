@@ -22,7 +22,7 @@ export interface TileSequenceProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   items: readonly TileSequenceItem[];
   show: boolean;
-  /** Layer group motion with a tile wave by default. */
+  /** A tile wave in a shared perspective by default. */
   mode?: "layered" | "group" | "individual";
   /** Used only by individual mode. */
   selectedId?: string;
@@ -45,8 +45,8 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
       show,
       selectedId,
       mode = "layered",
-      duration = 260,
-      interval = 40,
+      duration = mode === "layered" ? 220 : 260,
+      interval = mode === "layered" ? 33 : 40,
       direction = "forward",
       onEntered,
       onExited,
@@ -93,10 +93,10 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
               ...ids.filter((id) => id !== selectedId),
               ...ids.filter((id) => id === selectedId),
             ];
-      // Separate identities prevent an item named "group" from sharing a snapshot
-      // with the parent surface. Each layer owns its cancellation and transform.
+      // Group-only mode owns the root. Layered mode projects each tile through
+      // the same camera without moving the upper rows ahead of their wave.
       const tracks = [
-        ...(mode !== "individual" && ids.length
+        ...(mode === "group" && ids.length
           ? [{ key: "group", element: root.current, index: 0, group: true }]
           : []),
         ...(mode !== "group"
@@ -108,6 +108,12 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
             }))
           : []),
       ];
+      // Layout coordinates are unaffected by in-flight transforms. The positioned
+      // root is the offset parent, so every leaf can address one camera.
+      const width = Math.max(1, root.current?.clientWidth ?? 0);
+      const height = root.current?.clientHeight ?? 0;
+      const perspective = width * 2.45;
+      const travel = width * 0.108;
       const animations: {
         id: string;
         element: HTMLDivElement;
@@ -123,7 +129,9 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
         if (!current || completed) return;
         completed = true;
         snapshots.current.clear();
-        animations.forEach(({ animation }) => animation.cancel());
+        // Keep fill ownership until the terminal DOM commit. Canceling here
+        // exposes the resting tiles while React is still scheduling that commit.
+        // The layout-effect cleanup releases the animations after it is safe.
         const finalState = {
           target: show,
           phase: entering ? ("entered" as const) : ("exited" as const),
@@ -137,9 +145,15 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
       preference?.addEventListener?.("change", onPreferenceChange);
       const milliseconds = Number.isFinite(duration)
         ? Math.max(0, duration)
-        : 260;
+        : mode === "layered"
+          ? 220
+          : 260;
       const spacing = Math.min(
-        Number.isFinite(interval) ? Math.max(0, interval) : 40,
+        Number.isFinite(interval)
+          ? Math.max(0, interval)
+          : mode === "layered"
+            ? 33
+            : 40,
         240 / Math.max(1, tileOrder.length - 1),
       );
       if (!tracks.length || preference?.matches || milliseconds === 0) settle();
@@ -151,37 +165,51 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
           const layered = mode === "layered";
           const sign =
             (direction === "forward" ? 1 : -1) *
-            (mode !== "individual" || entering ? 1 : -1);
+            (layered
+              ? entering
+                ? -1
+                : 1
+              : mode !== "individual" || entering
+                ? 1
+                : -1);
           const hidden: Keyframe = {
-            opacity: layered && group ? 1 : 0,
-            transform:
-              layered && group
-                ? `perspective(1200px) translateX(${sign * -8}%) rotateY(${sign * 10}deg)`
-                : `perspective(1200px) rotateY(${sign * 78}deg)`,
+            opacity: 0,
+            transform: layered
+              ? `perspective(${perspective}px) translateX(${-sign * travel}px) rotateY(${-sign * 88}deg)`
+              : `perspective(1200px) rotateY(${sign * 78}deg)`,
           };
-          const from = sampled ?? (entering ? hidden : visible);
+          // Keep matching transform lists at both endpoints. Interpolating from
+          // "none" can take a different matrix decomposition path across engines.
+          const resting: Keyframe = layered
+            ? {
+                opacity: 1,
+                transform: `perspective(${perspective}px) translateX(0px) rotateY(0deg)`,
+              }
+            : visible;
+          const from = sampled ?? (entering ? hidden : resting);
           const transformOrigin =
             from.transformOrigin ??
-            (direction === "forward" ? "left center" : "right center");
+            (layered
+              ? `${(sign > 0 ? 0 : width) - element.offsetLeft}px ${height / 2 - element.offsetTop}px`
+              : direction === "forward"
+                ? "left center"
+                : "right center");
           try {
             const animation = element.animate(
               [
                 { ...from, transformOrigin },
-                { ...(entering ? visible : hidden), transformOrigin },
+                { ...(entering ? resting : hidden), transformOrigin },
               ],
               {
-                duration:
-                  milliseconds +
-                  (layered && group
-                    ? spacing * Math.max(0, tileOrder.length - 1)
-                    : 0),
+                duration: milliseconds,
                 // Interrupted frames move immediately; replaying their old stagger
                 // would freeze partially turned tiles at the reversal point.
                 delay: sampled || group ? 0 : Math.min(240, index * spacing),
-                easing:
-                  layered && !entering
-                    ? "cubic-bezier(0.55, 0, 0.85, 0.35)"
-                    : "cubic-bezier(0.15, 0.7, 0.25, 1)",
+                easing: layered
+                  ? entering
+                    ? "cubic-bezier(0, 0, 0.58, 1)"
+                    : "cubic-bezier(0.42, 0, 1, 1)"
+                  : "cubic-bezier(0.15, 0.7, 0.25, 1)",
                 fill: "both",
               },
             );

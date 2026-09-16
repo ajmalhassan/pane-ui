@@ -3,6 +3,7 @@ import { Theme, TileGrid, TileLink, RevealTile } from "@pane-ui/react";
 import { FlipArtwork, TileMotion } from "../tiles/TileArtwork";
 import { Portrait, Landscape } from "../phone/PhoneIcons";
 import { Glyph } from "./Glyph";
+import polish from "./landing.module.css";
 import styles from "./site.module.css";
 export function HeroTiles() {
   return (
@@ -11,7 +12,12 @@ export function HeroTiles() {
         <span>START SOMETHING DIFFERENT</span>
         <span>09:41</span>
       </div>
-      <Theme mode="dark" accent="blue" className={styles.heroTheme}>
+      <Theme
+        mode="dark"
+        accent="blue"
+        className={styles.heroTheme}
+        data-intro-tiles
+      >
         <TileGrid className={styles.heroTiles}>
           <TileLink
             size="large"
@@ -131,7 +137,9 @@ export function HeroTiles() {
       </Theme>
       <div className={styles.displayCaption}>
         <span>REAL COMPONENTS. TRY A TILE.</span>
-        <span>REACT 19</span>
+        <button type="button" className={polish.replay} data-replay-intro>
+          REPLAY ENTRANCE ↺
+        </button>
       </div>
     </TileMotion>
   );

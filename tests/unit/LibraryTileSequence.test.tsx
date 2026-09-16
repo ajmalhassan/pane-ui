@@ -443,7 +443,7 @@ it("reverses a group from its displayed frame and settles reduced motion", async
   expect(entered).toHaveBeenCalledTimes(1);
 });
 
-it("layers a reverse-order exit wave inside a moving group by default", async () => {
+it("turns a reverse-order wave around one measured camera without moving the root", async () => {
   const ref = createRef<HTMLDivElement>();
   const exited = vi.fn();
   const view = render(<TileSequence show items={items} ref={ref} />);
@@ -457,10 +457,9 @@ it("layers a reverse-order exit wave inside a moving group by default", async ()
       onExited={exited}
     />,
   );
-  expect(runs).toHaveLength(4);
-  const group = runs.find((run) => run.element === ref.current)!;
-  const tiles = runs.filter((run) => run !== group);
-  expect(group.options.duration).toBe(290);
+  expect(runs).toHaveLength(3);
+  expect(runs.some((run) => run.element === ref.current)).toBe(false);
+  const tiles = runs;
   expect(
     tiles.map((run) => [run.element.textContent, run.options.delay]),
   ).toEqual([
@@ -468,16 +467,14 @@ it("layers a reverse-order exit wave inside a moving group by default", async ()
     ["b", 35],
     ["a", 70],
   ]);
-  expect(group.frames.at(-1)!.transform).not.toBe(
-    tiles[0].frames.at(-1)!.transform,
-  );
-  await act(async () => group.finish());
+  expect(tiles[0].frames.at(-1)!.transform).toContain("rotateY(-88deg)");
+  await act(async () => tiles[0].finish());
   expect(exited).not.toHaveBeenCalled();
   await act(async () => tiles.forEach((run) => run.finish()));
   expect(exited).toHaveBeenCalledTimes(1);
 });
 
-it("reverses both layers from their own displayed frames with no stale completion", async () => {
+it("reverses the shared-camera wave from displayed frames with no stale completion", async () => {
   const exited = vi.fn();
   const entered = vi.fn();
   const ref = createRef<HTMLDivElement>();
@@ -505,8 +502,8 @@ it("reverses both layers from their own displayed frames with no stale completio
       onEntered={entered}
     />,
   );
-  expect(runs).toHaveLength(8);
-  for (const run of runs.slice(4)) {
+  expect(runs).toHaveLength(6);
+  for (const run of runs.slice(3)) {
     expect(run.options.delay).toBe(0);
     expect(run.frames[0].transform).toBe(
       run.element === ref.current
@@ -514,11 +511,94 @@ it("reverses both layers from their own displayed frames with no stale completio
         : "matrix(1, 0, 0, 1, 20, 0)",
     );
   }
-  await act(async () => runs.slice(0, 4).forEach((run) => run.finish()));
+  await act(async () => runs.slice(0, 3).forEach((run) => run.finish()));
   expect(exited).not.toHaveBeenCalled();
   act(() => {
     reduced = true;
     listeners.forEach((fn) => fn());
   });
   expect(entered).toHaveBeenCalledTimes(1);
+});
+
+it("anchors different tile origins to a single camera and scales projection with the grid", () => {
+  const ref = createRef<HTMLDivElement>();
+  const view = render(<TileSequence show items={items} ref={ref} />);
+  Object.defineProperties(ref.current!, {
+    clientWidth: { value: 400 },
+    clientHeight: { value: 600 },
+  });
+  const children = Array.from(ref.current!.children);
+  children.forEach((child, index) =>
+    Object.defineProperties(child, {
+      offsetLeft: { value: index * 100 },
+      offsetTop: { value: index * 150 },
+    }),
+  );
+  view.rerender(<TileSequence show={false} items={items} ref={ref} />);
+  for (const run of runs) {
+    const index = children.indexOf(run.element);
+    expect(index).toBeGreaterThanOrEqual(0);
+    const [x, y] = String(run.frames[0].transformOrigin)
+      .split(" ")
+      .map(parseFloat);
+    expect(x + index * 100).toBe(0);
+    expect(y + index * 150).toBe(300);
+    expect(
+      parseFloat(String(run.frames[0].transform).split("perspective(")[1]),
+    ).toBeCloseTo(980);
+    expect(run.frames.at(-1)!.transform).toContain("translateX(-43.2px)");
+  }
+});
+
+it.each(["layered", "group", "individual"] as const)(
+  "%s keeps the exit frame until React has hidden or removed its surface",
+  async (mode) => {
+    const ref = createRef<HTMLDivElement>();
+    const view = render(
+      <TileSequence mode={mode} show items={items} ref={ref} />,
+    );
+    view.rerender(
+      <TileSequence mode={mode} show={false} items={items} ref={ref} />,
+    );
+    const releasedWhileVisible: boolean[] = [];
+    for (const run of runs) {
+      run.cancel.mockImplementation(() => {
+        releasedWhileVisible.push(
+          run.element.isConnected && !ref.current!.hidden,
+        );
+      });
+    }
+    await act(async () => runs.forEach((run) => run.finish()));
+    expect(ref.current).toHaveAttribute("data-state", "exited");
+    expect(releasedWhileVisible.every((visible) => !visible)).toBe(true);
+    expect(releasedWhileVisible).toHaveLength(runs.length);
+  },
+);
+
+it("returns along the forward departure path with reversed timing", async () => {
+  const ref = createRef<HTMLDivElement>();
+  const view = render(<TileSequence show items={items} ref={ref} />);
+  Object.defineProperties(ref.current!, {
+    clientWidth: { value: 400 },
+    clientHeight: { value: 600 },
+  });
+  view.rerender(
+    <TileSequence show={false} direction="forward" items={items} ref={ref} />,
+  );
+  const departure = [...runs];
+  await act(async () => departure.forEach((run) => run.finish()));
+  view.rerender(
+    <TileSequence show direction="backward" items={items} ref={ref} />,
+  );
+  const returning = runs.slice(departure.length);
+  for (const back of returning) {
+    const out = departure.find(
+      (run) => run.element.textContent === back.element.textContent,
+    )!;
+    expect(back.frames[0]).toEqual(out.frames.at(-1));
+    expect(back.frames.at(-1)).toEqual(out.frames[0]);
+    expect(Number(back.options.delay) + Number(out.options.delay)).toBe(66);
+    expect(back.options.duration).toBe(out.options.duration);
+    expect(back.options.easing).toBe("cubic-bezier(0, 0, 0.58, 1)");
+  }
 });

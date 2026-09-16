@@ -1,29 +1,38 @@
 import Link from "next/link";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import { HeroTiles } from "@/components/site/HeroTiles";
+import { PhoneIcon } from "@/components/phone/PhoneIcons";
 import { Glyph } from "@/components/site/Glyph";
+import { LandingMotion } from "@/components/site/LandingMotion";
+import {
+  TypeSpecimen,
+  TileSpecimen,
+  MotionSpecimen,
+} from "@/components/site/DesignSpecimens";
+import { ComponentStudio } from "@/components/site/ComponentStudio";
+import polish from "@/components/site/landing.module.css";
 import styles from "@/components/site/site.module.css";
 export default function Home() {
   return (
-    <div className={styles.site}>
+    <LandingMotion className={`${styles.site} ${polish.landing}`}>
       <SiteHeader />
       <main id="main">
-        <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>
-              <span /> A DIFFERENT KIND OF REACT LIBRARY
+        <section className={styles.hero} aria-labelledby="hero-title" data-hero>
+          <div className={styles.heroCopy} data-hero-copy>
+            <p className={styles.eyebrow} data-intro>
+              <span /> A DIFFERENT RHYTHM FOR THE WEB
             </p>
-            <h1 id="hero-title">
+            <h1 id="hero-title" data-intro>
               Software that
               <br />
               <em>feels alive.</em>
             </h1>
-            <p className={styles.lede}>
+            <p className={styles.lede} data-intro>
               Big type. Living tiles. Motion with a purpose.
               <br />
               The spirit of Windows Phone, reimagined for the web.
             </p>
-            <div className={styles.actions}>
+            <div className={styles.actions} data-intro>
               <Link className={styles.primaryLink} href="/docs">
                 Read the docs <span aria-hidden="true">→</span>
               </Link>
@@ -37,7 +46,11 @@ export default function Home() {
           </div>
           <HeroTiles />
         </section>
-        <div className={styles.marquee} aria-label="Library foundations">
+        <div
+          className={styles.marquee}
+          aria-label="Library foundations"
+          data-foundations
+        >
           <span>native at heart</span>
           <i />
           <span>motion by design</span>
@@ -46,8 +59,12 @@ export default function Home() {
           <i />
           <span>zero framework lock-in</span>
         </div>
-        <section className={styles.section} aria-labelledby="design-title">
-          <div className={styles.sectionHead}>
+        <section
+          className={styles.section}
+          aria-labelledby="design-title"
+          data-language
+        >
+          <div className={styles.sectionHead} data-reveal>
             <p className={styles.eyebrow}>01 / THE DESIGN LANGUAGE</p>
             <h2 id="design-title">
               Less chrome.
@@ -61,11 +78,9 @@ export default function Home() {
             </p>
           </div>
           <div className={styles.principles}>
-            <article>
+            <article data-reveal>
               <span className={styles.index}>01</span>
-              <div className={styles.typeSpecimen} aria-hidden="true">
-                Aa<span>light / regular / bold</span>
-              </div>
+              <TypeSpecimen />
               <h3>Let the type do the talking.</h3>
               <p>
                 Confident headings, generous space, clear hierarchy. Your
@@ -75,14 +90,9 @@ export default function Home() {
                 Explore the foundations <span aria-hidden="true">→</span>
               </Link>
             </article>
-            <article>
+            <article data-reveal>
               <span className={styles.index}>02</span>
-              <div className={styles.miniGrid} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
+              <TileSpecimen />
               <h3>A little life on every surface.</h3>
               <p>
                 Tiles reveal, update, and open into something more. Small
@@ -92,14 +102,9 @@ export default function Home() {
                 Meet the tiles <span aria-hidden="true">→</span>
               </Link>
             </article>
-            <article>
+            <article data-reveal>
               <span className={styles.index}>03</span>
-              <div className={styles.motionSpecimen} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
+              <MotionSpecimen />
               <h3>Movement that connects.</h3>
               <p>
                 Turnstiles, panoramas, and layered transitions preserve a sense
@@ -111,18 +116,24 @@ export default function Home() {
             </article>
           </div>
         </section>
-        <section className={styles.phoneFeature} aria-labelledby="phone-title">
+        <ComponentStudio />
+        <section
+          className={styles.phoneFeature}
+          aria-labelledby="phone-title"
+          data-phone-story
+          data-reveal
+        >
           <div>
-            <p className={styles.eyebrow}>02 / SOMETHING FAMILIAR</p>
+            <p className={styles.eyebrow}>03 / THE PHONE THAT STARTED IT</p>
             <h2 id="phone-title">
               Remember
               <br />
               this feeling?
             </h2>
             <p>
-              The Start screen. The People hub. Those impossible-to-forget
-              transitions. Step inside an interactive recreation, built with the
-              same components you’ll use.
+              A cyan Nokia Lumia 520. My first smartphone. Its live tiles and
+              impossible-to-forget transitions stayed with me. Pane UI is an ode
+              to that feeling, made for the web.
             </p>
             <Link className={styles.primaryLink} href="/phone">
               Meet your new old phone <span aria-hidden="true">↗</span>
@@ -134,9 +145,10 @@ export default function Home() {
           <Link
             href="/phone"
             className={styles.phoneDrawing}
-            aria-label="Open the interactive Windows Phone replica"
+            aria-label="Open the interactive cyan Nokia Lumia 520 replica"
           >
             <div className={styles.earpiece} />
+            <span className={styles.drawBrand}>NOKIA</span>
             <div className={styles.drawScreen}>
               <span>09:41</span>
               <strong>start</strong>
@@ -162,17 +174,22 @@ export default function Home() {
                 </i>
               </div>
             </div>
-            <div className={styles.drawKeys}>
-              <span>←</span>
-              <span>⊞</span>
-              <span>⌕</span>
+            <div className={styles.drawKeys} aria-hidden="true">
+              <PhoneIcon name="back" />
+              <PhoneIcon name="start" />
+              <PhoneIcon name="search" />
             </div>
           </Link>
         </section>
-        <section className={styles.section} aria-labelledby="example-title">
+        <section
+          className={styles.section}
+          aria-labelledby="example-title"
+          data-examples
+          data-reveal
+        >
           <div className={styles.rowHeading}>
             <div>
-              <p className={styles.eyebrow}>03 / BUILD SOMETHING REAL</p>
+              <p className={styles.eyebrow}>04 / BUILD SOMETHING REAL</p>
               <h2 id="example-title">
                 A starting point,
                 <br />
@@ -229,9 +246,14 @@ export default function Home() {
             </Link>
           </div>
         </section>
-        <section className={styles.install} aria-labelledby="install-title">
+        <section
+          className={styles.install}
+          aria-labelledby="install-title"
+          data-install
+          data-reveal
+        >
           <div>
-            <p className={styles.eyebrow}>04 / YOUR NEXT PROJECT</p>
+            <p className={styles.eyebrow}>05 / YOUR NEXT PROJECT</p>
             <h2 id="install-title">
               Make it
               <br />
@@ -269,6 +291,6 @@ export default function Home() {
         </section>
       </main>
       <SiteFooter />
-    </div>
+    </LandingMotion>
   );
 }

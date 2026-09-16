@@ -1,3 +1,6 @@
+.wp-tile-sequence {
+  position: relative;
+}
 /* Grid spans and row ratios belong to these wrappers, not the inner tiles.
    This leaves the tile's transform available for independent press tilt. */
 .wp-tile-sequence[hidden] {

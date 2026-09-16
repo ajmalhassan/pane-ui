@@ -81,3 +81,12 @@ Nested menus/floating surfaces, shadow-root focus management, virtualization, da
 ## Benchmark
 
 Use [Radix accessibility](https://www.radix-ui.com/primitives/docs/overview/accessibility) and [React Aria quality](https://react-aria.adobe.com/quality) as references for keyboard, focus and assistive-technology rigor. Matching their maturity requires independent accessibility review, real-device evidence, stable APIs and ongoing maintenance; a component count or green test suite alone cannot establish it.
+
+
+### Shared-perspective tile motion (2026-09-16)
+
+TileSequence's default layered mode now uses the approved recording study: independently delayed planes with a common grid-edge camera, −88° forward turn, proportional leftward travel, 220ms duration and 33ms stagger. Group-only and individual modes retain their previous behavior. No additional runtime dependency was introduced. A backward return retraces the forward departure through the same edge with reversed easing and stagger.
+
+Verified: production build and library lint; all 529 unit tests (48 files); 38 navigation/phone browser checks across Chromium, mobile Chromium, Firefox and WebKit. Two existing native-touch injection checks are skipped outside Chromium. Unit and browser regression coverage includes shared camera coordinates, reverse-order departure, interruption, completion, focus return and reduced motion.
+
+Visual limitation: Playwright WebKit computes the same projected rectangles as Chromium but paints some perspective edges differently. Direct per-plane projection improves on the ancestor-perspective study. Static matrices, origin baking, matrix normalization, removing nested 3D contexts and changing backface handling did not establish full visual parity. No browser-specific compensation was added: it would risk distorting rendering on Safari versions not tested here. Navigation and accessibility checks pass; exact cross-engine visual parity remains open. Review the local isolated study under `experiments/transition-study` for the reference and comparison controls.

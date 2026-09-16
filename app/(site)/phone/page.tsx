@@ -3,20 +3,20 @@ import type { Metadata } from "next";
 import { PhoneDemo } from "@/components/phone/PhoneDemo";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import styles from "@/components/site/site.module.css";
-export const metadata: Metadata = { title: "The phone" };
+export const metadata: Metadata = {
+  title: "Nokia Lumia 520 — the inspiration",
+};
 export default function PhonePage() {
   return (
     <div className={styles.site}>
       <SiteHeader />
       <main id="main">
         <div className={styles.pageHeading}>
-          <p className={styles.eyebrow}>
-            A FAMILIAR FEELING, BUILT FROM COMPONENTS
-          </p>
-          <h1>hello again, phone.</h1>
+          <p className={styles.eyebrow}>NOKIA LUMIA 520 / CYAN</p>
+          <h1>hello again, Lumia.</h1>
           <p>
-            A little nostalgia. A lot of working React. Pick a tile and make
-            yourself at home.
+            An ode to my first smartphone: the cyan Nokia Lumia 520. This is
+            where Pane UI began.
           </p>
         </div>
         <div className={styles.phonePage}>
@@ -27,8 +27,9 @@ export default function PhonePage() {
               with a tile.
             </h2>
             <p>
-              This is an interactive web recreation built with Pane UI. Explore the familiar gestures and details that inspired the
-              library.
+              The cyan shell. The live tiles. The way every page moved. This
+              interactive recreation is a tribute to the phone that inspired
+              Pane UI. Pick a tile and make yourself at home.
             </p>
             <dl>
               <dt>01 / START</dt>

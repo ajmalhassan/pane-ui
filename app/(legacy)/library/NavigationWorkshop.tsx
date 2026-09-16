@@ -54,7 +54,7 @@ function SequenceJourney() {
     <div className={styles.sequenceExample}>
       <div className={styles.exampleMeta}>
         <span>03 / TILE SEQUENCE</span>
-        <span>A TURN WITHIN A TURN</span>
+        <span>ONE SPACE, MANY TURNS</span>
       </div>
       <div className={styles.sequenceStage}>
         <TileSequence

@@ -17,7 +17,7 @@ test("homepage connects the project, examples and phone", async ({ page }) => {
     "examples",
   );
   await page.goto("/phone");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("phone");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Lumia");
 });
 
 test("documentation search finds real component pages", async ({ page }) => {
@@ -119,4 +119,88 @@ test("docs and gallery pass WCAG checks at narrow widths", async ({ page }) => {
   }
   const missing = await page.goto("/docs/does-not-exist");
   expect(missing?.status()).toBe(404);
+});
+
+test("landing specimens and component preview work with reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: "REPLAY ENTRANCE" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Bold", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Bold", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const reveal = page.getByRole("button", { name: "Reveal the other side" });
+  await reveal.click();
+  await expect(reveal).toHaveAttribute("aria-pressed", "true");
+  const replay = page.getByRole("button", { name: "Replay the turn" });
+  await replay.click();
+  await expect(replay).toBeEnabled();
+  const studio = page.getByRole("region", { name: /Make yourself at home/ });
+  const quiet = studio.getByRole("switch", { name: "Quiet hours" });
+  await quiet.uncheck();
+  await expect(quiet).not.toBeChecked();
+  const volume = studio.getByRole("slider", { name: "Sound level" });
+  await volume.focus();
+  await volume.press("End");
+  await volume.press("ArrowLeft");
+  await expect(studio).toContainText("99%");
+  await studio.getByRole("button", { name: "Save preferences" }).click();
+  await expect(studio.getByRole("status")).toHaveText(
+    "Saved for this preview.",
+  );
+  await studio.getByRole("checkbox", { name: "Keep me in the loop" }).uncheck();
+  await expect(
+    studio.getByRole("button", { name: "Save preferences" }),
+  ).toBeVisible();
+});
+
+test("landing replay settles when reduced motion changes at runtime", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "REPLAY ENTRANCE" }).click();
+  await expect
+    .poll(() =>
+      page
+        .locator("[data-intro-tiles]")
+        .evaluate(
+          (el) =>
+            el
+              .getAnimations({ subtree: true })
+              .filter(
+                (a) =>
+                  a instanceof Animation &&
+                  (
+                    a.effect as KeyframeEffect
+                  ).target?.parentElement?.classList.contains("wp-tile-grid"),
+              ).length,
+        ),
+    )
+    .toBeGreaterThan(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(
+    page.getByRole("button", { name: "REPLAY ENTRANCE" }),
+  ).toBeDisabled();
+  await expect
+    .poll(() =>
+      page
+        .locator("[data-intro-tiles]")
+        .evaluate(
+          (el) =>
+            el
+              .getAnimations({ subtree: true })
+              .filter((a) =>
+                (
+                  a.effect as KeyframeEffect
+                ).target?.parentElement?.classList.contains("wp-tile-grid"),
+              ).length,
+        ),
+    )
+    .toBe(0);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

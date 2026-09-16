@@ -7,54 +7,48 @@
 }
 .device {
   width: min(100%, 364px);
-  padding: 0 12px;
-  background: #151517;
-  border: 1px solid #343439;
-  border-radius: 36px;
+  padding: 0 24px 8px;
+  background: linear-gradient(115deg, #232526 0%, #101112 25%, #080909 65%);
+  border: 3px solid #20bad8;
+  border-radius: 12px;
   box-shadow:
-    0 35px 75px #0004,
-    0 1px 0 #fff2 inset,
-    3px 0 0 #090909 inset,
-    -3px 0 0 #090909 inset;
+    0 28px 65px #0004,
+    0 0 0 1px #087b92,
+    0 0 0 2px #393d3e inset,
+    0 2px 1px #a7f1fa80 inset;
   overflow: hidden;
   position: relative;
 }
 .bezel {
-  height: 65px;
+  height: 70px;
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 12px;
+  padding-bottom: 19px;
 }
 .brand {
-  color: #939399;
-  font-size: 9px;
-  letter-spacing: 2.3px;
-  font-weight: 600;
+  color: #dedfdf;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  letter-spacing: -0.5px;
+  font-weight: 700;
+  line-height: 1;
 }
 .speaker {
   position: absolute;
-  top: 17px;
-  left: calc(50% - 28px);
-  width: 56px;
+  top: 3px;
+  left: calc(50% - 24px);
+  width: 48px;
   height: 4px;
-  border-radius: 9px;
+  border-radius: 0 0 3px 3px;
   background: #050506;
-  box-shadow: 0 1px 0 #ffffff16;
-}
-.camera {
-  position: absolute;
-  right: 50px;
-  top: 18px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #172533;
-  border: 2px solid #08090a;
+  box-shadow: 0 1px 0 #ffffff12;
 }
 .screen {
-  height: 576px;
+  aspect-ratio: 3 / 5;
+  display: flex;
+  flex-direction: column;
   background: var(--wp-background);
   color: var(--wp-foreground);
   overflow: hidden;
@@ -64,6 +58,7 @@
   border: 1px solid #050505;
 }
 .status {
+  flex-shrink: 0;
   height: 29px;
   padding: 5px 13px 4px;
   display: flex;
@@ -108,7 +103,8 @@
   top: 1px;
 }
 .viewport {
-  height: calc(100% - 29px);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -118,7 +114,7 @@
   perspective: 1200px;
 }
 .hardware {
-  height: 64px;
+  height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -136,14 +132,14 @@
   opacity: 0.35;
 }
 .hardware svg {
-  width: 23px;
-  height: 23px;
+  width: 19px;
+  height: 19px;
 }
 .hardware button:nth-child(2) svg {
   fill: currentColor;
   stroke-width: 0;
-  width: 27px;
-  height: 27px;
+  width: 22px;
+  height: 22px;
 }
 .device button:focus-visible,
 .device a:focus-visible {
@@ -711,11 +707,8 @@
 }
 @media (max-width: 400px) {
   .device {
-    padding: 0 9px;
-    border-radius: 28px;
-  }
-  .screen {
-    height: 552px;
+    padding: 0 17px 6px;
+    border-radius: 10px;
   }
   .bezel {
     height: 53px;

@@ -12,21 +12,18 @@
 }
 .brand {
   display: flex;
-  gap: 13px;
+  gap: 10px;
   align-items: center;
   text-decoration: none;
   white-space: nowrap;
-  font-size: 21px;
-  font-weight: 300;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 .brand svg {
   color: #49b1ff;
   flex: none;
-}
-.brand small {
-  margin-left: 9px;
-  color: #969ba4;
-  font-size: 12px;
 }
 .header nav {
   display: flex;
@@ -293,6 +290,9 @@
   height: 4px;
   animation: stream 3s ease-in-out infinite;
 }
+.heroDisplay[data-paused="true"] .motionLines span {
+  animation-play-state: paused;
+}
 .motionLines span:nth-child(2) {
   animation-delay: 0.15s;
 }
@@ -484,22 +484,35 @@
 .phoneDrawing {
   width: 270px;
   max-width: 100%;
-  border: 2px solid #536b7b;
-  border-bottom: 0;
-  background: #080b0e;
-  border-radius: 30px 30px 0 0;
-  padding: 20px 15px 0;
+  border: 3px solid #20bad8;
+  background: linear-gradient(115deg, #232526 0%, #101112 25%, #080909 65%);
+  border-radius: 10px;
+  padding: 0 19px 6px;
   text-decoration: none;
   margin: auto;
   transform: translateY(26px);
-  box-shadow: 15px 14px 0 #0b121a;
+  box-shadow:
+    0 0 0 1px #087b92,
+    0 0 0 2px #393d3e inset,
+    12px 14px 0 #0b121a;
 }
 .earpiece {
-  width: 47px;
-  height: 4px;
-  background: #4b535d;
-  margin: 0 auto 18px;
-  border-radius: 3px;
+  width: 36px;
+  height: 3px;
+  background: #050506;
+  margin: 2px auto 16px;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 1px 0 #ffffff12;
+}
+.drawBrand {
+  display: block;
+  margin-bottom: 16px;
+  color: #dedfdf;
+  font:
+    700 12px/1 Arial,
+    sans-serif;
+  letter-spacing: -0.4px;
+  text-align: center;
 }
 .drawScreen {
   background: #050606;
@@ -553,8 +566,17 @@
 .drawKeys {
   display: flex;
   justify-content: space-between;
-  padding: 18px 20px;
-  font-size: 22px;
+  align-items: center;
+  padding: 21px 15px;
+  color: #eee;
+}
+.drawKeys svg {
+  width: 17px;
+  height: 17px;
+}
+.drawKeys svg:nth-child(2) {
+  fill: currentColor;
+  stroke-width: 0;
 }
 .rowHeading {
   display: flex;

@@ -354,20 +354,20 @@ it("keeps the displayed transform origin when direction changes during a turnsti
       Content
     </Transition>,
   );
-  expect(runs[0].frames[0].transformOrigin).toBe("left center");
-  expect(runs[0].frames[1].transformOrigin).toBe("left center");
+  expect(runs[0].frames[0].transformOrigin).toBe("right center");
+  expect(runs[0].frames[1].transformOrigin).toBe("right center");
   vi.spyOn(window, "getComputedStyle").mockReturnValue({
     opacity: "0.5",
     transform: "matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)",
-    transformOrigin: "0px 100px",
+    transformOrigin: "240px 100px",
   } as CSSStyleDeclaration);
   view.rerender(
     <Transition show={false} direction="backward">
       Content
     </Transition>,
   );
-  expect(runs[1].frames[0].transformOrigin).toBe("0px 100px");
-  expect(runs[1].frames[1].transformOrigin).toBe("0px 100px");
+  expect(runs[1].frames[0].transformOrigin).toBe("240px 100px");
+  expect(runs[1].frames[1].transformOrigin).toBe("240px 100px");
 });
 
 it("invokes completion after the final DOM and child unmount commit", async () => {
@@ -431,4 +431,43 @@ it("allows replay from onExited after the previous content is removed", async ()
     "data-state",
     "entered",
   );
+});
+
+it.each(["turnstile", "slide", "continuum", "fade"] as const)(
+  "%s retraces its forward entrance on backward exit",
+  async (preset) => {
+    const view = render(
+      <Transition show={false} preset={preset}>
+        App
+      </Transition>,
+    );
+    view.rerender(
+      <Transition show preset={preset} direction="forward">
+        App
+      </Transition>,
+    );
+    const entrance = runs[0];
+    await act(async () => entrance.finish());
+    view.rerender(
+      <Transition show={false} preset={preset} direction="backward">
+        App
+      </Transition>,
+    );
+    const exit = runs[1];
+    expect(exit.frames[0]).toEqual(entrance.frames[1]);
+    expect(exit.frames[1]).toEqual(entrance.frames[0]);
+    expect(exit.options.easing).toBe("cubic-bezier(0.75, 0, 0.85, 0.3)");
+  },
+);
+
+it("holds the app's exit frame until its hidden DOM commit", async () => {
+  const view = render(<Transition show>App</Transition>);
+  const surface = screen.getByText("App");
+  view.rerender(<Transition show={false}>App</Transition>);
+  const visibleAtRelease: boolean[] = [];
+  runs[0].cancel.mockImplementation(() =>
+    visibleAtRelease.push(!surface.hidden),
+  );
+  await act(async () => runs[0].finish());
+  expect(visibleAtRelease.every((visible) => !visible)).toBe(true);
 });

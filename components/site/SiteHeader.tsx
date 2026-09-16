@@ -4,15 +4,9 @@ import styles from "./site.module.css";
 export function SiteHeader() {
   return (
     <header className={styles.header}>
-      <Link
-        className={styles.brand}
-        href="/"
-        aria-label="Pane UI home"
-      >
+      <Link className={styles.brand} href="/" aria-label="Pane UI home">
         <Mark />
-        <span>
-          pane<small>ui</small>
-        </span>
+        <span>Pane UI</span>
       </Link>
       <nav aria-label="Project navigation">
         <Link href="/docs">Documentation</Link>

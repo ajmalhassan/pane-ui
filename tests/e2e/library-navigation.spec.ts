@@ -163,7 +163,7 @@ test("Panorama retains a clickable previous-heading fragment", async ({
   ).toHaveAttribute("aria-selected", "true");
 });
 
-test("discovery exit and return layer a tile wave inside group motion", async ({
+test("discovery exit and return use staggered planes with one shared camera", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -214,8 +214,8 @@ test("discovery exit and return layer a tile wave inside group motion", async ({
         };
       }),
     ).toEqual({
-      count: 5,
-      onGroup: 1,
+      count: 4,
+      onGroup: 0,
       onTiles: 4,
       distinctTileFrames: 4,
       childTransforms: expect.arrayContaining([
@@ -231,6 +231,21 @@ test("discovery exit and return layer a tile wave inside group motion", async ({
         );
       }),
     ).toBe(true);
+    const cameras = await group.evaluate((el) =>
+      Array.from(el.children).map((child) => {
+        const node = child as HTMLElement;
+        const [x, y] = getComputedStyle(node)
+          .transformOrigin.split(" ")
+          .map(parseFloat);
+        return [x + node.offsetLeft, y + node.offsetTop];
+      }),
+    );
+    // Forward departure and backward return both use the left hinge.
+    expect(cameras[0][0]).toBeCloseTo(0, 1);
+    for (const camera of cameras) {
+      expect(camera[0]).toBeCloseTo(cameras[0][0], 1);
+      expect(camera[1]).toBeCloseTo(cameras[0][1], 1);
+    }
     await group.evaluate((el) =>
       el.getAnimations({ subtree: true }).forEach((a) => a.finish()),
     );
@@ -245,4 +260,51 @@ test("discovery exit and return layer a tile wave inside group motion", async ({
   await expect(group).toHaveAttribute("data-state", "entering");
   await checkSurface();
   await expect(source).toBeFocused();
+});
+
+test("tile exit never releases its final frame onto a visible grid", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/library#navigation");
+  await page.evaluate(() => {
+    const releases: boolean[] = [];
+    (window as unknown as { tileReleases: boolean[] }).tileReleases = releases;
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (...args) {
+      const animation = original.apply(this, args);
+      if (this.matches(".wp-tile-sequence, .wp-tile-sequence-item")) {
+        const surface = this;
+        const root = surface.closest<HTMLElement>(".wp-tile-sequence")!;
+        const cancel = animation.cancel.bind(animation);
+        animation.cancel = () => {
+          // Inspect the real WAAPI release boundary, not just the settled DOM.
+          cancel();
+          releases.push(
+            surface.isConnected &&
+              !root.hidden &&
+              root.dataset.state === "exiting",
+          );
+        };
+      }
+      return animation;
+    };
+  });
+  await page
+    .getByRole("button", { name: "Open a small discovery", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "a small discovery", exact: true }),
+  ).toBeFocused();
+  const releases = await page.evaluate(
+    () => (window as unknown as { tileReleases: boolean[] }).tileReleases,
+  );
+  expect(releases.length).toBeGreaterThan(0);
+  expect(releases.every((visible) => !visible)).toBe(true);
+  await page
+    .getByRole("button", { name: "Back to discoveries", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Open a small discovery", exact: true }),
+  ).toBeFocused();
 });
