@@ -1,0 +1,953 @@
+.desktop {
+  min-height: 100svh;
+  background: #101014 !important;
+  color: #f6f5f7;
+  --wp-accent: #008bbb;
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 5vw;
+}
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 22px;
+  text-decoration: none;
+  color: inherit;
+}
+.brand svg {
+  color: #49b8e7;
+}
+.header nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: 14px;
+}
+.header nav a {
+  color: #d5d3da;
+  text-decoration: none;
+}
+.header .docsLink {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #6c6976;
+  padding: 10px 20px;
+  font: inherit;
+  cursor: pointer;
+}
+.main {
+  width: 90%;
+  max-width: 1460px;
+  margin: 28px auto 0;
+  flex: 1;
+}
+.startIntro {
+  margin-bottom: 36px;
+}
+.intro {
+  margin: 12px 0 0;
+  max-width: 42ch;
+  color: #c1bec9;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.tile {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 26px;
+  color: white;
+  text-decoration: none;
+  overflow: hidden;
+  transition: filter 0.15s;
+}
+.tile:hover {
+  filter: brightness(1.13);
+}
+.tile:focus-visible {
+  outline: 3px solid white;
+  outline-offset: -6px;
+}
+.tileLabel {
+  position: absolute;
+  bottom: var(--wp-tile-label-inset-bottom, 8px);
+  left: var(--wp-tile-label-inset-inline, 12px);
+  font-size: 17px;
+  font-weight: 400;
+  text-shadow: 0 1px 5px #0009;
+}
+.people {
+  padding: 0;
+  background: #154d64;
+}
+.mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  gap: 0;
+}
+.face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: url("/images/start/contacts.webp");
+  background-size: 300% 300%;
+  background-repeat: no-repeat;
+}
+.docs {
+  background: #0073c4;
+  flex-direction: column;
+  gap: 9px;
+}
+.word {
+  font-size: 23px;
+  font-weight: 300;
+}
+.components {
+  background: #594395;
+}
+.miniSquares {
+  display: grid;
+  grid-template-columns: 38px 38px;
+  gap: 6px;
+}
+.miniSquares i {
+  background: #ffffffd9;
+  width: 38px;
+  height: 30px;
+}
+.miniSquares i:first-child {
+  grid-row: span 2;
+  height: 66px;
+}
+.photos {
+  padding: 0;
+  background: #285e69;
+}
+.photos .tileLabel {
+  background: #0004;
+  padding: 0;
+}
+.examples {
+  background: #b13c5a;
+  align-items: center;
+  padding-bottom: 42px;
+}
+.examples svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.phone {
+  background: #006979;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+.phoneText {
+  font-size: 38px;
+  font-weight: 300;
+  letter-spacing: -1px;
+}
+.phoneText small {
+  display: block;
+  font-size: 17px;
+  letter-spacing: 0;
+  margin-top: 8px;
+  color: #bfeaf1;
+}
+.miniPhone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 68px;
+  height: 132px;
+  border: 3px solid #21c2e5;
+  background: #101114;
+  border-radius: 5px;
+  transform: rotate(-9deg);
+  padding: 8px;
+  box-shadow: 8px 6px 0 #0002;
+}
+.miniPhone span {
+  font-size: 7px;
+}
+.miniPhone i {
+  background: linear-gradient(
+    90deg,
+    #087bbc 48%,
+    #101114 48%,
+    #101114 53%,
+    #2494b7 53%
+  );
+  width: 100%;
+  flex: 1;
+  margin: 8px 0;
+}
+.miniPhone b {
+  font-size: 12px;
+  font-weight: 400;
+}
+.motion > [data-tile-motion] {
+  display: block;
+}
+.motion > button {
+  margin: 24px 0 0 !important;
+  font-size: 11px !important;
+  color: #b9b4c3 !important;
+  border-color: #56515e !important;
+  background: transparent !important;
+}
+.app {
+  padding: 15px 0 35px;
+  min-height: 500px;
+  transform-origin: left center;
+}
+.appHeading {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 36px;
+}
+.appHeading h1 {
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 300;
+  letter-spacing: -3px;
+  margin: 0;
+  outline-offset: 8px;
+}
+.componentSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  min-height: 430px;
+  padding: 25px 0;
+  align-items: center;
+}
+.componentSection h2,
+.peopleApp h2 {
+  font-size: clamp(40px, 5vw, 70px);
+  font-weight: 300;
+  letter-spacing: -2px;
+  line-height: 1.06;
+  margin: 0 0 24px;
+}
+.componentSection p,
+.peopleApp p {
+  color: #c4becf;
+  line-height: 1.8;
+  max-width: 330px;
+  margin-bottom: 36px;
+}
+.componentSection a,
+.peopleApp a,
+.photoApp a {
+  color: #75cef1;
+  text-decoration: none;
+}
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+  padding: 40px;
+  background: #201e28;
+  border-top: 2px solid #49b8e7;
+}
+.controls button {
+  align-self: flex-start;
+}
+.peopleApp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 65px;
+  align-items: center;
+  padding-top: 10px;
+}
+.peopleApp > .mosaic {
+  aspect-ratio: 1;
+  max-width: 480px;
+  justify-self: end;
+  height: auto;
+}
+.photoApp {
+  position: relative;
+  height: 500px;
+}
+.photoApp > div {
+  position: absolute;
+  bottom: 35px;
+  left: 35px;
+  text-shadow: 0 2px 6px #000;
+}
+.photoApp h2 {
+  font-size: 55px;
+  letter-spacing: -2px;
+  font-weight: 300;
+  margin: 0 0 18px;
+}
+.photoApp a {
+  color: #fff;
+  background: #0006;
+  padding: 8px;
+}
+.footer {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  padding: 28px 5vw;
+  color: #a9a2b5;
+  font-size: 12px;
+  margin-top: 28px;
+}
+.footer a {
+  color: #c9c2d3;
+  text-decoration: none;
+  margin-left: auto;
+}
+.header a:focus-visible,
+.header .docsLink:focus-visible,
+.footer a:focus-visible,
+.app a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 5px;
+}
+@media (min-width: 1400px) {
+  .tile {
+    min-height: 180px;
+  }
+  .main {
+    margin-top: 45px;
+  }
+  .mosaic {
+    min-height: 360px;
+  }
+}
+@media (max-width: 1050px) {
+  .main {
+    margin-top: 10px;
+  }
+  .tile {
+    min-height: 145px;
+  }
+  .phoneText {
+    font-size: 30px;
+  }
+  .componentSection,
+  .peopleApp {
+    gap: 35px;
+  }
+  .mosaic {
+    min-height: 260px;
+  }
+}
+@media (max-width: 600px) {
+  .header {
+    padding: 22px 5vw;
+  }
+  .header nav {
+    gap: 18px;
+    font-size: 12px;
+  }
+  .header .docsLink {
+    padding: 8px 12px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .startIntro {
+    margin-bottom: 28px;
+  }
+  .intro {
+    font-size: 14px;
+  }
+  .tile {
+    min-height: 125px;
+    padding: 18px;
+  }
+  .people,
+  .photos {
+    padding: 0;
+  }
+  .tileLabel {
+    font-size: 14px;
+  }
+  .docs svg {
+    width: 40px;
+    height: 40px;
+  }
+  .word {
+    font-size: 18px;
+  }
+  .mosaic {
+    min-height: 250px;
+  }
+  .phone {
+    min-height: 150px;
+  }
+  .phoneText {
+    font-size: 29px;
+  }
+  .examples {
+    padding-bottom: 35px;
+  }
+  .examples svg {
+    width: 45px;
+  }
+  .miniSquares {
+    grid-template-columns: 28px 28px;
+  }
+  .miniSquares i {
+    width: 28px;
+    height: 24px;
+  }
+  .miniSquares i:first-child {
+    height: 54px;
+  }
+  .footer {
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+  }
+  .footer a {
+    margin-left: 0;
+  }
+  .footer > span:first-child {
+    width: 100%;
+  }
+  .componentSection,
+  .peopleApp {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .componentSection {
+    padding: 12px 0;
+  }
+  .controls {
+    padding: 25px;
+  }
+  .peopleApp > .mosaic {
+    width: 100%;
+    max-width: none;
+  }
+  .appHeading {
+    gap: 16px;
+  }
+  .appHeading h1 {
+    font-size: 43px;
+    letter-spacing: -2px;
+    overflow-wrap: anywhere;
+  }
+  .photoApp {
+    height: 440px;
+  }
+  .photoApp h2 {
+    font-size: 39px;
+  }
+  .photoApp > div {
+    left: 20px;
+    bottom: 25px;
+  }
+  .photoApp a {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+}
+.music {
+  padding: 0;
+  background: #171719;
+}
+.musicArt {
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: url("/images/start/lenka-everything-at-once.png") center 40% /
+    cover;
+}
+.music:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 15%, #000d);
+}
+.track {
+  position: absolute;
+  z-index: 1;
+  bottom: 41px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-shadow: 0 1px 5px #000;
+}
+.track strong {
+  font-size: 18px;
+  font-weight: 400;
+}
+.track > span {
+  font-size: 13px;
+}
+.music .tileLabel {
+  z-index: 1;
+  font-size: 12px;
+  color: #dedce1;
+}
+.playIcon {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  z-index: 1;
+  font-size: 26px;
+}
+.musicApp {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  padding-top: 12px;
+}
+.musicApp > .musicArt {
+  position: relative;
+  aspect-ratio: 1.3;
+  background-position: center;
+  background-size: cover;
+}
+.musicApp h2 {
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 300;
+  letter-spacing: -3px;
+  line-height: 1.05;
+  margin: 20px 0 40px;
+}
+.musicEyebrow {
+  font-size: 15px;
+  letter-spacing: 5px;
+  color: #b9b3c2;
+}
+.listen {
+  display: inline-block;
+  border: 1px solid #92899e;
+  padding: 15px 24px;
+  color: #fff;
+  text-decoration: none;
+}
+.musicApp .listen:hover {
+  background: #ffffff15;
+}
+@media (max-width: 600px) {
+  .musicApp {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .track strong {
+    font-size: 16px;
+  }
+  .musicApp h2 {
+    font-size: 52px;
+  }
+  .musicApp > .musicArt {
+    aspect-ratio: 1.4;
+  }
+}
+.tile {
+  min-height: 0;
+}
+.mosaic {
+  min-height: 0;
+}
+.face {
+  background-size: cover;
+  background-position: center;
+  background-image: none;
+}
+.peopleApp > .mosaic {
+  min-height: 320px;
+}
+.main {
+  margin-top: 10px;
+}
+@media (min-width: 1400px) {
+  .main {
+    margin-top: 18px;
+  }
+}
+@media (max-width: 600px) {
+  .music .musicArt {
+    background-position: center 40%;
+  }
+  .phone {
+    min-height: 0;
+  }
+  .peopleApp > .mosaic {
+    min-height: 0;
+  }
+}
+
+/* Both visual groups share the same TileSequence camera and DOM. */
+.startHeading {
+  font-size: clamp(72px, 8vw, 112px);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  margin: 12px 0 0;
+}
+.startGrid {
+  position: relative;
+  padding-top: 36px;
+}
+.everydayCaption,
+.buildCaption {
+  position: absolute;
+  top: 0;
+  margin: 0;
+  color: #c1bec9;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 24px;
+}
+.everydayCaption {
+  left: 0;
+}
+.buildCaption {
+  left: calc(50% + 20px);
+}
+.sequence {
+  /* Six square units per group; the middle column separates desktop groups. */
+  --start-unit: calc((90vw - 140px) / 12);
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) 20px repeat(
+      6,
+      minmax(0, 1fr)
+    ) !important;
+  grid-template-rows: repeat(4, var(--start-unit));
+  gap: 10px !important;
+  --wp-tile-gap: 10px;
+}
+.sequence > div {
+  min-height: 0 !important;
+  min-width: 0;
+  aspect-ratio: auto !important;
+}
+.sequence > div:has(.people) {
+  grid-area: 1 / 1 / 3 / 3;
+}
+.sequence > div:has(.photos) {
+  grid-area: 1 / 3 / 3 / 7;
+}
+.sequence > div:has(.music) {
+  grid-area: 3 / 2 / 5 / 6;
+}
+.sequence > div:has([data-shortcut="motion"]) {
+  grid-area: 3 / 1 / 4 / 2;
+}
+.sequence > div:has([data-shortcut="theme"]) {
+  grid-area: 3 / 6 / 4 / 7;
+}
+.sequence > div:has([data-shortcut="buttons"]) {
+  grid-area: 4 / 1 / 5 / 2;
+}
+.sequence > div:has([data-shortcut="accessibility"]) {
+  grid-area: 4 / 6 / 5 / 7;
+}
+.sequence > div:has(.docs) {
+  grid-area: 1 / 8 / 3 / 12;
+}
+.sequence > div:has(.components) {
+  grid-area: 1 / 12 / 3 / 14;
+}
+.sequence > div:has(.examples) {
+  grid-area: 3 / 8 / 5 / 10;
+}
+.sequence > div:has(.phone) {
+  grid-area: 3 / 10 / 5 / 14;
+}
+.shortcut {
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  background: #008a9c;
+}
+.shortcut[data-shortcut="theme"] {
+  background: #a74416;
+}
+.shortcut[data-shortcut="buttons"] {
+  background: #0073c4;
+}
+.shortcut[data-shortcut="accessibility"] {
+  background: #496b20;
+}
+@media (min-width: 1623px) {
+  .sequence {
+    --start-unit: 110px;
+  }
+}
+.phone {
+  gap: 18px;
+  padding: 20px 16px 42px;
+}
+.miniPhone {
+  flex-shrink: 0;
+  width: 48px;
+  height: 94px;
+  padding: 5px;
+}
+.phoneText {
+  font-size: clamp(21px, 2.1vw, 30px);
+  letter-spacing: -0.7px;
+}
+.phoneText small {
+  font-size: 12px;
+}
+.phoneOrigin {
+  color: #c1bec9;
+  margin-bottom: 28px;
+  line-height: 1.7;
+}
+.phoneOrigin > span {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8bd3f2;
+}
+@media (max-width: 900px) {
+  .sequence {
+    --start-unit: calc((90vw - 50px) / 6);
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(4, var(--start-unit)) 38px repeat(
+        4,
+        var(--start-unit)
+      );
+  }
+  .sequence > div:has(.docs) {
+    grid-area: 6 / 1 / 8 / 5;
+  }
+  .sequence > div:has(.components) {
+    grid-area: 6 / 5 / 8 / 7;
+  }
+  .sequence > div:has(.examples) {
+    grid-area: 8 / 1 / 10 / 3;
+  }
+  .sequence > div:has(.phone) {
+    grid-area: 8 / 3 / 10 / 7;
+  }
+  .buildCaption {
+    left: 0;
+    top: calc(36px + (90vw - 50px) / 6 * 4 + 40px);
+  }
+}
+@media (max-width: 600px) {
+  .startHeading {
+    margin: 10px 0 0;
+  }
+  .sequence {
+    --start-unit: calc((90vw - 40px) / 6);
+    grid-template-rows: repeat(8, var(--start-unit));
+    gap: 8px !important;
+    --wp-tile-gap: 8px;
+  }
+  .everydayCaption,
+  .buildCaption {
+    display: none;
+  }
+  .startGrid {
+    padding-top: 0;
+  }
+  .sequence > div:has(.docs) {
+    grid-area: 5 / 1 / 7 / 5;
+  }
+  .sequence > div:has(.components) {
+    grid-area: 5 / 5 / 7 / 7;
+  }
+  .sequence > div:has(.examples) {
+    grid-area: 7 / 1 / 9 / 3;
+  }
+  .sequence > div:has(.phone) {
+    grid-area: 7 / 3 / 9 / 7;
+  }
+  .tile {
+    padding: 18px;
+  }
+  .people,
+  .photos,
+  .music {
+    padding: 0;
+  }
+  .phone {
+    padding: 12px 10px 35px;
+    gap: 10px;
+  }
+  .phoneText {
+    font-size: 19px;
+    letter-spacing: -0.5px;
+  }
+  .phoneText small {
+    font-size: 11px;
+  }
+  .miniPhone {
+    width: 35px;
+    height: 70px;
+    border-width: 2px;
+    padding: 3px;
+  }
+  .miniPhone span {
+    font-size: 5px;
+  }
+  .miniPhone b {
+    font-size: 8px;
+  }
+  .track {
+    left: 12px;
+    right: 12px;
+  }
+  .track strong {
+    font-size: 15px;
+  }
+  .playIcon {
+    display: none;
+  }
+  .word {
+    font-size: 18px;
+  }
+}
+
+.football {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: url("/images/start/football.png") center / cover;
+}
+.photoAlbum {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: repeat(2, 240px);
+  gap: 12px;
+}
+.photoAlbum figure {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #18191c;
+}
+.photoAlbum img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photoAlbum figcaption {
+  position: absolute;
+  bottom: 14px;
+  left: 16px;
+  padding: 5px 9px;
+  color: #fff;
+  background: #000c;
+  font-size: 15px;
+}
+.footballPhoto {
+  grid-row: span 2;
+}
+.lumiaPhoto img {
+  object-position: center 54%;
+}
+.albumDocs {
+  display: inline-block;
+  color: #75cef1;
+  margin-top: 24px;
+  text-decoration: none;
+}
+@media (max-width: 600px) {
+  .photoAlbum {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 12px;
+  }
+  .photoAlbum figure {
+    aspect-ratio: 4 / 3;
+  }
+  .footballPhoto {
+    grid-row: auto;
+  }
+  .photoAlbum .weddingPhoto {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.weddingTile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: url("/images/start/wedding.png") center / cover;
+}
+
+/* Small tiles show only their glyph, as on the original Start screen. */
+.shortcut {
+  padding: 0;
+}
+.components {
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 36px;
+}
+@media (max-width: 600px) {
+  .shortcut svg {
+    width: 28px;
+    height: 28px;
+  }
+  .docs {
+    gap: 4px;
+    padding: 10px 12px 30px;
+  }
+  .docs svg {
+    width: 28px;
+    height: 28px;
+  }
+  .word {
+    font-size: 16px;
+  }
+  .components {
+    padding: 10px 10px 30px;
+  }
+  .miniSquares {
+    grid-template-columns: 20px 20px;
+    gap: 4px;
+  }
+  .miniSquares i {
+    width: 20px;
+    height: 18px;
+  }
+  .miniSquares i:first-child {
+    height: 40px;
+  }
+  .track {
+    bottom: 30px;
+    gap: 2px;
+  }
+  .track strong {
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  .track > span {
+    font-size: 11px;
+  }
+  .music .tileLabel {
+    font-size: 10px;
+  }
+}

@@ -21,6 +21,8 @@
   --wp-accent: #0063b1;
   --wp-on-accent: #ffffff;
   --wp-accent-text: #52b5ff;
+  --wp-tile-label-inset-inline: 12px;
+  --wp-tile-label-inset-bottom: 8px;
   --wp-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color-scheme: dark;
   color: var(--wp-foreground);
@@ -121,7 +123,8 @@
   min-width: 0;
   aspect-ratio: 1;
   min-height: min-content;
-  padding: 1.15rem;
+  --wp-tile-content-padding: 1.15rem;
+  padding: var(--wp-tile-content-padding);
   border: 0;
   border-radius: 0;
   background: var(--wp-accent, #0063b1);
@@ -151,6 +154,16 @@
   font-weight: 500;
   line-height: 1.35;
 }
+/* Keep labels in flow for wrapping and live controls, independent of content padding. */
+.wp-tile > .wp-tile-label,
+.wp-tile > .wp-live-footer {
+  margin-inline: calc(
+    var(--wp-tile-label-inset-inline, 12px) - var(--wp-tile-content-padding)
+  );
+  margin-bottom: calc(
+    var(--wp-tile-label-inset-bottom, 8px) - var(--wp-tile-content-padding)
+  );
+}
 /* The grid itself is the query container: descendants resolve cqw against its
    available width, even inside a narrow desktop sidebar. Text may grow tracks. */
 .wp-tile[data-size="wide"] {
@@ -178,7 +191,8 @@
 }
 .wp-tile-grid > .wp-tile {
   aspect-ratio: auto;
-  padding: clamp(0.5rem, 3cqw, 1.15rem);
+  --wp-tile-content-padding: clamp(0.5rem, 3cqw, 1.15rem);
+  padding: var(--wp-tile-content-padding);
   gap: 0.5rem;
 }
 .wp-tile-grid > [data-size="wide"],

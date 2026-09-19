@@ -1,9 +1,9 @@
 ---
-title: "Button and IconButton"
+title: "Button, IconButton and BackButton"
 description: "Native commands with clear variants, focus-preserving loading and accessible icon labels."
 ---
 
-# Button and IconButton
+# Button, IconButton and BackButton
 
 Native commands with clear variants, focus-preserving loading and accessible icon labels.
 
@@ -49,3 +49,15 @@ import { Button, IconButton } from "@pane-ui/react";
 Enter and Space activate native buttons. `loading` exposes `aria-busy` and `aria-disabled`, keeps the visible label and keyboard focus, and blocks repeated click activation including submission. Native `disabled` remains a separate mechanism and normally removes the button from Tab order.
 
 The application starts and finishes asynchronous work; Button does not perform it or announce its result. Keep a descriptive label while loading and pair meaningful completion with [MessageBanner](/docs/message-banner). An IconButton `aria-label` overrides its label-derived name; prefer the required label unless you have a clear reason to override it.
+
+## BackButton
+
+A circular back command with a geometric arrow. The ring and arrow are drawn together for consistent proportions across platforms.
+
+```tsx
+import { BackButton } from "@pane-ui/react";
+
+<BackButton label="Back to Start" onClick={goBack} />;
+```
+
+`label` defaults to `"Back"`. Supply a localized label or a destination when useful. Native button props, refs, and `loading` are supported. The control does not navigate automatically: the application owns browser history and transition timing. The 48px target remains the same on mobile.

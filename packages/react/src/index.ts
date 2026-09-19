@@ -45,8 +45,10 @@ export {
 export {
   Button,
   IconButton,
+  BackButton,
   type ButtonProps,
   type IconButtonProps,
+  type BackButtonProps,
 } from "./Button.js";
 export {
   AppBarLink,

@@ -15,6 +15,7 @@
   height: 100%;
   min-height: 0;
   aspect-ratio: auto;
-  padding: clamp(0.5rem, 3cqw, 1.15rem);
+  --wp-tile-content-padding: clamp(0.5rem, 3cqw, 1.15rem);
+  padding: var(--wp-tile-content-padding);
   gap: 0.5rem;
 }

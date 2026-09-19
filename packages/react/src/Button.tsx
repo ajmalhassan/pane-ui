@@ -73,3 +73,42 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     );
   },
 );
+
+export interface BackButtonProps
+  extends Omit<IconButtonProps, "icon" | "label" | "variant"> {
+  /** Localize or describe the destination. Defaults to "Back". */
+  label?: string;
+}
+/** Circular navigation command. The application owns history and navigation. */
+export const BackButton = forwardRef<HTMLButtonElement, BackButtonProps>(
+  function BackButton({ label = "Back", className = "", ...props }, ref) {
+    return (
+      <IconButton
+        {...props}
+        ref={ref}
+        label={label}
+        className={`wp-back-button ${className}`}
+        icon={
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path
+              d="M17.5 11.2H8.9l3.5-3.5-1.1-1.1L5.9 12l5.4 5.4 1.1-1.1-3.5-3.5h8.6v-1.6Z"
+              fill="currentColor"
+            />
+          </svg>
+        }
+      />
+    );
+  },
+);

@@ -27,7 +27,7 @@
     "test:library:cross-browser": "LIBRARY_CROSS_BROWSER=1 LIBRARY_PRODUCTION=1 playwright test tests/e2e/library*.spec.ts",
     "test:bundle": "npm run build:library && node scripts/measure-library.mjs",
     "postbuild": "node scripts/index-docs.mjs",
-    "test:site:browser": "playwright test tests/e2e/project-site.spec.ts tests/e2e/phone.spec.ts tests/e2e/seo.spec.ts"
+    "test:site:browser": "playwright test tests/e2e/project-site.spec.ts tests/e2e/start.spec.ts tests/e2e/phone.spec.ts tests/e2e/seo.spec.ts"
   },
   "dependencies": {
     "@pane-ui/react": "file:packages/react",

@@ -24,6 +24,7 @@ type Message = {
   body: string;
   time: string;
   read: boolean;
+  source?: string;
   folder: "inbox" | "sent";
 };
 const initialMessages: Message[] = [
@@ -56,6 +57,17 @@ const initialMessages: Message[] = [
     time: "Yesterday",
     read: true,
     folder: "inbox",
+  },
+  {
+    id: 4,
+    person: "Stephen",
+    address: "stephen@example.com",
+    subject: "Burning platform",
+    body: "“We too, are standing on a ‘burning platform’.”\n\nA small nod to the February 2011 memo. Some messages change everything.",
+    time: "9 Feb 2011",
+    read: true,
+    folder: "inbox",
+    source: "https://www.wired.com/2011/02/nokia-burning-platform/",
   },
 ];
 const emptyDraft = { to: "", subject: "", body: "" };
@@ -167,6 +179,11 @@ export function InboxExample() {
             {message.person} · {message.time}
           </p>
           <div className={styles.messageBody}>{message.body}</div>
+          {message.source && (
+            <a href={message.source} target="_blank" rel="noopener noreferrer">
+              Read the original story ↗
+            </a>
+          )}
         </article>
       ) : (
         <section

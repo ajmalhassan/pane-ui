@@ -47,3 +47,11 @@ Tile is not a button and has no keyboard interaction. TileLink retains native an
 TileGrid accepts arbitrary direct layout children. Size information must be on the direct child: a wrapper around a tile needs its own `data-size="wide"` for the correct span. TileSequence creates these wrappers for coordinated journeys.
 
 `TileAppearance` is an exported type shared by tile variants. Color names belong to Theme; tile accents describe contrast treatments. Keep content short enough to work at narrow widths and enlarged text, and avoid nesting interactive controls inside TileLink. For two faces use [RevealTile](/docs/reveal-tile); for cycling presentational items use [LiveTile](/docs/live-tile).
+
+### Label spacing
+
+Tile labels use `--wp-tile-label-inset-inline` (12px) and
+`--wp-tile-label-inset-bottom` (8px), independently of content padding.
+Override these properties on a `Theme` or individual tile to customize the
+insets. Labels remain in document flow so wrapped text and live-tile controls
+continue to reserve space.

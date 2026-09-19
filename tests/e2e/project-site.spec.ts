@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 test("homepage connects the project, examples and phone", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/about");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "feels alive",
   );
@@ -39,7 +39,7 @@ test("project homepage fits a phone viewport with reduced motion", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/about");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -125,7 +125,7 @@ test("landing specimens and component preview work with reduced motion", async (
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/about");
   await expect(
     page.getByRole("button", { name: "REPLAY ENTRANCE" }),
   ).toBeDisabled();
@@ -162,7 +162,7 @@ test("landing replay settles when reduced motion changes at runtime", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("/about");
   await page.getByRole("button", { name: "REPLAY ENTRANCE" }).click();
   await expect
     .poll(() =>

@@ -99,3 +99,14 @@
 .wp-button.wp-pressable[hidden] {
   display: none;
 }
+
+/* The ring and arrow share one SVG so their proportions remain consistent. */
+.wp-back-button.wp-icon-button.wp-button {
+  border: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+.wp-back-button.wp-icon-button > span:first-child {
+  width: 48px;
+  height: 48px;
+}

@@ -11,6 +11,7 @@ import {
   Pressable,
   Button,
   IconButton,
+  BackButton,
   AppBar,
   AppBarAction,
   AppBarLink,
@@ -198,6 +199,10 @@ function PreviewContent({ name }: { name: PreviewName }) {
                 label="Add another note"
                 icon={<PlusIcon />}
                 onClick={() => setCount(count + 1)}
+              />
+              <BackButton
+                label="Back to initial state"
+                onClick={() => setCount(0)}
               />
               <Button disabled>Unavailable</Button>
             </>,

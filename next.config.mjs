@@ -4,6 +4,9 @@ const withNextra = nextra({ search: { codeblocks: false } });
 const nextConfig = {
   // Pin the file-tracing root to this project so a lockfile above it is never inferred as the workspace root.
   outputFileTracingRoot: import.meta.dirname,
+  async redirects() {
+    return [{ source: "/start", destination: "/", permanent: true }];
+  },
   images: {
     // 75 is next/image's own default, used everywhere else; 30 is the
     // Photography backdrop's, a layer greyscale, blurred 24px and painted at

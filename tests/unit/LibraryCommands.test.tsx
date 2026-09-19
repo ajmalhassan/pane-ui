@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, it, vi } from "vitest";
-import { Button, IconButton } from "../../packages/react/src/Button.js";
+import {
+  Button,
+  IconButton,
+  BackButton,
+} from "../../packages/react/src/Button.js";
 import { AppBarLink, AppBarOverflow } from "../../packages/react/src/AppBar.js";
 
 it("preserves form submission, native disabled behavior, and button refs", async () => {
@@ -223,4 +227,26 @@ it("does not reclaim external focus after the focused command was removed", () =
     </>,
   );
   expect(outside).toHaveFocus();
+});
+
+it("BackButton preserves native keyboard, ref, naming and disabled contracts", async () => {
+  const user = userEvent.setup();
+  const back = vi.fn();
+  const submit = vi.fn((event) => event.preventDefault());
+  const ref = createRef<HTMLButtonElement>();
+  const { rerender } = render(
+    <form onSubmit={submit}>
+      <BackButton ref={ref} label="Back to Start" onClick={back} />
+    </form>,
+  );
+  const button = screen.getByRole("button", { name: "Back to Start" });
+  expect(ref.current).toBe(button);
+  button.focus();
+  await user.keyboard("{Enter}");
+  expect(back).toHaveBeenCalledTimes(1);
+  expect(submit).not.toHaveBeenCalled();
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  rerender(<BackButton disabled onClick={back} />);
+  await user.click(screen.getByRole("button", { name: "Back" }));
+  expect(back).toHaveBeenCalledTimes(1);
 });

@@ -4,6 +4,7 @@ const origin = "https://pane.ajmalhassan.com";
 test("public routes expose canonical and social metadata", async ({ page }) => {
   for (const path of [
     "/",
+    "/about",
     "/docs",
     "/docs/tile-sequence",
     "/phone",
