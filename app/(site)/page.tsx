@@ -261,8 +261,8 @@ export default function Home() {
             </h2>
             <p>
               The component package is independent of Next.js and Tailwind.
-              Start with the runnable React example, or install a local tarball
-              into your own app.
+              Start with the runnable React example, or install the alpha from
+              npm into your own app.
             </p>
             <Link className={styles.primaryLink} href="/docs/installation">
               Start building <span aria-hidden="true">→</span>
@@ -270,18 +270,16 @@ export default function Home() {
           </div>
           <div className={styles.installCode}>
             <div>
-              <span>LOCAL ALPHA</span>
+              <span>PUBLIC ALPHA</span>
               <span>terminal</span>
             </div>
             <pre>
               <code>
-                <span>01</span> npm ci{"\n"}
-                <span>02</span> npm run build:library{"\n"}
-                <span>03</span> npm pack ./packages/react
+                <span>01</span> npm install @pane-ui/react@alpha
               </code>
             </pre>
             <p>
-              Public npm installation comes after the release review.
+              Requires React 19. APIs may change during alpha.
               <br />
               <Link href="/docs/installation">
                 See the complete setup guide →

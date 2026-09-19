@@ -29,6 +29,7 @@ for (const path of [
   "dist/styles.css",
   "dist/motion.css",
   "README.md",
+  "LICENSE",
 ]) {
   assert(files.includes(path), `Missing published file: ${path}`);
 }

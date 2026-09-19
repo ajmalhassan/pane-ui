@@ -15,7 +15,7 @@ export function SiteHeader() {
           The phone <span aria-hidden="true">↗</span>
         </Link>
       </nav>
-      <span className={styles.alpha}>0.1 / local alpha</span>
+      <span className={styles.alpha}>0.1 / alpha</span>
     </header>
   );
 }

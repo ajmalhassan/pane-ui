@@ -77,5 +77,6 @@
     "nextra-theme-docs": {
       "zod": "4.3.6"
     }
-  }
+  },
+  "license": "MIT"
 }

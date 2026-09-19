@@ -1,10 +1,16 @@
 # Pane UI
 
-An independent React component library inspired by Windows Phone: typography, tiles, and purposeful transitions. Local alpha; not published to npm. Requires React 19 and an ESM-capable application toolchain. No Next.js or Tailwind dependency.
+An independent React component library inspired by Windows Phone: typography, tiles, and purposeful transitions. Alpha release; APIs may change before 1.0. Requires React 19 and an ESM-capable application toolchain. No Next.js or Tailwind dependency.
 
 ## Try it
 
-From this repository:
+Install the alpha in your React 19 project:
+
+```sh
+npm install @pane-ui/react@alpha
+```
+
+To build and try it locally from this repository:
 
 ```sh
 npm ci
@@ -99,12 +105,7 @@ The public API can change before 1.0. This alpha includes native form controls, 
 ## Pivot: related views
 
 ```tsx
-import {
-  Pivot,
-  PivotList,
-  PivotTrigger,
-  PivotPanel,
-} from "@pane-ui/react";
+import { Pivot, PivotList, PivotTrigger, PivotPanel } from "@pane-ui/react";
 
 <Pivot defaultValue="recent">
   <PivotList aria-label="Messages">
@@ -350,3 +351,7 @@ SectionHeader supports heading levels 2–4 and optional metadata. EmptyState is
 ## Release quality
 
 The repository [support and quality contract](../../docs/library-support.md) records browser coverage, API conventions, bundle budgets and outstanding manual accessibility/release checks. The package is a private alpha; automated tests do not constitute WCAG certification.
+
+## License
+
+MIT © 2026 Ajmal Hassan. See [LICENSE](./LICENSE).

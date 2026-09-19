@@ -2,7 +2,7 @@
 
 A React component library inspired by Windows Phone: bold typography, living tiles, and purposeful transitions.
 
-**Local alpha.** The library builds and can be installed from a tarball. It is not published to npm; package naming, licensing, and the release support matrix are still being finalized.
+**Public alpha.** Install `@pane-ui/react@alpha` from npm. Licensed under MIT; APIs may change before 1.0. See the support documentation for verified coverage and remaining manual checks.
 
 ## Run the project site
 
@@ -53,6 +53,14 @@ npm --prefix examples/vite run dev
 The starter consumes the local built package and keeps its own exact dependencies and lockfile. See [example source and reuse notes](examples/README.md).
 
 ## Use the library
+
+Install in a React 19 application:
+
+```sh
+npm install @pane-ui/react@alpha
+```
+
+For local development, you can also build a tarball:
 
 ```sh
 npm run build:library

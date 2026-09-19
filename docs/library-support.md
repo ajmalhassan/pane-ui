@@ -1,6 +1,6 @@
 # Alpha support and quality contract
 
-`@pane-ui/react` is a private local alpha. This document distinguishes intended contracts, automated evidence, and checks still required before a public release. It does not certify WCAG conformance or parity with an established system.
+`@pane-ui/react` is a public alpha. This document distinguishes intended contracts, automated evidence, and checks still required before a stable release. It does not certify WCAG conformance or parity with an established system.
 
 ## Intended platform
 
