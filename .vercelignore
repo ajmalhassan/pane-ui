@@ -1,0 +1,8 @@
+experiments/
+quality-results/
+test-results/
+playwright-report/
+.superpowers/
+.worktrees/
+.env*
+*.tgz

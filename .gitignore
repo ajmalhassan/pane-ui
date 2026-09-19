@@ -53,3 +53,4 @@ next-env.d.ts
 # Documentation search and runnable example output
 /public/_pagefind/
 /examples/vite/dist/
+.env*
