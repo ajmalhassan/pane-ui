@@ -1,10 +1,14 @@
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { SettingsExample } from "@/examples/shared/SettingsExample";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import { ExampleSource } from "@/components/site/ExampleSource";
 import styles from "@/components/site/site.module.css";
-export const metadata: Metadata = { title: "Settings example" };
+export const metadata = pageMetadata(
+  "/examples/settings",
+  "Settings example — Pane UI",
+  "A working React settings interface demonstrating Pane UI form fields, switches, selection controls, and feedback.",
+);
 export default function ExamplePage() {
   return (
     <div className={styles.site}>

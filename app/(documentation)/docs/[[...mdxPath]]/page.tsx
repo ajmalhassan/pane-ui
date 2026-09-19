@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/seo";
 import { generateStaticParamsFor, importPage } from "nextra/pages";
 import { useMDXComponents as getMDXComponents } from "@/mdx-components";
 type Props = { params: Promise<{ mdxPath?: string[] }> };
@@ -10,12 +11,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
   const { mdxPath = [] } = await params;
   const { metadata } = await importPage(["docs", ...mdxPath]);
-  return mdxPath.length
-    ? metadata
-    : {
-        ...metadata,
-        title: { absolute: "Documentation — Pane UI" },
-      };
+  return pageMetadata(
+    `/docs${mdxPath.length ? "/" + mdxPath.map(encodeURIComponent).join("/") : ""}`,
+    mdxPath.length ? `${metadata.title} — Pane UI` : "Documentation — Pane UI",
+    metadata.description ?? undefined,
+  );
 }
 const Wrapper = getMDXComponents().wrapper;
 export default async function DocPage(props: Props) {

@@ -1,11 +1,13 @@
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { PhoneDemo } from "@/components/phone/PhoneDemo";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import styles from "@/components/site/site.module.css";
-export const metadata: Metadata = {
-  title: "Nokia Lumia 520 — the inspiration",
-};
+export const metadata = pageMetadata(
+  "/phone",
+  "Nokia Lumia 520 — the inspiration — Pane UI",
+  "Explore an interactive cyan Nokia Lumia 520 recreation, built with Pane UI live tiles, People hub, and Windows Phone-inspired transitions.",
+);
 export default function PhonePage() {
   return (
     <div className={styles.site}>

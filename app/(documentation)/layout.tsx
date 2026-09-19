@@ -1,3 +1,4 @@
+import { siteMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Mark } from "@/components/site/Mark";
 import type { Metadata } from "next";
@@ -9,6 +10,7 @@ import "@pane-ui/react/styles.css";
 import "./docs.css";
 
 export const metadata: Metadata = {
+  ...siteMetadata,
   title: {
     default: "Documentation — Pane UI",
     template: "%s — Pane UI",
@@ -44,7 +46,9 @@ export default async function DocumentationLayout({
               </Link>
             </Navbar>
           }
-          footer={<Footer>Pane UI · An independent, local alpha.</Footer>}
+          footer={
+            <Footer>Pane UI · An independent React component library.</Footer>
+          }
           copyPageButton={false}
           editLink={null}
           feedback={{ content: null }}

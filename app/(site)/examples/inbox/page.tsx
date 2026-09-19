@@ -1,10 +1,14 @@
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { InboxExample } from "@/examples/shared/InboxExample";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import { ExampleSource } from "@/components/site/ExampleSource";
 import styles from "@/components/site/site.module.css";
-export const metadata: Metadata = { title: "Inbox example" };
+export const metadata = pageMetadata(
+  "/examples/inbox",
+  "Inbox example — Pane UI",
+  "A working React inbox demonstrating Pane UI lists, navigation, message composition, and modal dialogs.",
+);
 export default function ExamplePage() {
   return (
     <div className={styles.site}>

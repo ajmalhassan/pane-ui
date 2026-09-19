@@ -1,9 +1,13 @@
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import { Glyph } from "@/components/site/Glyph";
 import styles from "@/components/site/site.module.css";
-export const metadata: Metadata = { title: "Examples" };
+export const metadata = pageMetadata(
+  "/examples",
+  "React component examples — Pane UI",
+  "Explore working settings and inbox examples built with Pane UI. Learn to combine form controls, navigation, dialogs, and motion.",
+);
 export default function ExamplesPage() {
   return (
     <div className={styles.site}>

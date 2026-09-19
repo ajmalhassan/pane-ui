@@ -4,6 +4,7 @@ import { ProjectTransitionProvider } from "@/components/metro/ProjectTransitionP
 import "../globals.css";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Ajmal Hassan — Technical Leader & Builder",
   description:
     "AI-native product engineering leadership across learning, assessment, business systems, frontend craft, and full-stack delivery.",

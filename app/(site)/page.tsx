@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { SiteHeader, SiteFooter } from "@/components/site/SiteHeader";
 import { HeroTiles } from "@/components/site/HeroTiles";
@@ -12,6 +13,10 @@ import {
 import { ComponentStudio } from "@/components/site/ComponentStudio";
 import polish from "@/components/site/landing.module.css";
 import styles from "@/components/site/site.module.css";
+export const metadata = pageMetadata(
+  "/",
+  "Pane UI \u2014 React components with live tiles and motion",
+);
 export default function Home() {
   return (
     <LandingMotion className={`${styles.site} ${polish.landing}`}>

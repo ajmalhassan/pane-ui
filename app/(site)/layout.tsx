@@ -1,8 +1,10 @@
+import { siteMetadata } from "@/lib/seo";
 import Link from "next/link";
 import type { Metadata } from "next";
 import "@pane-ui/react/styles.css";
 import "./site.css";
 export const metadata: Metadata = {
+  ...siteMetadata,
   title: {
     default: "Pane UI — Software that feels alive",
     template: "%s — Pane UI",
