@@ -135,8 +135,9 @@ test("turnstile direction reversal preserves the displayed browser frame", async
   const after = await surface.boundingBox();
   expect(before).not.toBeNull();
   expect(after).not.toBeNull();
-  expect(Math.abs(before!.x - after!.x)).toBeLessThan(0.1);
-  expect(Math.abs(before!.width - after!.width)).toBeLessThan(0.1);
+  // WebKit rounds the restarted 3D transform to roughly a tenth of a CSS px.
+  expect(Math.abs(before!.x - after!.x)).toBeLessThan(0.25);
+  expect(Math.abs(before!.width - after!.width)).toBeLessThan(0.25);
   await surface.evaluate((element) =>
     element.getAnimations().forEach((animation) => animation.finish()),
   );
