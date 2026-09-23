@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.1 — 2026-09-23
+
+- Prepare layered `TileSequence` surfaces before entrance playback to prevent choppy tile returns.
+- Batch tile measurements before starting animations to avoid repeated layout work.
+- Preserve immediate reversals, reduced-motion behavior, and existing animation duration defaults.
+
 ## 0.1.0-alpha.0
 
 First public alpha release.

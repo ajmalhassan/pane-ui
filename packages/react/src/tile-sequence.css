@@ -10,6 +10,11 @@
   min-width: 0;
   backface-visibility: hidden;
 }
+/* Release the promotion hint at rest; only the fresh entrance needs it. */
+.wp-tile-sequence[data-mode="layered"][data-state="entering"]
+  > .wp-tile-sequence-item {
+  will-change: transform, opacity;
+}
 .wp-tile-sequence-item > .wp-tile {
   width: 100%;
   height: 100%;

@@ -9,6 +9,8 @@ type Run = {
   frames: Keyframe[];
   options: KeyframeAnimationOptions;
   cancel: ReturnType<typeof vi.fn>;
+  pause: ReturnType<typeof vi.fn>;
+  play: ReturnType<typeof vi.fn>;
   finish(): void;
   reject(): void;
 };
@@ -44,8 +46,19 @@ beforeEach(() => {
         reject = rej;
       });
       const cancel = vi.fn();
-      runs.push({ element: this, frames, options, finish, reject, cancel });
-      return { finished, cancel };
+      const pause = vi.fn();
+      const play = vi.fn();
+      runs.push({
+        element: this,
+        frames,
+        options,
+        finish,
+        reject,
+        cancel,
+        pause,
+        play,
+      });
+      return { finished, cancel, pause, play };
     }),
   });
 });
@@ -595,10 +608,128 @@ it("returns along the forward departure path with reversed timing", async () => 
     const out = departure.find(
       (run) => run.element.textContent === back.element.textContent,
     )!;
-    expect(back.frames[0]).toEqual(out.frames.at(-1));
+    expect(back.frames[0]).toMatchObject({
+      transform: out.frames.at(-1)!.transform,
+      transformOrigin: out.frames.at(-1)!.transformOrigin,
+    });
+    // Preparation uses alpha below one display step instead of exact zero.
+    expect(Number(back.frames[0].opacity)).toBeCloseTo(
+      Number(out.frames.at(-1)!.opacity),
+      2,
+    );
     expect(back.frames.at(-1)).toEqual(out.frames[0]);
     expect(Number(back.options.delay) + Number(out.options.delay)).toBe(66);
     expect(back.options.duration).toBe(out.options.duration);
     expect(back.options.easing).toBe("cubic-bezier(0, 0, 0.58, 1)");
   }
 });
+
+it("measures every tile before starting the wave to avoid repeated forced layouts", () => {
+  const ref = createRef<HTMLDivElement>();
+  const view = render(<TileSequence show items={items} ref={ref} />);
+  const operations: string[] = [];
+  for (const child of Array.from(ref.current!.children)) {
+    Object.defineProperties(child, {
+      offsetLeft: {
+        get: () => {
+          operations.push("measure");
+          return 0;
+        },
+      },
+      offsetTop: {
+        get: () => {
+          operations.push("measure");
+          return 0;
+        },
+      },
+    });
+  }
+  const animate = vi.mocked(Element.prototype.animate).getMockImplementation()!;
+  vi.mocked(Element.prototype.animate).mockImplementation(function (
+    this: Element,
+    frames,
+    options,
+  ) {
+    operations.push("animate");
+    return animate.call(this, frames, options);
+  });
+  view.rerender(<TileSequence show={false} items={items} ref={ref} />);
+  expect(
+    operations.filter((operation) => operation === "measure"),
+  ).toHaveLength(6);
+  expect(operations.lastIndexOf("measure")).toBeLessThan(
+    operations.indexOf("animate"),
+  );
+});
+
+function controlPreparationFrames() {
+  let id = 0;
+  const pending = new Map<number, FrameRequestCallback>();
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+    pending.set(++id, callback);
+    return id;
+  });
+  vi.spyOn(window, "cancelAnimationFrame").mockImplementation((frame) => {
+    pending.delete(frame);
+  });
+  return () => {
+    const callbacks = [...pending.values()];
+    pending.clear();
+    act(() => callbacks.forEach((callback) => callback(0)));
+  };
+}
+
+it("prepares a fresh layered entrance before starting its staggered playback", async () => {
+  const frame = controlPreparationFrames();
+  const entered = vi.fn();
+  const view = render(<TileSequence show={false} items={items} />);
+  view.rerender(<TileSequence show items={items} onEntered={entered} />);
+  expect(runs).toHaveLength(3);
+  for (const run of runs) {
+    expect(run.pause).toHaveBeenCalledOnce();
+    expect(run.play).not.toHaveBeenCalled();
+    // Nonzero, subpixel alpha lets the compositor rasterize the waiting tiles.
+    expect(Number(run.frames[0].opacity)).toBeGreaterThan(0);
+    expect(Number(run.frames[0].opacity)).toBeLessThan(1 / 255);
+  }
+  frame();
+  expect(runs.every((run) => run.play.mock.calls.length === 0)).toBe(true);
+  frame();
+  expect(runs.every((run) => run.play.mock.calls.length === 1)).toBe(true);
+  expect(runs.map((run) => run.options.delay)).toEqual([0, 33, 66]);
+  expect(entered).not.toHaveBeenCalled();
+  await act(async () => runs.forEach((run) => run.finish()));
+  expect(entered).toHaveBeenCalledOnce();
+});
+
+it.each(["hide", "unmount", "reduce"])(
+  "does not start a prepared entrance after %s interrupts it",
+  async (interrupt) => {
+    const frame = controlPreparationFrames();
+    const entered = vi.fn();
+    const view = render(<TileSequence show={false} items={items} />);
+    view.rerender(<TileSequence show items={items} onEntered={entered} />);
+    const entrance = [...runs];
+    expect(entrance.every((run) => run.pause.mock.calls.length === 1)).toBe(
+      true,
+    );
+    frame();
+    if (interrupt === "hide")
+      view.rerender(<TileSequence show={false} items={items} />);
+    if (interrupt === "unmount") view.unmount();
+    if (interrupt === "reduce")
+      act(() => {
+        reduced = true;
+        listeners.forEach((listener) => listener());
+      });
+    frame();
+    expect(entrance.every((run) => run.play.mock.calls.length === 0)).toBe(
+      true,
+    );
+    expect(entrance.every((run) => run.cancel.mock.calls.length === 1)).toBe(
+      true,
+    );
+    await act(async () => entrance.forEach((run) => run.finish()));
+    expect(entered).toHaveBeenCalledTimes(interrupt === "reduce" ? 1 : 0);
+  },
+);

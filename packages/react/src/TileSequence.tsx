@@ -84,6 +84,11 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
     useBrowserLayoutEffect(() => {
       if (phase !== "entering" && phase !== "exiting") return;
       const entering = phase === "entering";
+      // Only a fresh entrance needs raster preparation. An interrupted wave
+      // already has painted surfaces and must reverse without another pause.
+      const prepare =
+        entering && mode === "layered" && snapshots.current.size === 0;
+      let preparationFrame = 0;
       const ids: string[] = JSON.parse(identities);
       const tileOrder = entering
         ? ids
@@ -159,7 +164,21 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
       if (!tracks.length || preference?.matches || milliseconds === 0) settle();
       else {
         const promises: Promise<unknown>[] = [];
-        for (const { key: id, element, index, group } of tracks) {
+        // Starting an animation invalidates style/layout. Read the whole wave
+        // first so each subsequent tile does not force another layout flush.
+        const measuredTracks = tracks.map((track) => ({
+          ...track,
+          left: mode === "layered" ? track.element?.offsetLeft ?? 0 : 0,
+          top: mode === "layered" ? track.element?.offsetTop ?? 0 : 0,
+        }));
+        for (const {
+          key: id,
+          element,
+          index,
+          group,
+          left,
+          top,
+        } of measuredTracks) {
           if (!element || typeof element.animate !== "function") continue;
           const sampled = snapshots.current.get(id);
           const layered = mode === "layered";
@@ -190,14 +209,20 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
           const transformOrigin =
             from.transformOrigin ??
             (layered
-              ? `${(sign > 0 ? 0 : width) - element.offsetLeft}px ${height / 2 - element.offsetTop}px`
+              ? `${(sign > 0 ? 0 : width) - left}px ${height / 2 - top}px`
               : direction === "forward"
                 ? "left center"
                 : "right center");
           try {
             const animation = element.animate(
               [
-                { ...from, transformOrigin },
+                // Zero alpha lets browsers skip rasterizing delayed tiles until
+                // they move. Subpixel alpha prepares them without a visible flash.
+                {
+                  ...from,
+                  ...(prepare ? { opacity: 0.001 } : {}),
+                  transformOrigin,
+                },
                 { ...(entering ? resting : hidden), transformOrigin },
               ],
               {
@@ -215,16 +240,29 @@ export const TileSequence = forwardRef<HTMLDivElement, TileSequenceProps>(
             );
             animations.push({ id, element, animation });
             promises.push(animation.finished.catch(() => undefined));
+            if (prepare) animation.pause();
           } catch {
             /* Unsupported effects settle along with the remaining group. */
           }
         }
         snapshots.current.clear();
-        if (promises.length) void Promise.all(promises).then(settle);
-        else settle();
+        if (promises.length) {
+          if (prepare) {
+            // Give the paused, promoted surfaces a paint opportunity, then let
+            // the browser drive the wave. There is no per-frame JS animation.
+            preparationFrame = window.requestAnimationFrame(() => {
+              preparationFrame = window.requestAnimationFrame(() => {
+                if (!current || completed) return;
+                animations.forEach(({ animation }) => animation.play());
+              });
+            });
+          }
+          void Promise.all(promises).then(settle);
+        } else settle();
       }
       return () => {
         current = false;
+        window.cancelAnimationFrame(preparationFrame);
         preference?.removeEventListener?.("change", onPreferenceChange);
         const next = new Map<string, Keyframe>();
         animations.forEach(({ id, element, animation }) => {

@@ -1,6 +1,6 @@
 {
   "name": "@pane-ui/react",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Expressive React components with living tiles, bold typography, and purposeful motion.",
   "type": "module",
   "main": "./dist/index.js",

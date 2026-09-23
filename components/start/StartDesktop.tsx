@@ -286,6 +286,7 @@ export function StartDesktop() {
         className={s.sequence}
         items={tiles}
         show={phase === "start" || phase === "start-enter"}
+        duration={phase === "start-enter" ? 300 : undefined}
         direction={phase === "start-exit" ? "forward" : "backward"}
         onExited={startExited}
         onEntered={() => {

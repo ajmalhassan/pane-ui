@@ -60,4 +60,6 @@ Put `size` on the sequence item for the wrapper span and set the inner tile's si
 
 Initial visible content skips entrance and callbacks. Exiting content becomes inert immediately, then children unmount at completion. The root is positioned so wrapper offsets share a layout coordinate system. Avoid overriding its positioning or adding perspective to an ancestor. Interruption samples displayed transforms and resumes without replaying the old delay. Reduced motion, zero duration and unavailable animation support settle immediately.
 
+Fresh layered entrances prepare their composited surfaces over two animation frames before starting the wave. The `duration` and `interval` values describe playback after that preparation; departures and interrupted reversals start immediately. Reduced motion and zero duration skip preparation.
+
 Use `onExited` to open the next surface, rather than a timer. Focus and application navigation are yours to coordinate. Real cross-route destinations should retain anchor semantics.

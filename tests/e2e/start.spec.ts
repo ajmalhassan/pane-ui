@@ -187,3 +187,109 @@ test("Old Start URLs redirect and the original landing page lives at About", asy
     page.getByRole("heading", { name: /Software that feels alive/ }),
   ).toBeVisible();
 });
+
+test("Start defers decorative 3D flips until the entrance wave has settled", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    const samples: number[] = [];
+    const preparation: {
+      paused: boolean;
+      opacity: number;
+      promoted: boolean;
+    }[] = [];
+    Object.assign(window, {
+      entranceFlipCounts: samples,
+      entrancePreparation: preparation,
+    });
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (frames, options) {
+      const sequence = this.closest('.wp-tile-sequence[data-state="entering"]');
+      if (sequence && this === sequence.firstElementChild) {
+        samples.push(
+          sequence.getAnimations({ subtree: true }).filter((animation) => {
+            const target = (animation.effect as KeyframeEffect | null)?.target;
+            return (
+              target instanceof Element &&
+              !!target.closest("[data-flip-artwork]")
+            );
+          }).length,
+        );
+      }
+      const animation = animate.call(this, frames, options);
+      if (sequence && this === sequence.firstElementChild) {
+        // Observe the real animation after the component has finished setup,
+        // before its first frame. No timing or playback methods are replaced.
+        queueMicrotask(() => {
+          const style = getComputedStyle(this);
+          preparation.push({
+            paused: animation.playState === "paused",
+            opacity: Number(style.opacity),
+            promoted: style.willChange.includes("transform"),
+          });
+        });
+      }
+      return animation;
+    };
+  });
+  await page.goto("/");
+  const sequence = page.locator(".wp-tile-sequence");
+  await expect(sequence).toHaveAttribute("data-state", "entered");
+  const activeFlips = () =>
+    sequence.evaluate(
+      (root) =>
+        root.getAnimations({ subtree: true }).filter((animation) => {
+          const target = (animation.effect as KeyframeEffect | null)?.target;
+          return (
+            target instanceof Element && !!target.closest("[data-flip-artwork]")
+          );
+        }).length,
+    );
+  expect(await activeFlips()).toBe(10);
+  await page.getByRole("link", { name: "Open people", exact: true }).click();
+  await page.getByRole("button", { name: "Back to Start" }).click();
+  await expect(sequence).toHaveAttribute("data-state", "entered");
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { entranceFlipCounts: number[] })
+          .entranceFlipCounts,
+    ),
+  ).toEqual([0, 0]);
+  const preparation = await page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          entrancePreparation: {
+            paused: boolean;
+            opacity: number;
+            promoted: boolean;
+          }[];
+        }
+      ).entrancePreparation,
+  );
+  expect(preparation).toHaveLength(2);
+  for (const sample of preparation) {
+    expect(sample.paused).toBe(true);
+    expect(sample.promoted).toBe(true);
+    expect(sample.opacity).toBeGreaterThan(0);
+    expect(sample.opacity).toBeLessThan(1 / 255);
+  }
+  expect(
+    await sequence.evaluate((root) =>
+      Array.from(root.children).every(
+        (child) => getComputedStyle(child).willChange === "auto",
+      ),
+    ),
+  ).toBe(true);
+  expect(await activeFlips()).toBe(10);
+  await page.getByRole("button", { name: "Pause tile flips" }).click();
+  expect(
+    await sequence.evaluate((root) =>
+      root
+        .getAnimations({ subtree: true })
+        .every((animation) => animation.playState === "paused"),
+    ),
+  ).toBe(true);
+});

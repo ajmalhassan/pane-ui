@@ -23,6 +23,23 @@
 .back {
   transform: rotateX(180deg);
 }
+/* A newly mounted Start wave only needs the front artwork. Build the nested
+   3D flip surfaces after it settles, not while every outer tile is rotating.
+   This also starts the decorative timers after the entrance is visible. */
+:global(.wp-tile-sequence[data-state="entering"]) .scene {
+  perspective: none;
+}
+:global(.wp-tile-sequence[data-state="entering"]) .rotor {
+  animation: none;
+  transform-style: flat;
+}
+:global(.wp-tile-sequence[data-state="entering"]) .front {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+:global(.wp-tile-sequence[data-state="entering"]) .back {
+  display: none;
+}
 .front > svg,
 .back > svg {
   width: 100%;
